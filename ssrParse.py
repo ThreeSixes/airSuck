@@ -740,7 +740,7 @@ class ssrParse:
                     # No pos data
                     if(retVal['fmt'] == 0):
                         if self.decodeNames: retVal['fmtName'] = "No position info"
-                        retVal['nuc'] = 0
+                        retVal['nxc'] = 0
                     
                     # ID and category
                     if (retVal['fmt'] >= 1) and (retVal['fmt'] <= 4):

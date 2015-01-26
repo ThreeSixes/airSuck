@@ -58,6 +58,19 @@ class ssrParse:
     #####################
     # Parsing functions #
     #####################
+    
+    
+    def asciiHx2Str(self, asciiHx):
+        """
+        asciiHx2Str(asciiHx)
+        
+        Convert a hex string represented in ASCII to a binary string.
+        
+        Returns a string.
+        """
+        
+        return binascii.unhexlify(asciiHx)
+    
 
     def crcChk(self, data):
         """
@@ -508,7 +521,7 @@ class ssrParse:
         
         return retVal
     
-    def getUtilitMsg(self, data):
+    def getUtilityMsg(self, data):
         """
         getUtilityMsg(data)
         
@@ -599,7 +612,7 @@ class ssrParse:
                 if self.decodeNames: retVal['drName'] = dfData[1]
                 
                 # Get our utility message data
-                umData = self.getUtilitMsg(binData)
+                umData = self.getUtilityMsg(binData)
                 
                 # Set the utilit message fields
                 retVal['iis'] = umData[0]
@@ -635,7 +648,7 @@ class ssrParse:
                 if self.decodeNames: retVal['drName'] = dfData[1]
                 
                 # Get our utility message data
-                umData = self.getUtilitMsg(binData)
+                umData = self.getUtilityMsg(binData)
                 
                 # Set the utilit message fields
                 retVal['iis'] = umData[0]
@@ -1155,7 +1168,7 @@ class ssrParse:
                 if self.decodeNames: retVal['drName'] = dfData[1]
                 
                 # Get our utility message data
-                umData = self.getUtilitMsg(binData)
+                umData = self.getUtilityMsg(binData)
                 
                 # Set the utilit message fields
                 retVal['iis'] = umData[0]
@@ -1196,7 +1209,7 @@ class ssrParse:
                 if self.decodeNames: retVal['drName'] = dfData[1]
                 
                 # Get our utility message data
-                umData = self.getUtilitMsg(binData)
+                umData = self.getUtilityMsg(binData)
                 
                 # Set the utilit message fields
                 retVal['iis'] = umData[0]

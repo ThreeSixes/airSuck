@@ -45,10 +45,10 @@ class cprMath():
         
         if self.debugOn: print " NL() lat = " + str(lat)
         
-        # Lat should be positive.
+        # Lat should be positive since the zones are symmetric above and below the equator
         if lat < 0:
             lat = abs(lat)
-            if self.debugOn: print " NL() lat is negative. lat = abs(lat) = " + str(lat)
+            if self.debugOn: print " NL() lat < 0 lat = abs(lat) = " + str(lat)
         
         # Latitude transition table.
         if lat < 10.47047130: retVal = 59
@@ -189,10 +189,10 @@ class cprMath():
         # Southern hemisphere values are 270 to 360, so subtract 360 if rlats > 270.
         if rlat0 > 270:
             rlat0 = rlat0 - 360
-            print " decodeCPR() S\N hemisphere compensation - rlat0 = " + str(rlat0)
+            if self.debugOn: print " decodeCPR() S\N hemisphere compensation - rlat0 = " + str(rlat0)
         if rlat1 > 270:
             rlat1 = rlat1 - 360
-            print " decodeCPR() S\N hemisphere compensation - rlat1 = " + str(rlat1)
+            if self.debugOn: print " decodeCPR() S\N hemisphere compensation - rlat1 = " + str(rlat1)
             
         # Check to see that our rlat values exist in the same longitude zone.
         if self.NL(rlat0) == self.NL(rlat1):

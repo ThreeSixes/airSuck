@@ -18,6 +18,7 @@ from ssrParse import ssrParse
 
 # Which queue do we subscribe to?
 targetSub = "ssrFeed"
+targetHost = "127.0.0.1"
 
 # Set up the SSR parser
 ssrEngine = ssrParse()
@@ -78,7 +79,7 @@ if __name__ == "__main__":
     print "ADSB subscription queue data parsing test engine starting..."
     
     # Set up Redis queues.
-    r = redis.Redis()
+    r = redis.Redis(host=targetHost)
     
     # Start up our ADS-B parser
     client = SubListener(r, [targetSub])

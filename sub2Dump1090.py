@@ -19,6 +19,7 @@ from pprint import pprint
 
 # Which queue do we subscribe to?
 targetSub = "ssrFeed"
+targetHost = "127.0.0.1"
 
 # Submit data to a dump1090 instance via TCP 30001
 dump1090Dst = {
@@ -110,6 +111,6 @@ class SubListener(threading.Thread):
 if __name__ == "__main__":
     
     # Start up redis, create our threaded client, and start it.
-    r = redis.Redis()
+    r = redis.Redis(host=targetHost)
     client = SubListener(r, [targetSub])
     client.start()

@@ -265,6 +265,77 @@ class ssrParse:
         # Compute the values and return them.
         return (a * 1000) + (b * 100) + (c * 10) + d
     
+    def bin2Gillham(self, modeAHx):
+        """
+        hex2Gillham(modeAHx)
+        
+        Convert a decoded mode A squawk code expressed as a 2-byte number to Gillham code. Note that we ignore the X bit since it's not really used.
+        
+        returns a 12-bit Gillham-encoded squawk code as an integer.
+        """
+        
+        # Default return value.
+        retVal = 0x00
+        
+        # Hex bits for gillham encoding
+        A1 = 0x1000
+        A2 = 0x2000
+        A4 = 0x4000
+        B1 = 0x0100
+        B2 = 0x0200
+        B4 = 0x0400
+        C1 = 0x0010
+        C2 = 0x0020
+        C4 = 0x0040
+        D1 = 0x0001
+        D2 = 0x0002
+        D4 = 0x0004
+        
+        # Filter out illegal values (Clear the bits in the "8" position for each nibble).
+        maskedData = modeAHx & 0x7777
+        
+        # Shift bits around to get 12-bit Gillham encoded values, excluding the X bit.
+        # Note: Gillham encoded values are big-endian.
+        retVal = (A1 & maskedData) >> 2
+        retVal = retVal | (A2 & maskedData) >> 5
+        retVal = retVal | (A4 & maskedData) >> 8
+        retVal = retVal | (B1 & maskedData) >> 3
+        retVal = retVal | (B2 & maskedData) >> 6
+        retVal = retVal | (B4 & maskedData) >> 9
+        retVal = retVal | (C1 & maskedData) << 7
+        retVal = retVal | (C2 & maskedData) << 4
+        retVal = retVal | (C4 & maskedData) << 1
+        retVal = retVal | (D1 & maskedData) << 4
+        retVal = retVal | (D2 & maskedData) << 1
+        retVal = retVal | (D4 & maskedData) >> 2
+        
+        return retVal
+    
+    def modeASquawk2modeCAlt(self, modeAInt):
+        """
+        modeASquawk2modeCAlt(modeAInt)
+        
+        Attempt to convert a mode A squawk code to a mode C altitude. It accepts a 2-byte number containing a hex representation of the squawk code. Squawk 0040 = 0x0040.
+        
+        If the altitude can be decoded it returns an integer. If the altitude violates mode C constraints it returns False. Mode C altitudes have 100ft resolution.
+        """
+        
+        # Set a dummy return value
+        retVal = False
+        
+        # Check to make sure the mode C altitude doesn't violate constraints.
+        # First, check for illegal bits. The 8 bit in each nibble shouldn't be set, and D1,2 are illegal. At least one C1-4 bit should be set.
+        if ((modeAInt & 0x888b) == 0) and ((modeAInt & 0x00f0) > 0):
+            # Get the int value for mode A to C conversion.
+            retVal = self.modeA2C(modeAInt)
+            
+            # If we got a useful value from moeA2C
+            if (retVal != False) and (retVal >= -12):
+                # Our mode C altitude values are 100-ft resolution, so adjust for that fact.
+                retVal = retVal * 100
+        
+        return retVal
+    
     def modeA2C(self, modeAData):
         """
         ModeA2ModeC(modeAData)
@@ -1273,10 +1344,15 @@ class ssrParse:
                 # Set the emergency flag
                 retVal['emergency'] = True
             
-            # Also, since we can't really tell from the binary stream
-            # what the timing of pulse 3 in the RADAR interrogation is
-            # We should try to decode mode C data just for giggles.
-            # Todo: Try to get mode C altitude somehow.
+            # Get the mode A squawk as an integer.
+            aHx = (ord(binData[0]) << 8) | ord(binData[1])
+            
+            # Attempt to decode the mode A squawk as a mode C altitude.
+            cAlt = self.modeASquawk2modeCAlt(aHx)
+            
+            # If it worked, set our possible altitude value.
+            if cAlt != False:
+                retVal['cAlt'] = cAlt
             
         # Looks like the data is not Mode A/C/S based on invalid length.
         else:

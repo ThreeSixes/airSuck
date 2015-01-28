@@ -624,7 +624,11 @@ class ssrParse:
         Parse SSR data.
         
         Parse SSR data, looking for fields, etc. from binary data in the string binData.
-        Mode A/C data is only supported for dump1090-style messages which are already decoded into 2-byte hex.
+        Mode A/C data is only supported for dump1090-style messages which are already decoded into 2-byte hex representations of a mode A squawk code where squawk 1200 = 0x1200.
+        
+        Please note that when decoding Mode A/C replies, we don't actually know if we're working with a mode A ident reply or mode C altitude reply because we don't know the RADAR pulse spacing from the interrogation. We do our best to see if a squawk could be a mode C reply and decode it both as mode A and C.
+        
+        This method returns a dictionary of all decode fields.
         
         http://www.lll.lu/~edward/edward/adsb/DecodingADSBposition.html
         http://www.radartutorial.eu/13.ssr/sr25.en.html

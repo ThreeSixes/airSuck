@@ -941,20 +941,18 @@ class ssrParse:
                         
                         # If we have format types 9, 10, 20, or 21 get the UTC sync flag
                         if((retVal['fmt'] <= 10) or (retVal['fmt'] >= 20)):
-                            retVal['utcSync'] = altitudeBytes & 0x0008 >> 3
+                            retVal['utcSync'] = (ord(binData[6]) & 0x08) >> 3
                         
                         # Pull position format flag, even/odd
-                        retVal['evenOdd'] = altitudeBytes & 0x0004 >> 2
+                        retVal['evenOdd'] = (ord(binData[6]) & 0x04) >> 2
                         
                         # Grab lat bits.
-                        rawLat = (ord(binData[6]) & 0x03) << 15
-                        rawLat = rawLat | (ord(binData[7]) << 7)
-                        retVal['rawLat'] = rawLat | (ord(binData[8]) & 0xfe) >> 1
+                        rawLat = ((ord(binData[6]) & 0x03) << 15) | (ord(binData[7]) << 7) | ((ord(binData[8]) & 0xfe) >> 1)
+                        retVal['rawLat'] = rawLat
                         
                         # Grab lon bits.
-                        rawLon = (ord(binData[8]) & 0x01) << 16
-                        rawLon = rawLon | (ord(binData[9]) << 8)
-                        retVal['rawLon'] = rawLon | ord(binData[10])
+                        rawLon = ((ord(binData[8]) & 0x01) << 16) | (ord(binData[9]) << 8) | ord(binData[10])
+                        retVal['rawLon'] = rawLon
                     
                     # Airborne velocity
                     elif retVal['fmt'] == 19:

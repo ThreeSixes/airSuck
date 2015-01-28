@@ -8,7 +8,7 @@ from pprint import pprint
 parser = ssrParse()
 
 # Three sample frames
-someFrames = ["0225", "5da189a7b82d24", "8da15e719941be06306c00b1e7db"]
+someFrames = ["0225", "5da189a7b82d24", "8da15e719941be06306c00b1e7db", "2610"]
 
 # Actviate name-parsing
 parser.setReturnNames(True)

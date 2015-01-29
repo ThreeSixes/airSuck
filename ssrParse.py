@@ -72,7 +72,6 @@ class ssrParse:
         
         return binascii.unhexlify(asciiHx)
     
-
     def crcChk(self, data):
         """
         crcChk(data)
@@ -262,35 +261,83 @@ class ssrParse:
         
         return alt
     
+    def getModeAStr(self, modeAGil):
+        """
+        getModeAStr(modeAGil)
+        
+        Get a formatted mode A Squawk code. Returns a squawk string. 
+        """
+        
+        # Decode our Gillham enocded mode A squawk code into an integer.
+        retVal = self.gillham2Bin(modeAGil)
+        
+        # Convert the hexidecimal representation of that integer to a string.
+        retVal = str(hex(retVal))
+        
+        # Drop the 0x from the front of the string, and make sure we have 4 digits by zero-filling the left.
+        retVal = retVal.replace('0x', '')
+        retVal = retVal.rjust(4, '0')
+        
+        return retVal
+    
     def gillham2Bin(self, grayCode):
         """
         gillham2Bin(gray)
-        Convert Gillham gray code used in 13-bit altitude and mode A/C data to hex.
-        From: https://github.com/bistromath/gr-air-modes/blob/master/python/parse.py
+        
+        Convert Gillham gray code used in 13-bit altitude and mode A/C data to an int.
+        
+        This function ignores the X/M bit.
         """
         
-        # Bit positions for each bit
-        C1 = 0x1000
-        A1 = 0x0800
-        C2 = 0x0400
-        A2 = 0x0200
-        C4 = 0x0100
-        A4 = 0x0080
-        B1 = 0x0020
-        D1 = 0x0010 # AKA the Q bit.
-        B2 = 0x0008
-        D2 = 0x0004
-        B4 = 0x0002
-        D4 = 0x0001
+        # Return value
+        retVal = 0x0000
         
-        # Shift things around so gray code is now in order
-        a = ((grayCode & A1) >> 11) + ((grayCode & A2) >> 8) + ((grayCode & A4) >> 5)
-        b = ((grayCode & B1) >> 5) + ((grayCode & B2) >> 2) + ((grayCode & B4) << 1)
-        c = ((grayCode & C1) >> 12) + ((grayCode & C2) >> 9) + ((grayCode & C4) >> 6)
-        d = ((grayCode & D1) >> 2) + ((grayCode & D2) >> 1) + ((grayCode & D4) << 2)
+        # Bit positions for Gillham each bit
+        C1Gil = 0x1000
+        A1Gil = 0x0800
+        C2Gil = 0x0400
+        A2Gil = 0x0200
+        C4Gil = 0x0100
+        A4Gil = 0x0080
+        XMGil = 0x0040 # The X/M bit.
+        B1Gil = 0x0020
+        D1Gil = 0x0010 # The Q bit.
+        B2Gil = 0x0008
+        D2Gil = 0x0004
+        B4Gil = 0x0002
+        D4Gil = 0x0001
         
-        # Compute the values and return them.
-        return (a * 1000) + (b * 100) + (c * 10) + d
+        # Bit positions for Hex number.
+        C1Hex = 0x0010
+        A1Hex = 0x1000
+        C2Hex = 0x0020
+        A2Hex = 0x2000
+        C4Hex = 0x0040
+        A4Hex = 0x4000
+        XMHex = 0x0800 # The X/M bit.
+        B1Hex = 0x0100
+        D1Hex = 0x0001 # The Q bit.
+        B2Hex = 0x0200
+        D2Hex = 0x0002
+        B4Hex = 0x0400
+        D4Hex = 0x0004
+        
+        # Convert Gillham code to hex.
+        if (grayCode & C1Gil) > 0: retVal = retVal | C1Hex
+        if (grayCode & A1Gil) > 0: retVal = retVal | A1Hex
+        if (grayCode & C2Gil) > 0: retVal = retVal | C2Hex
+        if (grayCode & A2Gil) > 0: retVal = retVal | A2Hex
+        if (grayCode & C4Gil) > 0: retVal = retVal | C4Hex
+        if (grayCode & A4Gil) > 0: retVal = retVal | A4Hex
+        #if (grayCode & XMGil) > 0: retVal = retVal | XMHex
+        if (grayCode & B1Gil) > 0: retVal = retVal | B1Hex
+        if (grayCode & D1Gil) > 0: retVal = retVal | D1Hex
+        if (grayCode & B2Gil) > 0: retVal = retVal | B2Hex
+        if (grayCode & D2Gil) > 0: retVal = retVal | D2Hex
+        if (grayCode & B4Gil) > 0: retVal = retVal | B4Hex
+        if (grayCode & D4Gil) > 0: retVal = retVal | D4Hex
+        
+        return retVal
     
     def bin2Gillham(self, modeAHx):
         """
@@ -762,7 +809,7 @@ class ssrParse:
                 # Get our mode A squawk bytes.
                 sqkBytes = ((binData[2] << 8) | binData[3]) & 0x1fff
                 
-                retVal['aSquawk'] = str(self.gillham2Bin(sqkBytes)).rjust(4, '0')
+                retVal['aSquawk'] = self.getModeAStr(sqkBytes)
                 
                 # Check for emergency squawk codes.
                 sqwkEmergency = self.checkSquawk(retVal['aSquawk'])
@@ -1160,10 +1207,10 @@ class ssrParse:
                         # If we have a subType of 7...
                         if subType == 7:
                             # Get the test squawk code bits
-                            modeABits = ((binData[5] << 8) | binData[6] >> 3) & 0x1fff
+                            modeABits = (((binData[5] << 8) | binData[6]) & 0xfff1) >> 3
                             
                             # Set the mode A squawk code data.
-                            retVal['aSquawk'] = str(self.gillham2Bin(modeABits)).rjust(4, '0')
+                            retVal['aSquawk'] = self.getModeAStr(modeABits)
                                 
                             # Check for emergency squawk codes.
                             sqwkEmergency = self.checkSquawk(retVal['aSquawk'])
@@ -1206,10 +1253,10 @@ class ssrParse:
                                 retVal['emergency'] = True
                             
                             # Get the test squawk code bits
-                            modeABits = ((binData[5] << 8) | binData[6] >> 3) & 0x1fff
+                            modeABits = ((binData[5] << 8) | binData[6]) & 0x1fff
                             
                             # Set the mode A squawk code data.
-                            retVal['aSquawk'] = str(self.gillham2Bin(modeABits)).rjust(4, '0')
+                            retVal['aSquawk'] = self.getModeAStr(modeABits)
                             
                             # Check for emergency squawk codes.
                             sqwkEmergency = self.checkSquawk(retVal['aSquawk'])
@@ -1332,9 +1379,9 @@ class ssrParse:
                         retVal['idInfo'] = idData
                 
                 # Get our altitude bytes.
-                altBytes = ((binData[2] << 8) | binData[3]) & 0x1fff
+                aSquawkBytes = ((binData[2] << 8) | binData[3]) & 0x1fff
                 
-                retVal['aSquawk'] = str(self.gillham2Bin(altBytes)).rjust(4, '0')
+                retVal['aSquawk'] = self.getModeAStr(aSquawkBytes)
                    
                 # Check for emergency squawk codes.
                 sqwkEmergency = self.checkSquawk(retVal['aSquawk'])
@@ -1362,7 +1409,7 @@ class ssrParse:
             retVal['mode'] = "ac"
             
             # Set our mode a squawk code... this is only supported for dump1090 data right now.
-            retVal['aSquawk'] = self.formatString(binascii.hexlify(binData))
+            retVal['aSquawk'] = self.formatString(binascii.hexlify(binData)).rjust(4, '0')
             
             # Check for emergency squawk codes.
             sqwkEmergency = self.checkSquawk(retVal['aSquawk'])

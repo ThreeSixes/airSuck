@@ -339,49 +339,62 @@ class ssrParse:
         
         return retVal
     
-    def bin2Gillham(self, modeAHx):
+    def bin2BGillham(self, data):
         """
-        hex2Gillham(modeAHx)
+        int2Gillham(data)
         
-        Convert a decoded mode A squawk code expressed as a 2-byte number to Gillham code. Note that we ignore the X bit since it's not really used.
+        Convert a byestream to a Gillham encoded byte. Retruns an integer for success, and False for a failure.
         
-        returns a 12-bit Gillham-encoded squawk code as an integer.
+        This function does not ignore the X/M bit.
         """
         
-        # Default return value.
-        retVal = 0x00
+        # Return value
+        retVal = False
         
-        # Hex bits for gillham encoding
-        A1 = 0x1000
-        A2 = 0x2000
-        A4 = 0x4000
-        B1 = 0x0100
-        B2 = 0x0200
-        B4 = 0x0400
-        C1 = 0x0010
-        C2 = 0x0020
-        C4 = 0x0040
-        D1 = 0x0001
-        D2 = 0x0002
-        D4 = 0x0004
+        # Bit positions for Gillham each bit
+        C1Gil = 0x1000
+        A1Gil = 0x0800
+        C2Gil = 0x0400
+        A2Gil = 0x0200
+        C4Gil = 0x0100
+        A4Gil = 0x0080
+        XMGil = 0x0040 # The X/M bit.
+        B1Gil = 0x0020
+        D1Gil = 0x0010 # The Q bit.
+        B2Gil = 0x0008
+        D2Gil = 0x0004
+        B4Gil = 0x0002
+        D4Gil = 0x0001
         
-        # Filter out illegal values (Clear the bits in the "8" position for each nibble).
-        maskedData = modeAHx & 0x7777
+        # Bit positions for Hex number.
+        C1Hex = 0x0010
+        A1Hex = 0x1000
+        C2Hex = 0x0020
+        A2Hex = 0x2000
+        C4Hex = 0x0040
+        A4Hex = 0x4000
+        XMHex = 0x0800 # The X/M bit.
+        B1Hex = 0x0100
+        D1Hex = 0x0001 # The Q bit.
+        B2Hex = 0x0200
+        D2Hex = 0x0002
+        B4Hex = 0x0400
+        D4Hex = 0x0004
         
-        # Shift bits around to get 12-bit Gillham encoded values, excluding the X bit.
-        # Note: Gillham encoded values are big-endian.
-        retVal = (A1 & maskedData) >> 2
-        retVal = retVal | (A2 & maskedData) >> 5
-        retVal = retVal | (A4 & maskedData) >> 8
-        retVal = retVal | (B1 & maskedData) >> 3
-        retVal = retVal | (B2 & maskedData) >> 6
-        retVal = retVal | (B4 & maskedData) >> 9
-        retVal = retVal | (C1 & maskedData) << 7
-        retVal = retVal | (C2 & maskedData) << 4
-        retVal = retVal | (C4 & maskedData) << 1
-        retVal = retVal | (D1 & maskedData) << 4
-        retVal = retVal | (D2 & maskedData) << 1
-        retVal = retVal | (D4 & maskedData) >> 2
+        # Convert Gillham code to hex.
+        if (data & C1Hex) > 0: retVal = retVal | C1Gil
+        if (data & A1Hex) > 0: retVal = retVal | A1Gil
+        if (data & C2Hex) > 0: retVal = retVal | C2Gil
+        if (data & A2Hex) > 0: retVal = retVal | A2Gil
+        if (data & C4Hex) > 0: retVal = retVal | C4Gil
+        if (data & A4Hex) > 0: retVal = retVal | A4Gil
+        if (data & XMHex) > 0: retVal = retVal | XMGil
+        if (data & B1Hex) > 0: retVal = retVal | B1Gil
+        if (data & D1Hex) > 0: retVal = retVal | D1Gil
+        if (data & B2Hex) > 0: retVal = retVal | B2Gil
+        if (data & D2Hex) > 0: retVal = retVal | D2Gil
+        if (data & B4Hex) > 0: retVal = retVal | B4Gil
+        if (data & D4Hex) > 0: retVal = retVal | D4Gil
         
         return retVal
     

@@ -52,8 +52,8 @@ class SubListener(threading.Thread):
             # Get the hex data as a string
             strMsg = ssrWrapped['data']
             
-            # Convert the ASCII hex data to a binary string.
-            binData = binascii.unhexlify(strMsg)
+            # Convert the ASCII hex data to a byte array.
+            binData = bytearray(binascii.unhexlify(strMsg))
             
             # Parse the SSR data as a dict.
             parsed = ssrEngine.ssrParse(binData)

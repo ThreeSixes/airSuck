@@ -4,6 +4,7 @@
 
 import binascii
 import math
+import sys
 
 ##################
 # ssrParse class #
@@ -108,7 +109,7 @@ class ssrParse:
         dataLen = len(data)
         
         # Get the last three bytes of CRC (24 bits)
-        specCrc = (ord(data[dataLen - 3]) << 16) | (ord(data[dataLen - 2]) << 8) | ord(data[dataLen - 1])
+        specCrc = (data[dataLen - 3] << 16) | (data[dataLen - 2] << 8) | data[dataLen - 1]
         
         # Get the ICAO address as an int.
         icaoAAInt = self.getIcaoAAInt(data)
@@ -124,7 +125,7 @@ class ssrParse:
         
         # Load the first byte.
         byteCtr = 0
-        thisByte = ord(data[byteCtr])
+        thisByte = data[byteCtr]
         
         # Compute the CRC, bit by bit.
         for i in range(0, (dataLen - 1)):
@@ -133,7 +134,7 @@ class ssrParse:
                 # increment the byte counter
                 byteCtr += 1
                 # Get the new byte.
-                thisByte = ord(data[byteCtr])
+                thisByte = data[byteCtr]
             
             # Check for a bit set
             if ((thisByte & 0x80) > 0):
@@ -150,6 +151,26 @@ class ssrParse:
         
         return retVal
     
+    def formatString(self, subject):
+        """
+        formatString(subject)
+        
+        Properly format a string as either ASCII for Python versions < 3, and as UTF-8 for Python version >= 3.
+        This should be used for any data that has been "hexlified".
+        Returns either a unicode or ASCII string.
+        """
+        
+        # Decode input value as UTF-8.
+        retVal = subject.decode('utf8')
+        
+        # Version check and convert to ASCII if version > 3. We do this to stay consistent with our other
+        # string ouptput encodings, given a python version.
+        if sys.version_info[0] < 3:
+            # Encode ouptut for Python versions < 3 as ASCII
+            retVal = retVal.encode('ascii')
+        
+        return retVal
+    
     def getIcaoAAHx(self, data):
         """
         getIcaoAAHx(data)
@@ -157,7 +178,13 @@ class ssrParse:
         Get the ICAO AA as a hex string, given a frame such as DF11 or DF17.
         """
         
-        return binascii.hexlify(data[1] + data[2] + data[3])
+        # Hellify our ICAO AA
+        retVal = binascii.hexlify(data[1:4])
+        
+        # Make sure we encode the hexlified string properly.
+        retVal = self.formatString(retVal)
+        
+        return retVal
     
     def getIcaoAAInt(self, data):
         """
@@ -166,7 +193,7 @@ class ssrParse:
         Get the ICAO AA as an int, given a frame such as DF11 or DF17.
         """
         
-        return int((ord(data[1]) << 16) | (ord(data[2]) << 8) | ord(data[3]))
+        return int((data[1] << 16) | (data[2] << 8) | data[3])
 
     def getCACO(self, data):
         """
@@ -175,7 +202,7 @@ class ssrParse:
         Get the CA/Capability or Control value for a given frame such as DF11, DF17, and DF18.
         """
         
-        return (ord(data[0]) & 0x07)
+        return (data[0] & 0x07)
     
     def getFlightStatus(self, data):
         """
@@ -188,7 +215,7 @@ class ssrParse:
         fsText = ["Nrml, Air", "Nrml, Gnd", "Alert, Air", "Alert, Gnd", "Alert + SPI", "SPI", "Reserved", "Unknown"]
         
         # Get FS bits
-        fsBits = ord(data[0]) & 0x07
+        fsBits = data[0] & 0x07
         
         # Return flight status data, based on the 3 FS bits.
         return [fsBits, fsText[fsBits]]
@@ -211,7 +238,7 @@ class ssrParse:
         "Reserved"]
         
         # Get ES bits
-        esBits = (ord(data[5]) & 0xe0) >> 5
+        esBits = (data[5] & 0xe0) >> 5
         
         return [esBits, esText[esBits]]
     
@@ -226,7 +253,7 @@ class ssrParse:
         alt = False
         
         # Get the altitude bits.
-        altBits = ((ord(data[2]) << 8) | ord(data[3])) & 0x1fff
+        altBits = ((data[2] << 8) | data[3]) & 0x1fff
         
         # If the altitude bits are non-zero
         if altBits > 0:
@@ -514,7 +541,7 @@ class ssrParse:
             retVal += self.decode6BitChr(data >> (42-6*i) & 0x3F)
             
         # Retrun the flight ID data
-        return retVal.strip()    
+        return retVal.strip()
     
     def checkSquawk(self, aSquawk):
         """
@@ -584,7 +611,7 @@ class ssrParse:
         retVal = [False, False]
         
         # Get downlink request bits
-        drBits = (ord(data[1]) & 0xF8) >> 3
+        drBits = (data[1] & 0xF8) >> 3
         
         # Set return values
         retVal[0] = drBits
@@ -606,10 +633,10 @@ class ssrParse:
         retVal = [False, False, False]
         
         # Get IDS bits
-        idsBits = (ord(data[2]) & 0x60) >> 5
+        idsBits = (data[2] & 0x60) >> 5
         
         # Get and set IIS bits.
-        retVal[0] = ((ord(data[1]) & 0x07) << 1) | ((ord(data[2]) & 0x80) >> 7)
+        retVal[0] = ((data[1] & 0x07) << 1) | ((data[2] & 0x80) >> 7)
         
         # Set IDS bits and name.
         retVal[1] = idsBits
@@ -648,17 +675,17 @@ class ssrParse:
             retVal['mode'] = "s"
             
             # Get our DF (downlink format)
-            retVal['df'] = ord(binData[0]) >> 3
+            retVal['df'] = binData[0] >> 3
             
             # Short air-to-air ACAS
             if(retVal['df'] == 0):
                 if self.decodeNames: retVal['dfName'] = "Short Air-to-air ACAS"
                 
                 # Get vertical status bits.
-                vsBit = (ord(binData[5]) & 0x04) >> 2
+                vsBit = (binData[5] & 0x04) >> 2
                 retVal['vertStat'] = "air" if vsBit == 0 else "gnd"
-                retVal['cc'] = (ord(binData[5]) & 0x02) >> 1
-                retVal['sl'] = (ord(binData[6]) & 0xE0) >> 2
+                retVal['cc'] = (binData[5] & 0x02) >> 1
+                retVal['sl'] = (binData[6] & 0xE0) >> 2
                 
                 # Grab our altitude.
                 alt = self.get13BitAlt(binData)
@@ -733,7 +760,7 @@ class ssrParse:
                 if self.decodeNames: retVal['idsName'] = umData[2]
                 
                 # Get our mode A squawk bytes.
-                sqkBytes = ((ord(binData[2]) << 8) | ord(binData[3])) & 0x1fff
+                sqkBytes = ((binData[2] << 8) | binData[3]) & 0x1fff
                 
                 retVal['aSquawk'] = str(self.gillham2Bin(sqkBytes)).rjust(4, '0')
                 
@@ -776,7 +803,7 @@ class ssrParse:
                 caCo = self.getCACO(binData)
                 
                 # Get our format bytes.
-                retVal['fmt'] = ord(binData[4]) >> 3
+                retVal['fmt'] = binData[4] >> 3
                 
                 # Do some work on our DFs
                 if retVal['df'] == 17:
@@ -836,13 +863,13 @@ class ssrParse:
                         if self.decodeNames: retVal['fmtName'] = "ID and category"
                         
                         # Get the category item #.
-                        catItem = ord(binData[4]) & 0x07
+                        catItem = binData[4] & 0x07
                         
                         # Set the aircraft category information.
                         retVal['category'] = chr(0x45 - retVal['fmt']) + str(catItem)
                         
                         # Convert our flight ID data to a big number so we can do binary operations on it. 
-                        bigNumber = (ord(binData[5]) << 40) | (ord(binData[6]) << 32) | (ord(binData[7]) << 24) | (ord(binData[8]) << 16) | (ord(binData[9]) << 8) | ord(binData[10])
+                        bigNumber = (binData[5] << 40) | (binData[6] << 32) | (binData[7] << 24) | (binData[8] << 16) | (binData[9] << 8) | binData[10]
                         
                         # Try to interpret bigNumber as ID data.
                         idData = self.getIDInfo(bigNumber)
@@ -859,18 +886,18 @@ class ssrParse:
                         retVal['nxc'] = 14 - retVal['fmt']
                         
                         # Get subformat bits
-                        subFmt = ord(binData[4]) >> 3
+                        subFmt = binData[4] >> 3
                         
                         # Get movment bits
-                        movementRaw = ((ord(binData[4]) & 0x07) << 4) | (ord(binData[5]) >> 4)
+                        movementRaw = ((binData[4] & 0x07) << 4) | (binData[5] >> 4)
                         
                         # Get our track validity bit
-                        headingValid = (ord(binData[5]) & 0x08) >> 3
+                        headingValid = (binData[5] & 0x08) >> 3
                         retVal['headingValid'] = trackValid
                         
                         # If we have a valid track, get our track bits
                         if(headingValid == 1):
-                            headingRaw = ((ord(binData[5]) & 0x07) << 4) | (((ord(binData[6]) & 0xF0)) >> 4)
+                            headingRaw = ((binData[5] & 0x07) << 4) | (((binData[6] & 0xF0)) >> 4)
                             
                             # The track data is from 0-360, in 128 steps.
                             headingRaw = trackRaw * 2.8125
@@ -882,18 +909,18 @@ class ssrParse:
                             retVal['heading'] = headingRaw
                             
                         # Get UTC sync and even/odd format bit.
-                        utcSync = (ord(binData[6]) & 0x08) >> 3
-                        evenOdd = (ord(binData[6]) & 0x04) >> 2
+                        utcSync = (binData[6] & 0x08) >> 3
+                        evenOdd = (binData[6] & 0x04) >> 2
                         
                         # Set UTC sync and evenOdd
                         retVal['utcSync'] = utcSync
                         retVal['evenOdd'] = evenOdd
                         
                         # Get 17 bit CPR latitude
-                        rawLat = ((ord(binData[6]) & 0x03) << 15) | (ord(binData[7]) << 7) | ((ord(binData[8]) & 0xfe) >> 1)
+                        rawLat = ((binData[6] & 0x03) << 15) | (binData[7] << 7) | ((binData[8] & 0xfe) >> 1)
                         
                         # Get 17 bit CRP longitude
-                        rawLon = ((ord(binData[8]) & 0x01) << 16) | (ord(binData[9]) << 8) | ord(binData[10])
+                        rawLon = ((binData[8] & 0x01) << 16) | (binData[9] << 8) | binData[10]
                         
                         # Set raw lat and lon
                         retVal['rawLat'] = rawLat
@@ -910,10 +937,10 @@ class ssrParse:
                             retVal['nxc'] = 29 - retVal['fmt']
                         
                         # Get the single-antenna flag.
-                        retVal['singleAnt'] = ord(binData[4]) & 0x01
+                        retVal['singleAnt'] = binData[4] & 0x01
                         
                         # Get surveillance status bytes.
-                        ss = (ord(binData[4]) & 0x06) >> 1
+                        ss = (binData[4] & 0x06) >> 1
                         
                         # Surveillance status table
                         ssTable = ["No alert", "Permanent alert", "Code change", "SPI"]
@@ -932,7 +959,7 @@ class ssrParse:
                             retVal['altType'] = "GNSS"
                         
                         # Attempt to decode the altitude data.
-                        altitudeBytes = (ord(binData[5]) << 8) | ord(binData[6])
+                        altitudeBytes = (binData[5] << 8) | binData[6]
                         altProcessed = self.decode12BitAlt(altitudeBytes >> 4)
                         
                         # Verify altitude and see if we have an odd format bit.
@@ -941,17 +968,17 @@ class ssrParse:
                         
                         # If we have format types 9, 10, 20, or 21 get the UTC sync flag
                         if((retVal['fmt'] <= 10) or (retVal['fmt'] >= 20)):
-                            retVal['utcSync'] = (ord(binData[6]) & 0x08) >> 3
+                            retVal['utcSync'] = (binData[6] & 0x08) >> 3
                         
                         # Pull position format flag, even/odd
-                        retVal['evenOdd'] = (ord(binData[6]) & 0x04) >> 2
+                        retVal['evenOdd'] = (binData[6] & 0x04) >> 2
                         
                         # Grab lat bits.
-                        rawLat = ((ord(binData[6]) & 0x03) << 15) | (ord(binData[7]) << 7) | ((ord(binData[8]) & 0xfe) >> 1)
+                        rawLat = ((binData[6] & 0x03) << 15) | (binData[7] << 7) | ((binData[8] & 0xfe) >> 1)
                         retVal['rawLat'] = rawLat
                         
                         # Grab lon bits.
-                        rawLon = ((ord(binData[8]) & 0x01) << 16) | (ord(binData[9]) << 8) | ord(binData[10])
+                        rawLon = ((binData[8] & 0x01) << 16) | (binData[9] << 8) | binData[10]
                         retVal['rawLon'] = rawLon
                     
                     # Airborne velocity
@@ -959,29 +986,29 @@ class ssrParse:
                         if self.decodeNames: retVal['fmtName'] = "Airborne velo"
                         
                         # Get subtype.
-                        subType = ord(binData[4]) & 0x07
+                        subType = binData[4] & 0x07
                         
                         # Set the subtype
                         retVal['subType'] = subType
                         
                         # Get source bit.
-                        srcFlag = (ord(binData[8]) >> 4) & 0x01
+                        srcFlag = (binData[8] >> 4) & 0x01
                         retVal['srcFlag'] = srcFlag
                         
                         # Get the intent bit.
-                        retVal['intentFlag'] = ord(binData[5]) >> 7
+                        retVal['intentFlag'] = binData[5] >> 7
                         
                         # Get the high-level ADS-B (IFR) support bit
-                        retVal['ifrCap'] = (ord(binData[5]) & 0x40) >> 6
+                        retVal['ifrCap'] = (binData[5] & 0x40) >> 6
                         
                         # Get the NUC/NAC
-                        retVal['nxc'] = (ord(binData[5]) & 0x38) >> 3
+                        retVal['nxc'] = (binData[5] & 0x38) >> 3
                         
                         # Get the GNSS vs. Baro delta flag, where 0 = GNSS > Baro, 1 = Baro > GNSS
-                        altDeltaSign = ord(binData[6]) >> 7
+                        altDeltaSign = binData[6] >> 7
                         
                         # Get the difference in altitude between GNSS and Baro instruments.
-                        altDeltaBytes = ord(binData[6]) & 0x7f
+                        altDeltaBytes = binData[6] & 0x7f
                         
                         # See if we have the necessary instuments to set the value (!=0)
                         if altDeltaBytes == 1:
@@ -995,14 +1022,14 @@ class ssrParse:
                             retVal['altDeltaSign'] = altDeltaSign
                         
                         # Get turn bits (reserved for future)
-                        #manuBits = ord(binData[5]) & 0x03
+                        #manuBits = binData[5] & 0x03
                         
                         # Set the default not-supersonic
                         retVal['supersonic'] = False
                         
                         # Get Vertical rate data, and the vertical rate sign bit.
-                        vertSign = (ord(binData[8]) >> 3) & 0x01
-                        vertRateRaw = ((ord(binData[8]) & 0x07) << 6) | ((ord(binData[8]) & 0xfc) >> 2)
+                        vertSign = (binData[8] >> 3) & 0x01
+                        vertRateRaw = ((binData[8] & 0x07) << 6) | ((binData[8] & 0xfc) >> 2)
                         
                         # If we have vert rate data...
                         if vertRateRaw > 0:
@@ -1016,10 +1043,10 @@ class ssrParse:
                             retVal['vertRate'] = vertRateRaw * 64
                             
                             # Get Geometric height diff
-                            geoSign = (ord(binData[9]) >> 7) & 0x01
+                            geoSign = (binData[9] >> 7) & 0x01
                             
                             # Get the raw height data value.
-                            getHeightDiffRaw = ord(binData[9]) & 0xef
+                            getHeightDiffRaw = binData[9] & 0xef
                         
                         # Do we have a supersonic aircraft?
                         if (subType == 2) or (subType == 4):
@@ -1033,15 +1060,15 @@ class ssrParse:
                             retVal['dataFmt'] = "crt"
                             
                             # Get the E/W and N/S bit for the direction
-                            ewDirFlag = (ord(binData[5]) >> 2) & 0x01
-                            nsDirFlag = (ord(binData[7]) >> 7) & 0x01
+                            ewDirFlag = (binData[5] >> 2) & 0x01
+                            nsDirFlag = (binData[7] >> 7) & 0x01
                             
                             # Get E/W and N/S velocity data
-                            ewVeloRaw = ((ord(binData[5]) & 0x03) << 8) | ord(binData[6])
+                            ewVeloRaw = ((binData[5] & 0x03) << 8) | binData[6]
                             # Adjust offset
                             ewVeloRaw -= 1
                             
-                            nsVeloRaw = ((ord(binData[7]) & 0x7f) << 3) | (ord(binData[8]) >> 5)
+                            nsVeloRaw = ((binData[7] & 0x7f) << 3) | (binData[8] >> 5)
                             # Adjust offset
                             nsVeloRaw -= 1
                             
@@ -1088,7 +1115,7 @@ class ssrParse:
                             retVal['dataFmt'] = "plr"
                             
                             # Get heading status flag
-                            headingStat = (ord(binData[5]) & 0x04) >> 2
+                            headingStat = (binData[5] & 0x04) >> 2
                             
                             # Set value
                             retVal['headingAvail'] = headingStat
@@ -1097,7 +1124,7 @@ class ssrParse:
                             if (headingStat == 1):
                                 
                                 # 1024 bit heading... LSB = 1024/360 = 0.3515625
-                                headingRaw = ((ord(binData[5]) & 0x03) << 8) | ord(binData[6])
+                                headingRaw = ((binData[5] & 0x03) << 8) | binData[6]
                                 
                                 # Convert the heading to an angle moving clockwise from north.
                                 heading = headingRaw * 0.3515625
@@ -1106,10 +1133,10 @@ class ssrParse:
                                 retVal['heading'] = round(heading, 1)
                             
                             # Get airspeed type bit
-                            airspeedType = ord(binData[7]) >> 7
+                            airspeedType = binData[7] >> 7
                             
                             # Get airspeed bits
-                            rawAirspeed = ((ord(binData[7]) & 0x7f) << 3) | (ord(binData[8]) >> 5)
+                            rawAirspeed = ((binData[7] & 0x7f) << 3) | (binData[8] >> 5)
                             
                             # If we have airspeed data (data = 0)
                             if rawAirspeed > 0:
@@ -1127,13 +1154,13 @@ class ssrParse:
                         if self.decodeNames: retVal['fmtName'] = "Testing"
                         
                         # Get subtype
-                        subType = ord(binData[4]) & 0x07
+                        subType = binData[4] & 0x07
                         retVal['subType'] = subType
                         
                         # If we have a subType of 7...
                         if subType == 7:
                             # Get the test squawk code bits
-                            modeABits = ((ord(binData[5]) << 8) | ord(binData[6]) >> 3) & 0x1fff
+                            modeABits = ((binData[5] << 8) | binData[6] >> 3) & 0x1fff
                             
                             # Set the mode A squawk code data.
                             retVal['aSquawk'] = str(self.gillham2Bin(modeABits)).rjust(4, '0')
@@ -1160,7 +1187,7 @@ class ssrParse:
                         if self.decodeNames: retVal['fmtName'] = "ES Aircraft Status"
                         
                         # Get subtype
-                        subType = ord(binData[4]) & 0x07
+                        subType = binData[4] & 0x07
                         retVal['subType'] = subType
                         
                         # If we have a subType of 1...
@@ -1179,7 +1206,7 @@ class ssrParse:
                                 retVal['emergency'] = True
                             
                             # Get the test squawk code bits
-                            modeABits = ((ord(binData[5]) << 8) | ord(binData[6]) >> 3) & 0x1fff
+                            modeABits = ((binData[5] << 8) | binData[6] >> 3) & 0x1fff
                             
                             # Set the mode A squawk code data.
                             retVal['aSquawk'] = str(self.gillham2Bin(modeABits)).rjust(4, '0')
@@ -1251,9 +1278,9 @@ class ssrParse:
                 if self.decodeNames: retVal['idsName'] = umData[2]
                 
                 # See if we have flight ID data.
-                if ord(binData[4]) == 0x20:
+                if binData[4] == 0x20:
                     # Convert our flight ID data to a big number so we can do binary operations on it. 
-                    bigNumber = (ord(binData[5]) << 40) | (ord(binData[6]) << 32) | (ord(binData[7]) << 24) | (ord(binData[8]) << 16) | (ord(binData[9]) << 8) | ord(binData[10])
+                    bigNumber = (binData[5] << 40) | (binData[6] << 32) | (binData[7] << 24) | (binData[8] << 16) | (binData[9] << 8) | binData[10]
                     
                     # Try to interpret bigNumber as ID data.
                     idData = self.getIDInfo(bigNumber)
@@ -1292,9 +1319,9 @@ class ssrParse:
                 if self.decodeNames: retVal['idsName'] = umData[2]
                 
                 # See if we have flight ID data.
-                if ord(binData[4]) == 0x20:
+                if binData[4] == 0x20:
                     # Convert our flight ID data to a big number so we can do binary operations on it. 
-                    bigNumber = (ord(binData[5]) << 40) | (ord(binData[6]) << 32) | (ord(binData[7]) << 24) | (ord(binData[8]) << 16) | (ord(binData[9]) << 8) | ord(binData[10])
+                    bigNumber = (binData[5] << 40) | (binData[6] << 32) | (binData[7] << 24) | (binData[8] << 16) | (binData[9] << 8) | binData[10]
                     
                     # Try to interpret bigNumber as ID data.
                     idData = self.getIDInfo(bigNumber)
@@ -1305,7 +1332,7 @@ class ssrParse:
                         retVal['idInfo'] = idData
                 
                 # Get our altitude bytes.
-                altBytes = ((ord(binData[2]) << 8) | ord(binData[3])) & 0x1fff
+                altBytes = ((binData[2] << 8) | binData[3]) & 0x1fff
                 
                 retVal['aSquawk'] = str(self.gillham2Bin(altBytes)).rjust(4, '0')
                    
@@ -1335,7 +1362,7 @@ class ssrParse:
             retVal['mode'] = "ac"
             
             # Set our mode a squawk code... this is only supported for dump1090 data right now.
-            retVal['aSquawk'] = binascii.hexlify(binData).rjust(4, '0')
+            retVal['aSquawk'] = self.formatString(binascii.hexlify(binData))
             
             # Check for emergency squawk codes.
             sqwkEmergency = self.checkSquawk(retVal['aSquawk'])
@@ -1347,7 +1374,7 @@ class ssrParse:
                 retVal['emergency'] = True
             
             # Get the mode A squawk as an integer.
-            aHx = (ord(binData[0]) << 8) | ord(binData[1])
+            aHx = (binData[0] << 8) | binData[1]
             
             # Attempt to decode the mode A squawk as a mode C altitude.
             cAlt = self.modeASquawk2modeCAlt(aHx)

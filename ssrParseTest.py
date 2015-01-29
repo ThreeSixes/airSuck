@@ -14,7 +14,9 @@ someFrames = [
     "8da15e719941be06306c00b1e7db", # DF17, airborne veloicty
     "8D75804B580FF2CF7E9BA6F701D0", # DF17, airborne position, even formation
     "8D75804B580FF6B283EB7A157117", # DF17, airborne position, odd formation
-    "8D7C6D2B2058F6B9CF9820000000" # DF17, aircraft ID and category info, bad CRC
+    "8D7C6D2B2058F6B9CF9820000000", # DF17, aircraft ID and category info, bad CRC
+    "8da11136e11c280000000074397e", # DF17, ES Should squawk 1330
+    "280010839b69fd" # DF 5, unknown squawk
     ]
 
 # Actviate name-parsing

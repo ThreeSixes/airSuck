@@ -47,7 +47,7 @@ class dataSource(threading.Thread):
 	"""
 	 
 	def __init__(self, rQ, myName, dump1090Src, rQInfo):
-		print "Init thread for " + myName
+		print("Init thread for " + myName)
 		threading.Thread.__init__(self)
 		
 		# Extend properties to be class-wide. 
@@ -64,7 +64,7 @@ class dataSource(threading.Thread):
 		myName = self.myName
 		dump1090Src = self.dump1090Src
 		
-		print myName + " running."
+		print(myName + " running.")
 		
 		# Do stuff.
 		while (True):
@@ -210,7 +210,7 @@ class dataSource(threading.Thread):
 #######################
 
 # ... and go.
-print "Dump1090 connector starting..."
+print("Dump1090 connector starting...")
 
 # Threading setup
 threadLock = threading.Lock()
@@ -221,7 +221,7 @@ r = redis.StrictRedis()
 
 # Spin up our client threads.
 for thisName, connData in dump1909Srcs.iteritems():
-	print "Spinning up thread for " + thisName
+	print("Spinning up thread for " + thisName)
 	client = dataSource(r, thisName, connData, redisQueues)
 	client.start()
 	threadList.append(client)
@@ -230,4 +230,4 @@ for thisName, connData in dump1909Srcs.iteritems():
 for t in threadList:
 	t.join()
 
-print "Shutting down."
+print("Shutting down.")

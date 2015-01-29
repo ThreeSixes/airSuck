@@ -145,8 +145,8 @@ class ssrParse:
         # Compute final CRC value.
         retVal = (crc ^ icaoAAInt) & 0xffffff
         
-        print "Debug computed CRC " + str(retVal)
-        print "Debug provided CRC " + str(specCrc)
+        print("Debug computed CRC " + str(retVal))
+        print("Debug provided CRC " + str(specCrc))
         
         return retVal
     

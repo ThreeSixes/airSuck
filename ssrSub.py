@@ -38,7 +38,7 @@ class SubListener(threading.Thread):
         
         # Make sure we got good data from json.loads
         if (type(adsbWrapped) == dict):
-            print str(adsbWrapped)
+            print(str(adsbWrapped))
         
         
     def run(self):
@@ -46,7 +46,7 @@ class SubListener(threading.Thread):
             self.worker(work)
             
 if __name__ == "__main__":
-    print "ADSB subscription queue viewer starting..."
+    print("ADSB subscription queue viewer starting...")
     r = redis.Redis()
     client = SubListener(r, [targetSub])
     client.start()

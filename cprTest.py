@@ -15,6 +15,6 @@ cprDecoder.debugToggle(True)
 for thisPoint in dataPoints:
 	coords = cprDecoder.decodeCPR(thisPoint[0], thisPoint[1], thisPoint[2], surface)
 	if coords != False:
-		print str(coords[0]) + ", " + str(coords[1])
+		print(str(coords[0]) + ", " + str(coords[1]))
 	else:
-		print "Bad data."
+		print("Bad data.")

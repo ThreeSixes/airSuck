@@ -68,7 +68,7 @@ class SubListener(threading.Thread):
             jsonData = json.dumps(ssrWrapped)
             
             # Dump the data
-            print jsonData
+            print(jsonData)
         
         
     def run(self):
@@ -76,7 +76,7 @@ class SubListener(threading.Thread):
             self.worker(work)
 
 if __name__ == "__main__":
-    print "ADSB subscription queue data parsing test engine starting..."
+    print("ADSB subscription queue data parsing test engine starting...")
     
     # Set up Redis queues.
     r = redis.Redis(host=targetHost)

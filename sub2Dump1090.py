@@ -102,8 +102,8 @@ class SubListener(threading.Thread):
                 
             except Exception as x:
                 print("Failed to connect to " + dump1090Dst["host"] + ":" + str(dump1090Dst["port"]))
-                print type(x)
-                print x
+                print(type(x))
+                print(x)
                 print("Sleeping " + str(dump1090Dst["reconnectDelay"]) + " sec")
                 time.sleep(dump1090Dst["reconnectDelay"])
 

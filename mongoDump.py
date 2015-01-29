@@ -14,7 +14,7 @@ targetQ = "ssrReliable"
 rQ = redis.StrictRedis()
 
 #Delay this many seconds if the queue is empty to prevent
-#stupid amounts of CPU utilizations.
+#stupid amounts of CPU utilization.
 checkDelay = 0.1
 
 #MongoDB config
@@ -34,10 +34,9 @@ def dejsonify(msg):
 # Insert records into specified mongo instance
 def serializeADSB(entry):
         mDB.rawADSB.insert(entry)
-        #print mDB.rawADSB.count()
 
 # Infinite fucking loop.
-print "Dumping SSR data from queue to MongoDB."
+print("Dumping SSR data from queue to MongoDB.")
 while(True) :
         try:
                 # Pull oldest entry from the queue.
@@ -45,7 +44,6 @@ while(True) :
     
                 # If we have no data sleep for our configured delay to save CPU.
                 if(dQd == None):
-                    #print "Nothing in the queue. Sleeping " + str(checkDelay) + " sec"
                     time.sleep(checkDelay)
                 else:
                         # We have data so we should break it out of JSON formatting.
@@ -56,5 +54,5 @@ while(True) :
         except KeyboardInterrupt:
             quit()
         except:
-            print "Failed to pull from the Redis queue. Sleeping " + str(checkDelay) + " sec"
+            print("Failed to pull from the Redis queue. Sleeping " + str(checkDelay) + " sec")
             pprint(sys.exc_info())

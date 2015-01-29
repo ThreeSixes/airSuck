@@ -28,7 +28,7 @@ class cprMath():
         self.debugOn = onOff
         
         if self.debugOn:
-            print "debugToggle() cprMath debugging on."
+            print("debugToggle() cprMath debugging on.")
         
         return onOff
     
@@ -43,12 +43,12 @@ class cprMath():
         # Set dummy return value.
         retVal = False
         
-        if self.debugOn: print " NL() lat = " + str(lat)
+        if self.debugOn: print(" NL() lat = " + str(lat))
         
         # Lat should be positive since the zones are symmetric above and below the equator
         if lat < 0:
             lat = abs(lat)
-            if self.debugOn: print " NL() lat < 0 lat = abs(lat) = " + str(lat)
+            if self.debugOn: print(" NL() lat < 0 lat = abs(lat) = " + str(lat))
         
         # Latitude transition table.
         if lat < 10.47047130: retVal = 59
@@ -111,7 +111,7 @@ class cprMath():
         elif lat < 87.00000000: retVal = 2
         else: retVal = 1
         
-        if self.debugOn: print " NL() returning " + str(retVal)
+        if self.debugOn: print(" NL() returning " + str(retVal))
         
         return retVal
     
@@ -122,20 +122,20 @@ class cprMath():
         
         This function provides a specific modulus function for decoding CPR formatted coordinates which will always return a positive nubmer.
         """
-        if self.debugOn: print " cprMod(" + str(numerator) + ", " + str(divisor) + ")"
+        if self.debugOn: print(" cprMod(" + str(numerator) + ", " + str(divisor) + ")")
         
         # Perform initial modulus.
         retVal = numerator % divisor
         
-        if self.debugOn: print " cprMod() numerator % divisor = " + str(retVal)
+        if self.debugOn: print(" cprMod() numerator % divisor = " + str(retVal))
         
         # If we're < 0...
         if retVal < 0:
             # Bring it back up.
             retVal = retVal + numerator
-            if self.debugOn: print " cprMod() modulo < 0, (modulo += numerator) = " + str(retVal)
+            if self.debugOn: print(" cprMod() modulo < 0, (modulo += numerator) = " + str(retVal))
         
-        if self.debugOn: print " cprMod() returning " + str(retVal)
+        if self.debugOn: print(" cprMod() returning " + str(retVal))
         
         return retVal
     
@@ -153,10 +153,10 @@ class cprMath():
         retVal = False
         
         if self.debugOn:
-            print "Even CPR lat, lon : " + str(evenData[0]) + ", " + str(evenData[1])
-            print "Odd CPR lat, lon  : " + str(oddData[0]) + ", " + str(oddData[1])
-            print "Last CPR format   : " + str(lastFmt)
-            print "Surface position  : " + str(surface)
+            print("Even CPR lat, lon : " + str(evenData[0]) + ", " + str(evenData[1]))
+            print("Odd CPR lat, lon  : " + str(oddData[0]) + ", " + str(oddData[1]))
+            print("Last CPR format   : " + str(lastFmt))
+            print("Surface position  : " + str(surface))
         
         # "Magic number" based on surface data.
         if surface:
@@ -164,61 +164,61 @@ class cprMath():
         else:
             magicNumber = 360.0
         
-        if self.debugOn: print " decodeCPR() magicNumber = " + str(magicNumber)
+        if self.debugOn: print(" decodeCPR() magicNumber = " + str(magicNumber))
         
         # Get airDlat0, 1
         airDlat0 = magicNumber / 60.0
         airDlat1 = magicNumber / 59.0
         
-        if self.debugOn: print " decodeCPR() airDlat0 = " + str(airDlat0)
-        if self.debugOn: print " decodeCPR() airDlat1 = " + str(airDlat1)
+        if self.debugOn: print(" decodeCPR() airDlat0 = " + str(airDlat0))
+        if self.debugOn: print(" decodeCPR() airDlat1 = " + str(airDlat1))
         
         # Compute latitude index.
         j = math.floor(((59.0 * evenData[0] - 60.0 * oddData[0]) / 131072.0) + 0.5)
         
-        if self.debugOn: print " decodeCPR() j = " + str(j)
+        if self.debugOn: print(" decodeCPR() j = " + str(j))
         
         # Calculate rlat0 and 1.
         rlat0 = airDlat0 * (self.cprMod(j, 60) + evenData[0] / 131072.0)
         rlat1 = airDlat1 * (self.cprMod(j, 59) + oddData[0] / 131072.0)
         
         if self.debugOn:
-            print " decodeCPR() rlat0 = " + str(rlat0)
-            print " decodeCPR() rlat1 = " + str(rlat1)
+            print(" decodeCPR() rlat0 = " + str(rlat0))
+            print(" decodeCPR() rlat1 = " + str(rlat1))
         
         # Southern hemisphere values are 270 to 360, so subtract 360 if rlats > 270.
         if rlat0 > 270:
             rlat0 = rlat0 - 360
-            if self.debugOn: print " decodeCPR() S\N hemisphere compensation - rlat0 = " + str(rlat0)
+            if self.debugOn: print(" decodeCPR() S\N hemisphere compensation - rlat0 = " + str(rlat0))
         if rlat1 > 270:
             rlat1 = rlat1 - 360
-            if self.debugOn: print " decodeCPR() S\N hemisphere compensation - rlat1 = " + str(rlat1)
+            if self.debugOn: print(" decodeCPR() S\N hemisphere compensation - rlat1 = " + str(rlat1))
             
         # Check to see that our rlat values exist in the same longitude zone.
         if self.NL(rlat0) == self.NL(rlat1):
-            if self.debugOn: print " decodeCPR() NL(rlat0) == NL(rlat1) = " + str(self.NL(rlat0))
+            if self.debugOn: print(" decodeCPR() NL(rlat0) == NL(rlat1) = " + str(self.NL(rlat0)))
             
             retVal = [0, 0]
             
             # Compute N(i)
             ni = self.NL(lastFmt) - 1
             
-            if self.debugOn: print " decodeCPR() N(i) = " + str(ni)
+            if self.debugOn: print(" decodeCPR() N(i) = " + str(ni))
             
             # If N(i) < 1, we should set it to 1.
             if ni < 1:
-                if self.debugOn: print " decodeCPR() N(i) < 1, N(i) = 1"
+                if self.debugOn: print(" decodeCPR() N(i) < 1, N(i) = 1")
                 ni = 1
             
             # Get dlon
             dlon = 360.0 / ni
             
-            if self.debugOn: print " decodeCPR() dlon = " + str(dlon)
+            if self.debugOn: print(" decodeCPR() dlon = " + str(dlon))
             
             # Get longitude index.
             m = math.floor((((evenData[1] * (self.NL(lastFmt) - 1)) - (oddData[1] * self.NL(lastFmt))) / 131072.0) + 0.5)
             
-            if self.debugOn: print " decodeCPR() m = " + str(m)
+            if self.debugOn: print(" decodeCPR() m = " + str(m))
             
             if lastFmt == 0:
                 retVal[0] = rlat0
@@ -228,14 +228,14 @@ class cprMath():
                 retVal[1] = dlon * (self.cprMod(m, ni) + oddData[1] / 131072.0)
             
             if self.debugOn:
-                print " decodeCPR() Lat = " + str(retVal[0])
-                print " decodeCPR() Lon = " + str(retVal[1])
+                print(" decodeCPR() Lat = " + str(retVal[0]))
+                print(" decodeCPR() Lon = " + str(retVal[1]))
             
         elif self.debugOn:
-            print " decodeCPR() Failure: NL(rlat0) != NL(rlat1)"
-            print "   NL(rlat0) = " + str(self.NL(rlat0))
-            print "   NL(rlat1) = " + str(self.NL(rlat1))
+            print(" decodeCPR() Failure: NL(rlat0) != NL(rlat1)")
+            print("   NL(rlat0) = " + str(self.NL(rlat0)))
+            print("   NL(rlat1) = " + str(self.NL(rlat1)))
         
-        if self.debugOn: print " decodeCPR() returning " + str(retVal)
+        if self.debugOn: print(" decodeCPR() returning " + str(retVal))
         
         return retVal

@@ -20,7 +20,7 @@ someFrames = [
     ]
 
 # Actviate name-parsing
-#parser.setReturnNames(True)
+parser.setReturnNames(True)
 
 # For each frame
 for asciiFrame in someFrames:

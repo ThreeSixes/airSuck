@@ -227,6 +227,11 @@ class cprMath():
                 retVal[0] = rlat1
                 retVal[1] = dlon * (self.cprMod(m, ni) + oddData[1] / 131072.0)
             
+            # Adjust for E/W.
+            if retVal[1] > 270:
+                if self.debugOn: print(" decodeCPR() E\W hemisphere compensation - retVal[1] = " + str(retVal[1]))
+                retVal[1] = retVal[1] - 360
+            
             if self.debugOn:
                 print(" decodeCPR() Lat = " + str(retVal[0]))
                 print(" decodeCPR() Lon = " + str(retVal[1]))

@@ -9,6 +9,7 @@ import time
 import json
 import datetime
 import threading
+import errno
 from socket import socket
 from pprint import pprint
 
@@ -26,13 +27,15 @@ redisQueues = {
 
 #dump1090 sources
 dump1909Srcs = {
-	#"tallear": { "host": "127.0.0.1", "port": 40000, "reconnectDelay": 5}
-	#, "northwind":  { "host": "127.0.0.1", "port": 40001, "reconnectDelay": 5}
-	"tallear": { "host": "tallear", "port": 30002, "reconnectDelay": 5}
-	, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
+	"tallear": { "host": "127.0.0.1", "port": 40000, "reconnectDelay": 5}
+	, "northwind":  { "host": "127.0.0.1", "port": 40001, "reconnectDelay": 5}
+	#"tallear": { "host": "tallear", "port": 30002, "reconnectDelay": 5}
+	#, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
 	#"insurrection":  { "host": "127.0.0.1", "port": 30002, "reconnectDelay": 5}
 }
 
+
+alive = True
 
 ####################
 # dataSource class #
@@ -67,14 +70,31 @@ class dataSource(threading.Thread):
 		print(myName + " running.")
 		
 		# Do stuff.
-		while (True):
+		while (alive):
 			dump1090Sock = socket()
+			
+			# Attempt to connect.
 			try:
 				# Connect up
 				print(myName + " connecting to " + dump1090Src["host"] + ":" + str(dump1090Src["port"]))
 				dump1090Sock.connect((dump1090Src["host"], dump1090Src["port"]))
 				print(myName + " connected.")
 				
+			except Exception as e:
+					# If we weren't able to connect, dump a message
+					if e.errno == errno.ECONNREFUSED:
+						#Print some messages
+						print(myName + " failed to connect to " + dump1090Src["host"] + ":" + str(dump1090Src["port"]))
+						print(myName + " sleeping " + str(dump1090Src["reconnectDelay"]) + " sec")
+					else:
+						# Something besides connection refused happened. Let's figure out what happened.
+						pprint(e)
+					
+					# In the event our connect fails, try again after the configured delay
+					time.sleep(dump1090Src["reconnectDelay"])
+			
+			# Try to read a lone from our established socket.
+			try:
 				# Get lines of data from dump1090
 				for thisLine in self.readLines(dump1090Sock):
 					
@@ -87,7 +107,7 @@ class dataSource(threading.Thread):
 					#Make sure we didn't trim microseconds because if we did the mongoDump script gets pissed off.
 					if (len(dtsStr) == 19):
 						dtsStr = dtsStr + ".000000"
-					
+						
 					# Todo: handle MLAT data here.
 					if thisLine.find('@') >= 0:
 						# Properly format the "line"
@@ -98,31 +118,24 @@ class dataSource(threading.Thread):
 						
 						# Set MLAT data and SSR data.
 						thisEntry.update({ 'mlatData': lineParts[0], 'data': lineParts[1] })
-						
+							
 					else:
 						# Properly format the "line"
 						thisEntry.update({ 'data': self.formatSSRMsg(thisLine) })
-					
-					#threadLock.acquire()
-					# Create an entry to be queued.
-					thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName })
-					
-					self.queueADSB(thisEntry)
-					#threadLock.release()
+						
+						#threadLock.acquire()
+						# Create an entry to be queued.
+						thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName })
+						
+						self.queueADSB(thisEntry)
+						#threadLock.release()
+				
 				dump1090Sock.close()
-			
+					
+			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
 			except Exception as e:
-				#Print some messages
-				print(myName + " failed to connect to " + dump1090Src["host"] + ":" + str(dump1090Src["port"]))
-				print(myName + " sleeping " + str(dump1090Src["reconnectDelay"]) + " sec")
-				
-				#Debug
+				print(myName + " went boom.")
 				pprint(e)
-				
-				# In the event our connect fails, try again after the configured delay
-				time.sleep(dump1090Src["reconnectDelay"])
-			
-			dump1090Sock.close()
 			
 	def formatSSRMsg(self, strMsg):
 		"""
@@ -223,8 +236,12 @@ r = redis.StrictRedis()
 for thisName, connData in dump1909Srcs.iteritems():
 	print("Spinning up thread for " + thisName)
 	client = dataSource(r, thisName, connData, redisQueues)
+	client.daemon = True
 	client.start()
 	threadList.append(client)
+
+# Fix bug that prevents keyboard interrupt from killing dump1090Connector.py
+while True: time.sleep(10)
 
 # Shut down
 for t in threadList:

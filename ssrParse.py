@@ -339,9 +339,9 @@ class ssrParse:
         
         return retVal
     
-    def bin2BGillham(self, data):
+    def bin2Gillham(self, data):
         """
-        int2Gillham(data)
+        bin2Gillham(data)
         
         Convert a byestream to a Gillham encoded byte. Retruns an integer for success, and False for a failure.
         

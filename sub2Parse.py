@@ -83,6 +83,15 @@ if __name__ == "__main__":
     
     # Start up our ADS-B parser
     client = SubListener(r, [targetSub])
-    
+    client.daemon = True
     # .. and go.
     client.start()
+    
+    try:
+        while True: time.sleep(10)
+    except KeyboardInterrupt:
+        # Die nicely.
+        quit()
+    except Exception as e:
+        print("Caught unhandled exception")
+        pprint(e)

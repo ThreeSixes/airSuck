@@ -113,4 +113,5 @@ if __name__ == "__main__":
     # Start up redis, create our threaded client, and start it.
     r = redis.Redis(host=targetHost)
     client = SubListener(r, [targetSub])
+    client.daemon = True
     client.start()

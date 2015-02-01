@@ -55,7 +55,7 @@ if __name__ == "__main__":
     
     try:
         # Fix bug that doesn't allow Ctrl + C to kill the script
-        time.sleep(10)
+        while True: time.sleep(10)
     except KeyboardInterrupt:
         # Die incely.
         quit()

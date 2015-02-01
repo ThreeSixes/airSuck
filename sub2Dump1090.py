@@ -115,3 +115,12 @@ if __name__ == "__main__":
     client = SubListener(r, [targetSub])
     client.daemon = True
     client.start()
+    
+    try:
+        while True: time.sleep(10)
+    except KeyboardInterrupt:
+        # Die nicely.
+        quit()
+    except Exception as e:
+        print("Unexpected exception")
+        pprint(e)

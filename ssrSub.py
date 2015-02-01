@@ -44,9 +44,21 @@ class SubListener(threading.Thread):
     def run(self):
         for work in self.pubsub.listen():
             self.worker(work)
-            
+
 if __name__ == "__main__":
     print("ADSB subscription queue viewer starting...")
     r = redis.Redis()
     client = SubListener(r, [targetSub])
+    # We want the faote of our SubListener instance to be tied to the main thread process.
+    client.daemon = True
     client.start()
+    
+    try:
+        # Fix bug that doesn't allow Ctrl + C to kill the script
+        time.sleep(10)
+    except KeyboardInterrupt:
+        # Die incely.
+        quit()
+    except Exception as e:
+        print("Unhandled exception:")
+        pprint(e)

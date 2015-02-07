@@ -10,6 +10,8 @@ import json
 import datetime
 import threading
 import errno
+import binascii
+import ssrParse
 from socket import socket
 from pprint import pprint
 
@@ -27,10 +29,10 @@ redisQueues = {
 
 #dump1090 sources
 dump1909Srcs = {
-	"tallear": { "host": "127.0.0.1", "port": 40000, "reconnectDelay": 5}
-	, "northwind":  { "host": "127.0.0.1", "port": 40001, "reconnectDelay": 5}
-	#"tallear": { "host": "tallear", "port": 30002, "reconnectDelay": 5}
-	#, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
+	#"tallear": { "host": "127.0.0.1", "port": 40000, "reconnectDelay": 5}
+	#, "northwind":  { "host": "127.0.0.1", "port": 40001, "reconnectDelay": 5}
+	"tallear": { "host": "tallear", "port": 30002, "reconnectDelay": 5}
+	, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
 	#"insurrection":  { "host": "127.0.0.1", "port": 30002, "reconnectDelay": 5}
 }
 
@@ -58,6 +60,7 @@ class dataSource(threading.Thread):
 		self.myName = myName
 		self.dump1090Src = dump1090Src
 		self.rQInfo = rQInfo
+		self.ssrParser = ssrParse.ssrParse()
 	
 	def run(self):
 		"""run
@@ -83,6 +86,7 @@ class dataSource(threading.Thread):
 			except Exception as e:
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:
+						
 						#Print some messages
 						print(myName + " failed to connect to " + dump1090Src["host"] + ":" + str(dump1090Src["port"]))
 						print(myName + " sleeping " + str(dump1090Src["reconnectDelay"]) + " sec")
@@ -110,25 +114,43 @@ class dataSource(threading.Thread):
 						
 					# Todo: handle MLAT data here.
 					if thisLine.find('@') >= 0:
+						# This doesn't get deduplicated.
+						dedupeFlag = False
+						
 						# Properly format the "line"
 						thisLine = self.formatSSRMsg(thisLine)
 						
 						# Split MLAT data from SSR data.
 						lineParts = self.splitMlat(thisLine)
 						
+						# Parse the frame.
+						binData = bytearray(binascii.unhexlify(lineParts[1]))
+						
 						# Set MLAT data and SSR data.
 						thisEntry.update({ 'mlatData': lineParts[0], 'data': lineParts[1] })
-							
-					else:
-						# Properly format the "line"
-						thisEntry.update({ 'data': self.formatSSRMsg(thisLine) })
 						
-						#threadLock.acquire()
+						# Add parsed data.
+						thisEntry.update(self.ssrParser.ssrParse(binData))
+						
+					else:
+						# This gets fed to the deduplicator.
+						dedupeFlag = True
+						
+						# Format our SSR data a hex string and bytearray.
+						formattedSSR = self.formatSSRMsg(thisLine)
+						binData = bytearray(binascii.unhexlify(formattedSSR))
+						
+						# Properly format the "line"
+						thisEntry.update({ 'data': formattedSSR })
+						
 						# Create an entry to be queued.
 						thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName })
 						
-						self.queueADSB(thisEntry)
-						#threadLock.release()
+						# Parse our data and add it to the stream.
+						thisEntry.update(self.ssrParser.ssrParse(binData))
+						
+					# Queue up our data.
+					self.queueADSB(thisEntry, dedupeFlag)
 				
 				dump1090Sock.close()
 					
@@ -205,14 +227,14 @@ class dataSource(threading.Thread):
 		return
 	
 	# Convert the data we want to send to JSON format.
-	def queueADSB(self, msg):
+	def queueADSB(self, msg, dedupeFlag):
 		"""queueADSB(msg)
 		
-		Accepts a JSON string and queues it in the Redis database, assuming a duplicate string hasn't been queued within the last n seconds specified in redisQueues['dudeupeTableExp']
+		Accepts a JSON string and queues it in the Redis database, assuming a duplicate string hasn't been queued within the last n seconds specified in redisQueues['dudeupeTableExp'], and we're not dealing with MLAT data. (dedupeFlag = False prevents dedupliation operations.)
 		"""
 		jsonMsg = self.jsonify(msg)
-		# See if we already have the key in the redis cache.
-		if (self.rQ.exists(msg['data']) == False):
+		# See if we already have the key in the redis cache, or if we're supposed to dedupe this frame at all.
+		if ((self.rQ.exists(msg['data']) == False) or (dedupeFlag == False)):
 			# Set the key and insert lame value.
 			self.rQ.setex(msg['data'], self.rQInfo['dedupeExp'], "X")
 			

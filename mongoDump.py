@@ -18,7 +18,7 @@ rQ = redis.StrictRedis()
 checkDelay = 0.1
 
 #MongoDB config
-mDB = pymongo.MongoClient().radSI
+mDB = pymongo.MongoClient().airSuck
 
 # Convert datetime objects expressed as a string back to datetime
 def toDatetime(strDateTime):
@@ -33,7 +33,7 @@ def dejsonify(msg):
 
 # Insert records into specified mongo instance
 def serializeADSB(entry):
-        mDB.rawADSB.insert(entry)
+        mDB.airSSR.insert(entry)
 
 # Infinite fucking loop.
 print("Dumping SSR data from queue to MongoDB.")

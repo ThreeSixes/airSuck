@@ -742,10 +742,10 @@ class ssrParse:
                 if self.decodeNames: retVal['dfName'] = "Short Air-to-air ACAS"
                 
                 # Get vertical status bits.
-                vsBit = (binData[5] & 0x04) >> 2
+                vsBit = (binData[0] & 0x04) >> 2
                 retVal['vertStat'] = "air" if vsBit == 0 else "gnd"
-                retVal['cc'] = (binData[5] & 0x02) >> 1
-                retVal['sl'] = (binData[6] & 0xE0) >> 2
+                retVal['cc'] = (binData[0] & 0x02) >> 1
+                retVal['sl'] = (binData[1] & 0xE0) >> 2
                 
                 # Grab our altitude.
                 alt = self.get13BitAlt(binData)

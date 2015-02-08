@@ -745,7 +745,7 @@ class ssrParse:
                 vsBit = (binData[0] & 0x04) >> 2
                 retVal['vertStat'] = "air" if vsBit == 0 else "gnd"
                 retVal['cc'] = (binData[0] & 0x02) >> 1
-                retVal['sl'] = (binData[1] & 0xE0) >> 2
+                retVal['sl'] = (binData[1] & 0xE0) >> 5
                 
                 # Grab our altitude.
                 alt = self.get13BitAlt(binData)

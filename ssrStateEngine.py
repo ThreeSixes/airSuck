@@ -9,7 +9,9 @@ import time
 import json
 import threading
 import binascii
+import datetime
 from pprint import pprint
+
 
 #################
 # Configuration #
@@ -18,6 +20,9 @@ from pprint import pprint
 # Which queue do we subscribe to?
 targetSub = "ssrFeed"
 targetHost = "127.0.0.1"
+
+# How long should it take to expire planes in seconds.
+expireTime = 300
 
 
 ##############################
@@ -34,6 +39,52 @@ class SubListener(threading.Thread):
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(channels)
     
+    def updateState(self, objName, cacheData):
+        """
+        updateState
+        
+        Update state engine with data from incoming frames given the data in the dict cacheData. objName is the name of the ICAO AA in hex, or emergency squawk code.
+        
+        Returns all data in the cache.
+        """
+        
+        # Get our time
+        thisTime = str(datetime.datetime.utcnow())
+        
+        # Create properly-formatted name for the state hash table we're creating.
+        fullName = str('state:' + objName)
+        
+        # Do we have a firstSeen key?
+        if self.redis.hsetnx(fullName, 'firstSeen', thisTime) == 0:
+            self.redis.hset(fullName, 'lastSeen', thisTime)
+        
+        # Update or create cached data, if we have more than just a name
+        if type(cacheData) == dict:
+            
+            # Set each specified value.
+            for thisKey in cacheData:
+                self.redis.hset(fullName, thisKey, cacheData[thisKey])
+        
+        # Set expiration on the hash entry.
+        self.redis.expire(fullName, expireTime)
+        
+        retVal = self.redis.hgetall(fullName)
+        retVal.update({'addr': objName})
+        
+        return retVal
+
+
+    def enqueueData(self, statusData):
+        """
+        enqueueDate(statusData)
+        
+        Put status data on a queue for processing
+        """
+        
+        pprint(statusData)
+        
+        return
+
     def worker(self, work):
         # Do work on the data returned from the subscriber.
         ssrJson = str(work['data'])
@@ -44,8 +95,33 @@ class SubListener(threading.Thread):
         # Make sure we got good data from json.loads
         if (type(ssrWrapped) == dict):
             
+            # Do we hvae mode s?
+            if ssrWrapped['mode'] == "s":
+                
+                # Do we have data we care about?
+                if ssrWrapped['df'] == 11:
+                    
+                    # Filter for the data we need:
+                    data = {'df': 11}
+                    
+                    # Enqueue processed state data.
+                    self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
+                
+                elif ssrWrapped['df'] == 17:
+                    
+                    # Filter for the data we need:
+                    data = {'df': 17}
+                    
+                    # Enqueue processed state data.
+                    self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
+            
+            elif (ssrWrapped['mode'] == "ac") and ('emergency' in ssrWrapped):
+                
+                # Enqueue processed state data.
+                self.enqueueData(self.updateState('A-' + ssrWrapped['aSquawk'], False))
+            
             # Get the hex data as a string
-            pprint(ssrWrapped)
+            #pprint(ssrWrapped)
     
     def run(self):
         for work in self.pubsub.listen():

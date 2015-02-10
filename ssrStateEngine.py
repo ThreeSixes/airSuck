@@ -161,8 +161,15 @@ class SubListener(threading.Thread):
                     if 'vertRate' in ssrWrapped:
                         data.update({"vertRate": ssrWrapped['vertRate']})
                     
-                    # Velo
-                    # Needs some more logic.
+                    # Velocity data
+                    
+                    # For airborne aircraft
+                    if ssrWrapped['fmt'] == 19:
+                        if 'gndspeed' in ssrWrapped:
+                            data.update({"velo": ssrWrapped['gndspeed'], "veloType": "gnd"})
+                        if 'airspeed' in ssrWrapped:
+                            data.update({"velo": ssrWrapped['airspeed'], "veloType": "air", "airspeedRef": ssrWrapped['airspeedRef']})
+                    # Deal with vehicles on the ground here...
                     
                     # Vertical status
                     # Needs moe logic

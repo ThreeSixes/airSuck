@@ -187,6 +187,8 @@ class SubListener(threading.Thread):
                     
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
+                    
+                    # Figure out how to clear the emergency flag if we no longer have an emergency.
             
             elif (ssrWrapped['mode'] == "ac") and ('emergency' in ssrWrapped):
                 

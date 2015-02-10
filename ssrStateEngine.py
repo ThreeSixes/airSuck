@@ -10,6 +10,7 @@ import json
 import threading
 import binascii
 import datetime
+from cprMath import cprMath
 from pprint import pprint
 
 
@@ -189,9 +190,36 @@ class SubListener(threading.Thread):
                     if 'utc' in ssrWrapped:
                         data.update({"utc": ssrWrapped['utc']})
                     
-                    # Handle location data
-                    # This needs a lot of logic.
                     
+                    # This needs more logic for decoding CPR, etc.
+                    if 'evenOdd' in ssrWrapped:
+                        
+                        # Update data with even and odd raw values.
+                        if ssrWrapped['evenOdd'] == 0:
+                            # Set even data.
+                            data.update({"evenLat": ssrWrapped['rawLat'], "evenLon": ssrWrapped['rawLon'], "evenTs": ssrWrapped['dts'], "lastFmt": ssrWrapped['evenOdd']})
+                        else:
+                            # Set odd data.
+                            data.update({"oddLat": ssrWrapped['rawLat'], "oddLon": ssrWrapped['rawLon'], "oddTs": ssrWrapped['dts'], "lastFmt": ssrWrapped['evenOdd']})
+                        
+                        # This functionality needs to be broken out as a function.
+                        
+                        # If we have even and odd lat/lon data
+                        if ("evenTs" in data) and ("oddTs" in data):
+                            
+                            # Pull even and odd data.
+                            evenData = [data['evenLat'], data['evenLon']]
+                            oddData = [data['oddLat'], data['oddLon']]
+                            lastFmt = data['lastFmt']
+                            
+                            # Decode location
+                            locData = cprMath.decodeCPR(evenData, oddData, lastFmt, False)
+                            
+                            # Location data
+                            if type(locData) == list:
+                                # Set location data.
+                                data.update({"lat": locData[0], "lon": locData[1]})
+                        
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
                     

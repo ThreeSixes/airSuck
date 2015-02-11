@@ -25,6 +25,9 @@ targetHost = "127.0.0.1"
 # How long should it take to expire planes in seconds.
 expireTime = 300
 
+# CPR stuff.
+cprProc = cprMath()
+
 
 ##############################
 # Classes for handling data. #
@@ -39,6 +42,7 @@ class SubListener(threading.Thread):
         self.redis = r
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(channels)
+    
     
     def updateState(self, objName, cacheData):
         """
@@ -74,7 +78,62 @@ class SubListener(threading.Thread):
         retVal.update({'addr': objName})
         
         return retVal
+    
 
+    def pullState(self, objName):
+        """
+        pullState(objName)
+        
+        Pull state information for a given object name. Returns a dict with existing data.
+        """
+        
+        # Try to pull data...
+        dataPull = self.redis.hgetall('state:' + objName)
+        
+        # Make sure we have some sort of data.
+        if type(dataPull) == dict:
+            retVal = dataPull
+        else:
+            # If not, return a blank dict.
+            retVal = {}
+        
+        return retVal
+    
+    def getEmergencyInfo(self, data):
+        """
+        getEmergencyInfo(data)
+        
+        Get stateful emergency info for a given state entry.
+        
+        Returns a dict containing emergency info.
+        """
+        
+        retVal = {}
+        
+        # Automatically grab any emergency data we have ahead of time.
+        if 'emergency' in data:
+            # Inherit the emergency flag from anything with the emergency flag from ANY frame.
+            retVal.update({'emergency': data['emergency']})
+                
+            # Get a mode A squawk emergency description if one exists.
+            if 'aSquawkEmergency' in data:
+                retVal.update({'emergencyData': data['aSquawkEmergency']})
+                
+            # If we have more specific emergency data from an extended status squitter use it instead of a gneeric mode A squawk message.
+            if 'es' in data:
+                esText = ["No emergency", # This really shouldn't come through without emergency = True.
+                    "General emergency (sqwk 7700)",
+                    "Lifeguard/Medical",
+                    "Minimum Fuel",
+                    "No comms (sqwk 7600)",
+                    "Unlawful interference (sqwk 7500)",
+                    "Downed aircraft",
+                    "Reserved"]
+                    
+                retVal.update({'emergencyData': esText[data['es']]})
+                
+        return retVal
+    
 
     def enqueueData(self, statusData):
         """
@@ -84,9 +143,13 @@ class SubListener(threading.Thread):
         """
         
         #Debug print instead of dumping data onto another queue.
-        print(json.dumps(statusData))
+        #print(json.dumps(statusData))
+        
+        if 'lat' in statusData:
+            print(statusData['addr'] + " - " + statusData['lat'] + ", " + statusData['lon'])
         
         return
+    
 
     def worker(self, work):
         # Do work on the data returned from the subscriber.
@@ -101,41 +164,40 @@ class SubListener(threading.Thread):
             # Set up our data structure
             data = {}
             
-            # Set our datetime stamp for this data.
-            data.update({"dts": ssrWrapped['dts']})
-            
-            # Automatically grab any emergency data we have ahead of time.
-            if 'emergency' in ssrWrapped:
-                # Inherit the emergency flag from anything with the emergency flag from ANY frame.
-                data.update({'emergency': ssrWrapped['emergency']})
-                
-                # Get a mode A squawk emergency description if one exists.
-                if 'aSquawkEmergency' in ssrWrapped:
-                    data.update({'emergencyData': ssrWrapped['aSquawkEmergency']})
-                
-                # If we have more specific emergency data from an extended status squitter use it instead of a gneeric mode A squawk message.
-                if 'es' in ssrWrapped:
-                    esText = ["No emergency", # This really shouldn't come through without emergency = True.
-                        "General emergency (sqwk 7700)",
-                        "Lifeguard/Medical",
-                        "Minimum Fuel",
-                        "No comms (sqwk 7600)",
-                        "Unlawful interference (sqwk 7500)",
-                        "Downed aircraft",
-                        "Reserved"]
-                    
-                    data.update({'emergencyData': esText[ssrWrapped['es']]})
-            
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":
                 
                 # Do we have data we care about?
                 if ssrWrapped['df'] == 11:
                     
+                    # Try to get existing data.
+                    data = self.pullState(ssrWrapped['icaoAAHx'])
+                    
+                    # Check for emergency conditions.
+                    data.update(self.getEmergencyInfo(ssrWrapped))
+                    
+                    # Set the last sensor we got a frame from
+                    data.update({"lastSrc": ssrWrapped['src']})
+                    
+                    # Set our datetime stamp for this data.
+                    data.update({"dts": ssrWrapped['dts']})
+                    
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
                 
                 elif ssrWrapped['df'] == 17:
+                    
+                    # Try to get existing data.
+                    data = self.pullState(ssrWrapped['icaoAAHx'])
+                    
+                    # Check for emergency conditions.
+                    data.update(self.getEmergencyInfo(ssrWrapped))
+                    
+                    # Set the last sensor we got a frame from
+                    data.update({"lastSrc": ssrWrapped['src']})
+                    
+                    # Set our datetime stamp for this data.
+                    data.update({"dts": ssrWrapped['dts']})
                     
                     # Filter for the data we need:
                     # Mode A squawk code.
@@ -210,10 +272,16 @@ class SubListener(threading.Thread):
                             # Pull even and odd data.
                             evenData = [data['evenLat'], data['evenLon']]
                             oddData = [data['oddLat'], data['oddLon']]
-                            lastFmt = data['lastFmt']
+                            
+                            #if data['lastFmt'] == 0:
+                            #    hackFmt = 1
+                            #else:
+                            #    hackFmt = 0
+                            
+                            hackFmt = data['lastFmt']
                             
                             # Decode location
-                            locData = cprMath.decodeCPR(evenData, oddData, lastFmt, False)
+                            locData = cprProc.decodeCPR(evenData, oddData, hackFmt, False)
                             
                             # Location data
                             if type(locData) == list:
@@ -226,6 +294,9 @@ class SubListener(threading.Thread):
                     # Figure out how to clear the emergency flag if we no longer have an emergency.
             
             elif (ssrWrapped['mode'] == "ac") and ('emergency' in ssrWrapped):
+                
+                # Check for emergency conditions.
+                data.update(self.getEmergencyInfo(ssrWrapped))
                 
                 # Enqueue processed state data.
                 self.enqueueData(self.updateState('A-' + ssrWrapped['aSquawk'], data))

@@ -146,7 +146,11 @@ class SubListener(threading.Thread):
         #print(json.dumps(statusData))
         
         if 'lat' in statusData:
-            print(statusData['addr'] + " - " + statusData['lat'] + ", " + statusData['lon'])
+            print(statusData['addr'] + " - " + \
+                str(statusData['lat']) + ", " + str(statusData['lon']) + \
+                ": eLat " + str(statusData['evenLat']) + ", eLon " + str(statusData['evenLon']) + \
+                ", oLat " + str(statusData['oddLat']) + ", oLon " + str(statusData['oddLon']) +  \
+                ", lastFmt " + str(statusData['lastFmt']))
         
         return
     

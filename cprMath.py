@@ -152,6 +152,13 @@ class cprMath():
         # Set a dummy return value.
         retVal = False
         
+        # Make sure we typcasdt our incoming values as floats since our math.floor() if they're ints.
+        evenData[0] = float(evenData[0])
+        evenData[1] = float(evenData[1])
+        oddData[0] = float(oddData[0])
+        oddData[1] = float(oddData[1])
+        
+        # Debug prints to show input data.
         if self.debugOn:
             print("Even CPR lat, lon : " + str(evenData[0]) + ", " + str(evenData[1]))
             print("Odd CPR lat, lon  : " + str(oddData[0]) + ", " + str(oddData[1]))
@@ -174,7 +181,7 @@ class cprMath():
         if self.debugOn: print(" decodeCPR() airDlat1 = " + str(airDlat1))
         
         # Compute latitude index.
-        j = math.floor(((59.0 * evenData[0] - 60.0 * oddData[0]) / 131072.0) + 0.5)
+        j = math.floor((((59.0 * evenData[0]) - (60.0 * oddData[0])) / 131072.0) + 0.5)
         
         if self.debugOn: print(" decodeCPR() j = " + str(j))
         

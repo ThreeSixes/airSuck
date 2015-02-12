@@ -193,11 +193,11 @@ class cprMath():
             print(" decodeCPR() rlat0 = " + str(rlat0))
             print(" decodeCPR() rlat1 = " + str(rlat1))
         
-        # Southern hemisphere values are 270 to 360, so subtract 360 if rlats > 270.
-        if rlat0 > 270:
+        # Southern hemisphere values are 180 to 360, so subtract 360 if rlats > 180.
+        if rlat0 > 180:
             rlat0 = rlat0 - 360
             if self.debugOn: print(" decodeCPR() S\N hemisphere compensation - rlat0 = " + str(rlat0))
-        if rlat1 > 270:
+        if rlat1 > 180:
             rlat1 = rlat1 - 360
             if self.debugOn: print(" decodeCPR() S\N hemisphere compensation - rlat1 = " + str(rlat1))
             
@@ -235,7 +235,7 @@ class cprMath():
                 retVal[1] = dlon * (self.cprMod(m, ni) + oddData[1] / 131072.0)
             
             # Adjust for E/W.
-            if retVal[1] > 270:
+            if retVal[1] > 180:
                 if self.debugOn: print(" decodeCPR() E\W hemisphere compensation - retVal[1] = " + str(retVal[1]))
                 retVal[1] = retVal[1] - 360
             

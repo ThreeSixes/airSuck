@@ -142,7 +142,7 @@ class SubListener(threading.Thread):
         Put status data on a queue for processing
         """
         
-        #Debug print instead of dumping data onto another queue.
+        # Debug print instead of dumping data onto another queue.
         #print(json.dumps(statusData))
         
         if 'lat' in statusData:
@@ -216,7 +216,7 @@ class SubListener(threading.Thread):
                     if 'category' in ssrWrapped:
                         data.update({"category": ssrWrapped['category']})
                     
-                    # Aircraft category
+                    # Aircraft heading
                     if 'heading' in ssrWrapped:
                         data.update({"heading": ssrWrapped['heading']})
                     

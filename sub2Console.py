@@ -16,6 +16,7 @@ from pprint import pprint
 
 # Which queue do we subscribe to?
 targetSub = "ssrFeed"
+targetHost = 'brick'
 
 ##############################
 # Classes for handling data. #
@@ -47,7 +48,7 @@ class SubListener(threading.Thread):
 
 if __name__ == "__main__":
     print("ADSB subscription queue viewer starting...")
-    r = redis.Redis()
+    r = redis.Redis(targetHost)
     client = SubListener(r, [targetSub])
     # We want the faote of our SubListener instance to be tied to the main thread process.
     client.daemon = True

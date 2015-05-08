@@ -22,8 +22,7 @@ from pprint import pprint
 
 #Target Redis queues
 redisQueues = {
-	"targetQ": "ssrReliable",	# Reliable queue for DB serialization
-	"targetPub": "ssrFeed",		# Pub/sub queue for other subscribers
+	"targetQ": "ssrPreReliable",	# Reliable queue for DB serialization
 	"dedupeExp": 3			# Redis hash table entry expiry
 }
 
@@ -32,7 +31,7 @@ dump1909Srcs = {
 	#"tallear": { "host": "127.0.0.1", "port": 40000, "reconnectDelay": 5}
 	#, "northwind":  { "host": "127.0.0.1", "port": 40001, "reconnectDelay": 5}
 	"tallear": { "host": "tallear", "port": 30002, "reconnectDelay": 5}
-	, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
+	#, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
 	#"insurrection":  { "host": "127.0.0.1", "port": 30002, "reconnectDelay": 5}
 }
 
@@ -210,6 +209,7 @@ class dataSource(threading.Thread):
 	
 	# Get one line from TCP output, from:
 	# http://synack.me/blog/using-python-tcp-sockets
+	
 	def readLines(self, sock, recvBuffer = 4096, delim = '\n'):
 		"""readLines(sock)
 		
@@ -238,10 +238,8 @@ class dataSource(threading.Thread):
 			# Set the key and insert lame value.
 			self.rQ.setex(msg['data'], self.rQInfo['dedupeExp'], "X")
 			
-			# Drop the data on our reliable DB queue, and the non-persistent queue.
-			self.rQ.rpush(self.rQInfo['targetQ'], jsonMsg)
-			self.rQ.publish(self.rQInfo['targetPub'], jsonMsg)
-		
+			# Drop the data on our reliable preprocessed DB queue.
+			self.rQ.rpush(self.rQInfo['targetQ'], jsonMsg)		
 		return
 		
 

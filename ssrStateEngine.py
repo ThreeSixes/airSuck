@@ -144,10 +144,10 @@ class SubListener(threading.Thread):
         """
         
         # Debug print instead of dumping data onto another queue.
-        print(json.dumps(statusData))
-        statusData = json.loads(statusData)
-        self.redis.rpush(destReliable, statusData)
-        self.redis.publish(destPubSub, statusData)
+        jsonData = json.dumps(statusData)
+        print(jsonData)
+        self.redis.rpush(destReliable, jsonData)
+        self.redis.publish(destPubSub, jsonData)
         
         #if 'lat' in statusData:
         #    print(statusData['addr'] + " - " + \

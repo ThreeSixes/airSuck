@@ -48,7 +48,6 @@ while(True) :
                 else:
                     # We have data so we should break it out of JSON formatting.
                     xDqd = dejsonify(dQd)
-                    xDqd['dts'] = toDatetime(xDqd['dts'])
                     serializeState(xDqd)
                 
         except KeyboardInterrupt:

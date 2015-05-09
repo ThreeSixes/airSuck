@@ -39,8 +39,10 @@ class SubListener(threading.Thread):
     """
     Listen to the SSR channel for new incoming data.
     """
-    def __init__(self, r, channels):
+    def __init__(self, r, channels, destReliable, destPubSub):
         threading.Thread.__init__(self)
+        self.destReliable = destReliable
+        self.destPubSub = destPubSub
         self.redis = r
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(channels)    
@@ -145,19 +147,8 @@ class SubListener(threading.Thread):
         
         # Debug print instead of dumping data onto another queue.
         jsonData = json.dumps(statusData)
-        #print(jsonData)
-        try:
-            self.redis.rpush(destReliable, jsonData)
-            self.redis.publish(destPubSub, jsonData)
-        except Exception as e:
-            pprint(e)
-        
-        #if 'lat' in statusData:
-        #    print(statusData['addr'] + " - " + \
-        #        str(statusData['lat']) + ", " + str(statusData['lon']) + \
-        #        ": eLat " + str(statusData['evenLat']) + ", eLon " + str(statusData['evenLon']) + \
-        #        ", oLat " + str(statusData['oddLat']) + ", oLon " + str(statusData['oddLon']) +  \
-        #        ", lastFmt " + str(statusData['lastFmt']))
+        self.redis.rpush(destReliable, jsonData)
+        self.redis.publish(destPubSub, jsonData)
         
         return
     
@@ -326,7 +317,7 @@ if __name__ == "__main__":
     r = redis.Redis(host=targetHost)
     
     # Start up our ADS-B parser
-    client = SubListener(r, [targetSub])
+    client = SubListener(r, [targetSub], [destReliable], [destPubSub])
     client.daemon = True
     # .. and go.
     client.start()

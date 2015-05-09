@@ -19,8 +19,10 @@ from pprint import pprint
 #################
 
 # Which queue do we subscribe to?
+targetHost = "brick"
 targetSub = "ssrFeed"
-targetHost = "127.0.0.1"
+destReliable = "airState"
+destPubSub = "airState"
 
 # How long should it take to expire planes in seconds.
 expireTime = 300
@@ -107,7 +109,7 @@ class SubListener(threading.Thread):
         
         Returns a dict containing emergency info.
         """
-        
+         
         retVal = {}
         
         # Automatically grab any emergency data we have ahead of time.
@@ -143,14 +145,16 @@ class SubListener(threading.Thread):
         """
         
         # Debug print instead of dumping data onto another queue.
-        #print(json.dumps(statusData))
+        print(json.dumps(statusData))
+        self.redis.rpush(destReliable, jsonMsg)
+        self.redis.publish(destPubSub, jsonMsg)
         
-        if 'lat' in statusData:
-            print(statusData['addr'] + " - " + \
-                str(statusData['lat']) + ", " + str(statusData['lon']) + \
-                ": eLat " + str(statusData['evenLat']) + ", eLon " + str(statusData['evenLon']) + \
-                ", oLat " + str(statusData['oddLat']) + ", oLon " + str(statusData['oddLon']) +  \
-                ", lastFmt " + str(statusData['lastFmt']))
+        #if 'lat' in statusData:
+        #    print(statusData['addr'] + " - " + \
+        #        str(statusData['lat']) + ", " + str(statusData['lon']) + \
+        #        ": eLat " + str(statusData['evenLat']) + ", eLon " + str(statusData['evenLon']) + \
+        #        ", oLat " + str(statusData['oddLat']) + ", oLon " + str(statusData['oddLon']) +  \
+        #        ", lastFmt " + str(statusData['lastFmt']))
         
         return
     

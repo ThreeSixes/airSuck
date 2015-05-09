@@ -22,7 +22,7 @@ from pprint import pprint
 targetHost = "brick"
 targetSub = "ssrFeed"
 destReliable = "airState"
-destPubSub = "airState"
+destPubSub = "airStateFeed"
 
 # How long should it take to expire planes in seconds.
 expireTime = 300
@@ -44,6 +44,7 @@ class SubListener(threading.Thread):
         self.redis = r
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(channels)
+        self.destPubSub = self.redis.pubsub()
     
     
     def updateState(self, objName, cacheData):
@@ -147,7 +148,7 @@ class SubListener(threading.Thread):
         # Debug print instead of dumping data onto another queue.
         print(json.dumps(statusData))
         self.redis.rpush(destReliable, jsonMsg)
-        self.redis.publish(destPubSub, jsonMsg)
+        self.redis.publish(self.destPubSub, jsonMsg)
         
         #if 'lat' in statusData:
         #    print(statusData['addr'] + " - " + \

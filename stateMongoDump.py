@@ -52,6 +52,7 @@ while(True) :
                 
         except KeyboardInterrupt:
             quit()
-        except:
+        except Exception as e:
             print("Failed to pull from the Redis queue. Sleeping " + str(checkDelay) + " sec")
+            pprint(e)
             pprint(sys.exc_info())

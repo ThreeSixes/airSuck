@@ -18,7 +18,7 @@ rQ = redis.StrictRedis()
 checkDelay = 0.1
 
 #MongoDB config
-mDB = pymongo.MongoClient().airSuckState
+mDB = pymongo.MongoClient().airSuck
 
 # Convert datetime objects expressed as a string back to datetime
 def toDatetime(strDateTime):

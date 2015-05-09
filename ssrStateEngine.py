@@ -145,6 +145,7 @@ class SubListener(threading.Thread):
         
         # Debug print instead of dumping data onto another queue.
         print(json.dumps(statusData))
+        statusData = json.loads(statusData)
         self.redis.rpush(destReliable, statusData)
         self.redis.publish(destPubSub, statusData)
         

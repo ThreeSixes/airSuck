@@ -22,7 +22,8 @@ from pprint import pprint
 
 #Target Redis queues
 redisQueues = {
-	"targetQ": "ssrPreReliable",	# Reliable queue for DB serialization
+	"targetQ": "ssrReliable",	# Reliable queue for DB serialization
+	"targetPub": "ssrFeed",		# Pub/sub queue for other subscribers
 	"dedupeExp": 3			# Redis hash table entry expiry
 }
 
@@ -209,7 +210,6 @@ class dataSource(threading.Thread):
 	
 	# Get one line from TCP output, from:
 	# http://synack.me/blog/using-python-tcp-sockets
-	
 	def readLines(self, sock, recvBuffer = 4096, delim = '\n'):
 		"""readLines(sock)
 		
@@ -238,8 +238,10 @@ class dataSource(threading.Thread):
 			# Set the key and insert lame value.
 			self.rQ.setex(msg['data'], self.rQInfo['dedupeExp'], "X")
 			
-			# Drop the data on our reliable preprocessed DB queue.
-			self.rQ.rpush(self.rQInfo['targetQ'], jsonMsg)		
+			# Drop the data on our reliable DB queue, and the non-persistent queue.
+			self.rQ.rpush(self.rQInfo['targetQ'], jsonMsg)
+			self.rQ.publish(self.rQInfo['targetPub'], jsonMsg)
+		
 		return
 		
 
@@ -272,4 +274,3 @@ while True: time.sleep(10)
 for t in threadList:
 	t.join()
 
-print("Shutting down.")

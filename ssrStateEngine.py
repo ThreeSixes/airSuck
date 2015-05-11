@@ -78,6 +78,9 @@ class SubListener(threading.Thread):
         self.redis.expire(fullName, expireTime)
         
         retVal = self.redis.hgetall(fullName)
+        
+        
+        
         retVal.update({'addr': objName})
         
         return retVal
@@ -186,6 +189,10 @@ class SubListener(threading.Thread):
                     
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
+                    
+                    # Scan for emergency flag.
+                    if 'emergency' in ssrWrapped:
+                        data.update({"emergency": ssrWrapped['emergency']})
                 
                 elif ssrWrapped['df'] == 17:
                     
@@ -194,6 +201,10 @@ class SubListener(threading.Thread):
                     
                     # Check for emergency conditions.
                     data.update(self.getEmergencyInfo(ssrWrapped))
+                    
+                    # Scan for emergency flag.
+                    if 'emergency' in ssrWrapped:
+                        data.update({"emergency": ssrWrapped['emergency']})
                     
                     # Set the last sensor we got a frame from
                     data.update({"lastSrc": ssrWrapped['src']})

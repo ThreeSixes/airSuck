@@ -165,7 +165,7 @@ class SubListener(threading.Thread):
                 
             if 'lastFmt' in retVal:
                 try:
-                    retVal['kastFmt'] = int(retVal['kastFmt'])
+                    retVal['lastFmt'] = int(retVal['lastFmt'])
                 except Exception as e:
                     pprint(e)
                     

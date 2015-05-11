@@ -79,8 +79,6 @@ class SubListener(threading.Thread):
         
         retVal = self.redis.hgetall(fullName)
         
-        
-        
         retVal.update({'addr': objName})
         
         return retVal
@@ -99,6 +97,115 @@ class SubListener(threading.Thread):
         # Make sure we have some sort of data.
         if type(dataPull) == dict:
             retVal = dataPull
+            
+            # Convert values from strings to other things.
+            
+            # Check for boolean-based data.
+            if 'supersonic' in retVal:
+                if retVal['supersonic'] == "True":
+                    retVal['supersonic'] = True
+                else:
+                    retVal['supersonic'] = False
+            
+            if 'emergency' in retVal:
+                if retVal['emergency'] == "True":
+                    retVal['emergency'] = True
+                else:
+                    retVal['emergency'] = False
+            
+            # Check for floats.
+            if 'heading' in retVal:
+                try:
+                    retVal['heading'] = float(retVal['heading'])
+                except Exception as e:
+                    pprint(e)
+                
+            if 'lat' in retVal:
+                try:
+                    retVal['lat'] = float(retVal['lat'])
+                except Exception as e:
+                    pprint(e)
+                
+            if 'lon' in retVal:
+                try:
+                    retVal['lon'] = float(retVal['lon'])
+                except Exception as e:
+                    pprint(e)
+                
+            if 'velo' in retVal:
+                try:
+                    retVal['velo'] = float(retVal['velo'])
+                except Exception as e:
+                    pprint(e)
+            
+            # Check for ints.
+            if 'alt' in retVal:
+                try:
+                    retVal['alt'] = int(retVal['alt'])
+                except Exception as e:
+                    pprint(e)
+                    
+            if 'evenLat' in retVal:
+                try:
+                    retVal['evenLat'] = int(retVal['evenLat'])
+                except Exception as e:
+                    pprint(e)
+                
+            if 'evenLon' in retVal:
+                try:
+                    retVal['evenLon'] = int(retVal['evenLon'])
+                except Exception as e:
+                    pprint(e)
+                
+            if 'gndspeed' in retVal:
+                try:
+                    retVal['gndspeed'] = int(retVal['gndspeed'])
+                except Exception as e:
+                    pprint(e)
+                
+            if 'lastFmt' in retVal:
+                try:
+                    retVal['kastFmt'] = int(retVal['kastFmt'])
+                except Exception as e:
+                    pprint(e)
+                    
+            if 'oddLat' in retVal:
+                try:
+                    retVal['oddLat'] = int(retVal['oddLat'])
+                except Exception as e:
+                    pprint(e)
+                
+            if 'oddLon' in retVal:
+                try:
+                    retVal['oddLon'] = int(retVal['oddLon'])
+                except Exception as e:
+                    pprint(e)
+                    
+            if 'ss' in retVal:
+                try:
+                    retVal['ss'] = int(retVal['ss'])
+                except Exception as e:
+                    pprint(e)
+            
+            if 'survStat' in retVal:
+                try:
+                    retVal['survStat'] = int(retVal['survStat'])
+                except Exception as e:
+                    pprint(e)
+            
+            if 'utc' in retVal:
+                try:
+                    retVal['utc'] = int(retVal['utc'])
+                except Exception as e:
+                    pprint(e)
+            
+            if 'vertRate' in retVal:
+                try:
+                    retVal['vertRate'] = int(retVal['vertRate'])
+                except Exception as e:
+                    pprint(e)
+        
+        
         else:
             # If not, return a blank dict.
             retVal = {}
@@ -307,6 +414,10 @@ class SubListener(threading.Thread):
                     # Figure out how to clear the emergency flag if we no longer have an emergency.
             
             elif (ssrWrapped['mode'] == "ac") and ('emergency' in ssrWrapped):
+                
+                # Scan for emergency flag.
+                if 'emergency' in ssrWrapped:
+                    data.update({"emergency": ssrWrapped['emergency']})
                 
                 # Check for emergency conditions.
                 data.update(self.getEmergencyInfo(ssrWrapped))

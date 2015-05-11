@@ -48,6 +48,8 @@ while(True) :
                 else:
                     # We have data so we should break it out of JSON formatting.
                     xDqd = dejsonify(dQd)
+                    xDqd['firstSeen'] = toDatetime(xDqd['firstSeen'])
+                    xDqd['lastSeen'] = toDatetime(xDqd['lastSeen'])
                     serializeState(xDqd)
                 
         except KeyboardInterrupt:

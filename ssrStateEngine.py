@@ -169,7 +169,7 @@ class SubListener(threading.Thread):
         # Check for floats.
         if 'heading' in retVal:
             try:
-                retVal['heading'] = float(retVal['heading'])
+                retVal['heading'] = round(float(retVal['heading']), 1)
             except Exception as e:
                 pprint(e)
         
@@ -187,7 +187,7 @@ class SubListener(threading.Thread):
         
         if 'velo' in retVal:
             try:
-                retVal['velo'] = float(retVal['velo'])
+                retVal['velo'] = round(float(retVal['velo']), 1)
             except Exception as e:
                 pprint(e)
         

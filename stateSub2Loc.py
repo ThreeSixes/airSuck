@@ -51,13 +51,24 @@ class SubListener(threading.Thread):
                 
                 if 'alt' in stateWrapped:
                     locStr = locStr + " @ " + str(stateWrapped['alt']) + "ft"
+                    
+                if 'vertRate' in stateWrapped:
+                    signExtra = ""
+                    
+                    if stateWrapped['vertRate'] > 0:
+                        signExtra = "+"
+                        
+                    locStr = locStr + " (" + signExtra + str(stateWrapped['vertRate']) + "ft/min)"
                 
                 if 'heading' in stateWrapped:
                     locStr = locStr + " - " + str(stateWrapped['heading']) + " deg"
                 
                 if 'category' in stateWrapped:
                     locStr = locStr + " ; cat " + stateWrapped['category']
-            
+                
+                if 'vertStat' in stateWrapped:
+                    locStr = locStr + " (" + stateWrapped['vertStat'] + ")"
+                
                 print(locStr)
         
         

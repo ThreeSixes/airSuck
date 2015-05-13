@@ -114,7 +114,7 @@ class SubListener(threading.Thread):
         
         Returns a dict containing emergency info.
         """
-         
+        
         retVal = {}
         
         # Automatically grab any emergency data we have ahead of time.
@@ -355,6 +355,10 @@ class SubListener(threading.Thread):
                     # Vertical rate data
                     if 'vertRate' in ssrWrapped:
                         data.update({"vertRate": ssrWrapped['vertRate']})
+                    
+                    # Vertical status data
+                    if 'vertStat' in ssrWrapped:
+                        data.update({"vertStat": ssrWrapped['vertStat']})
                     
                     # Velocity data
                     

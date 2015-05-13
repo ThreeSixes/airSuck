@@ -34,12 +34,12 @@ class SubListener(threading.Thread):
         
     def worker(self, work):
         #Do work on the data returned from the subscriber.
-        adsbJson = str(work['data'])
-        adsbWrapped = json.loads(adsbJson)
+        stateJson = str(work['data'])
+        stateWrapped = json.loads(stateJson)
         
         # Make sure we got good data from json.loads
-        if (type(adsbWrapped) == dict):
-            print(str(adsbWrapped))
+        if (type(stateWrapped) == dict):
+            print(str(stateWrapped))
         
         
     def run(self):

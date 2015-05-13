@@ -291,6 +291,10 @@ class SubListener(threading.Thread):
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":
                 
+                # Vertical status data
+                if 'vertStat' in ssrWrapped:
+                    data.update({"vertStat": ssrWrapped['vertStat']})
+                
                 # Do we have data we care about?
                 if ssrWrapped['df'] == 11:
                     
@@ -355,10 +359,6 @@ class SubListener(threading.Thread):
                     # Vertical rate data
                     if 'vertRate' in ssrWrapped:
                         data.update({"vertRate": ssrWrapped['vertRate']})
-                    
-                    # Vertical status data
-                    if 'vertStat' in ssrWrapped:
-                        data.update({"vertStat": ssrWrapped['vertStat']})
                     
                     # Velocity data
                     

@@ -208,7 +208,10 @@ class cprMath():
             retVal = [0, 0]
             
             # Compute N(i)
-            ni = (self.NL(lastFmt) - (lastFmt * 1.0))
+            if lastFmt == 1:
+                ni = self.NL(rlat1) - 1.0
+            else:
+                ni = self.NL(rlat0)
             
             if self.debugOn: print(" decodeCPR() N(i) = " + str(ni))
             

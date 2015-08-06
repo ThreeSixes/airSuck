@@ -417,7 +417,8 @@ class SubListener(threading.Thread):
                             hackFmt = data['lastFmt']
                             
                             # Decode location
-                            locData = cprProc.decodeCPR(evenData, oddData, hackFmt, False)
+                            locData = cprProc.decodeGlobalCPR(evenData[0], evenData[1], oddData[0], oddData[1], hackFmt)
+                            #decodeCPR(evenData[0], oddData, hackFmt, False)
                             
                             # Location data
                             if type(locData) == list:

@@ -419,10 +419,10 @@ class SubListener(threading.Thread):
                             # Decode location
                             try:
                                 # Original version:
-                                locData = cprProc.decodeCPR(evenData, oddData, hackFmt, False)
+                                #locData = cprProc.decodeCPR(evenData, oddData, hackFmt, False)
                                 
                                 # New test version
-                                #locData = cprProc.decodeGlobalCPR(evenData[0], evenData[1], oddData[0], oddData[1], hackFmt)
+                                locData = cprProc.decodeGlobalCPR(evenData[0], evenData[1], oddData[0], oddData[1], hackFmt)
                             except ValueError:
                                 pass
                             

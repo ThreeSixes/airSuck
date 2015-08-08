@@ -414,15 +414,16 @@ class SubListener(threading.Thread):
                             #else:
                             #    hackFmt = 0
                             
-                            hackFmt = data['lastFmt']
+                            fmt = data['lastFmt']
                             
                             # Decode location
                             try:
                                 # Original version:
-                                locData = cprProc.decodeCPR(evenData, oddData, hackFmt, False)
+                                locData = crpProc.cprResolveGlobal(evenData, oddData, fmt)
+                                #locData = cprProc.decodeCPR(evenData, oddData, fmt, False)
                                 
                                 # New test version
-                                #locData = cprProc.decodeGlobalCPR(evenData[0], evenData[1], oddData[0], oddData[1], hackFmt)
+                                #locData = cprProc.decodeGlobalCPR(evenData[0], evenData[1], oddData[0], oddData[1], fmt)
                             except ValueError:
                                 pass
                             

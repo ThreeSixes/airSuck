@@ -427,7 +427,7 @@ class SubListener(threading.Thread):
                                     data.update({"lat": locData[0], "lon": locData[1]})
                             
                             except CPRBoundaryStraddleError:
-                                continue
+                                pass
                         
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

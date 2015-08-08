@@ -22,7 +22,7 @@ class cprMath():
     def __nz(self, cType):
         return 4 * self.__latz - cType
     
-    def __lat(cType, surface):
+    def __lat(self, cType, surface):
         if surface == 1:
             tmp = 90.0
         else:
@@ -74,7 +74,7 @@ class cprMath():
         
         return [decodedLat, decodedLon]
 
-    def cprResolveGlobal(evenPos, oddPos, mostRecent, myPos = None, surface = None):
+    def cprResolveGlobal(self, evenPos, oddPos, mostRecent, myPos = None, surface = None):
         #cannot resolve surface positions unambiguously without knowing receiver position
         if surface and myPos is None:
             raise CPRNoPositionError

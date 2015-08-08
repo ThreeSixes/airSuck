@@ -68,6 +68,8 @@ class SubListener(threading.Thread):
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
             
+            cacheData.update({'lastSeen': str(datetime.datetime.utcnow())})
+            
             # Set each specified value.
             for thisKey in cacheData:
                 self.redis.hset(fullName, thisKey, cacheData[thisKey])
@@ -78,8 +80,6 @@ class SubListener(threading.Thread):
         retVal = self.redis.hgetall(fullName)
         
         retVal.update({'addr': objName})
-        
-        retVal.update({'lastSeen': str(datetime.datetime.utcnow())})
         
         retVal = self.fixDataTypes(retVal)
         

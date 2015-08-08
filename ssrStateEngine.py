@@ -64,8 +64,6 @@ class SubListener(threading.Thread):
         
         # Set the first seen data.
         self.redis.hsetnx(fullName, 'firstSeen', thisTime)
-        # Set last seen either way.
-        self.redis.hset(fullName, 'lastSeen', str(datetime.datetime.utcnow()))
         
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
@@ -80,6 +78,8 @@ class SubListener(threading.Thread):
         retVal = self.redis.hgetall(fullName)
         
         retVal.update({'addr': objName})
+        
+        retVal.update({'lastSeen': str(datetime.datetime.utcnow())})
         
         retVal = self.fixDataTypes(retVal)
         

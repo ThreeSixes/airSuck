@@ -68,7 +68,7 @@ class SubListener(threading.Thread):
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
             
-            cacheData.update({'lastSeen': str(datetime.datetime.utcnow())})
+            cacheData.update({'lastSeen': thisTime})
             
             # Set each specified value.
             for thisKey in cacheData:
@@ -335,7 +335,6 @@ class SubListener(threading.Thread):
                     # Set our datetime stamp for this data.
                     data.update({"dts": ssrWrapped['dts']})
                     
-                    # Filter for the data we need:
                     # Mode A squawk code.
                     if 'aSquawk' in ssrWrapped:
                         data.update({"aSquawk": ssrWrapped['aSquawk']})

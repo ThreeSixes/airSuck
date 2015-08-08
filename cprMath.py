@@ -60,7 +60,7 @@ class cprMath():
         else:
             tmp = 360.0
         
-        nLcalc = max(self.__nl(declatIn) - cType, 1)
+        nlCalc = max(self.__nl(declatIn) - cType, 1)
         
         return tmp / nlCalc
     

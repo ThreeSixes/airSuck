@@ -426,7 +426,7 @@ class SubListener(threading.Thread):
                                     # Set location data.
                                     data.update({"lat": locData[0], "lon": locData[1]})
                             
-                            except CPRBoundaryStraddleError:
+                            except Exception as e:
                                 pass
                         
                     # Enqueue processed state data.

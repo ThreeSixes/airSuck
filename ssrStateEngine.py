@@ -65,7 +65,7 @@ class SubListener(threading.Thread):
         # Set the first seen data.
         self.redis.hsetnx(fullName, 'firstSeen', thisTime)
         # Set last seen either way.
-        self.redis.hset(fullName, 'lastSeen', thisTime)
+        self.redis.hset(fullName, 'lastSeen', str(datetime.datetime.utcnow()))
         
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
@@ -380,9 +380,6 @@ class SubListener(threading.Thread):
                     # Surveillance status
                     if 'ss' in ssrWrapped:
                         data.update({"survStat": ssrWrapped['ss']})
-                    
-                    # Work on location data.
-                    # This needs a decent amount of logic
                     
                     # UTC flag
                     if 'utc' in ssrWrapped:

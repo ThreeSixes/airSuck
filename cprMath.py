@@ -22,6 +22,19 @@ class cprMath():
     def __nz(self, cType):
         return 4 * self.__latz - cType
     
+    def __dlat(self, cType, surface):
+        if surface == 1:
+            tmp = 90.0
+        else:
+            tmp = 360.0
+        
+        nzcalc = self.__nz(cType)
+        
+        if nZcalc == 0:
+            return tmp
+        else:
+            return tmp / nzcalc
+
     def __lat(self, cType, surface):
         if surface == 1:
             tmp = 90.0

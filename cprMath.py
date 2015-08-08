@@ -52,7 +52,7 @@ class cprMath():
         if abs(declatIn) >= 87.0:
             return 1.0
         
-        return math.floor( (2.0 * math.pi) * math.acos(1.0 - (1.0 - math.cos(math.pi / (2.0 * latz))) / math.cos((math.pi / 180.0) * abs(declatIn)) ** 2)** -1)
+        return math.floor( (2.0 * math.pi) * math.acos(1.0 - (1.0 - math.cos(math.pi / (2.0 * self.__latz))) / math.cos((math.pi / 180.0) * abs(declatIn)) ** 2)** -1)
     
     def __dlon(self, declatIn, cType, surface):
         if surface:

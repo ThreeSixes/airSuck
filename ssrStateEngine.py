@@ -291,6 +291,10 @@ class SubListener(threading.Thread):
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":
                 
+                # Mode A squawk code if we have one!
+                if 'aSquawk' in ssrWrapped:
+                    data.update({"aSquawk": ssrWrapped['aSquawk']})
+                
                 # Vertical status data
                 if 'vertStat' in ssrWrapped:
                     data.update({"vertStat": ssrWrapped['vertStat']})
@@ -334,10 +338,6 @@ class SubListener(threading.Thread):
                     
                     # Set our datetime stamp for this data.
                     data.update({"dts": ssrWrapped['dts']})
-                    
-                    # Mode A squawk code.
-                    if 'aSquawk' in ssrWrapped:
-                        data.update({"aSquawk": ssrWrapped['aSquawk']})
                     
                     # ID data
                     if 'idInfo' in ssrWrapped:

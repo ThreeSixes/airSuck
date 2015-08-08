@@ -419,7 +419,7 @@ class SubListener(threading.Thread):
                             # Decode location
                             try:
                                 # Original version:
-                                locData = crpProc.cprResolveGlobal(evenData, oddData, fmt)
+                                locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
                                 #locData = cprProc.decodeCPR(evenData, oddData, fmt, False)
                                 
                                 # New test version

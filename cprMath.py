@@ -28,9 +28,9 @@ class cprMath():
         else:
             tmp = 360.0
         
-        nzcalc = self.__nz(cType)
+        nzCalc = self.__nz(cType)
         
-        if nZcalc == 0:
+        if nzCalc == 0:
             return tmp
         else:
             return tmp / nzcalc

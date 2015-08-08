@@ -33,7 +33,7 @@ class cprMath():
         if nzCalc == 0:
             return tmp
         else:
-            return tmp / nzcalc
+            return tmp / nzCalc
 
     def __lat(self, cType, surface):
         if surface == 1:

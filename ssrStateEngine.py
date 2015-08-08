@@ -420,17 +420,14 @@ class SubListener(threading.Thread):
                             try:
                                 # Original version:
                                 locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
-                                #locData = cprProc.decodeCPR(evenData, oddData, fmt, False)
                                 
-                                # New test version
-                                #locData = cprProc.decodeGlobalCPR(evenData[0], evenData[1], oddData[0], oddData[1], fmt)
-                            except ValueError:
-                                pass
+                                # Location data
+                                if type(locData) == list:
+                                    # Set location data.
+                                    data.update({"lat": locData[0], "lon": locData[1]})
                             
-                            # Location data
-                            if type(locData) == list:
-                                # Set location data.
-                                data.update({"lat": locData[0], "lon": locData[1]})
+                            except CPRBoundaryStraddleError:
+                                continue
                         
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

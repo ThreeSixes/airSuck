@@ -48,7 +48,7 @@ class SubListener(threading.Thread):
                 
                 # If we know the aircraft's squawk code add it, too.
                 if 'aSquawk' in stateWrapped:
-                    locStr = locStr + "(" + stateWrapped['aSquawk'] + ")" 
+                    locStr = locStr + "(" + stateWrapped['aSquawk'] + ") " 
                 
                 # Add ICAO AA address.
                 locStr = locStr + "[" + stateWrapped['addr'] + "]: "

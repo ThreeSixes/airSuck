@@ -98,7 +98,7 @@ class cprMath():
         evenPos = [float(evenPos[0]), float(evenPos[1])]
         oddPos = [float(oddPos[0]), float(oddPos[1])]
         
-        j = math.floor(((self.__nz(1) * evenPos[0] - nz(0) * oddPos[0]) / 2 ** 17) + 0.5) #latitude index
+        j = math.floor(((self.__nz(1) * evenPos[0] - self.__nz(0) * oddPos[0]) / 2 ** 17) + 0.5) #latitude index
         
         rLatEven = dLatEven * ((j % self.__nz(0)) + evenPos[0] / 2 ** 17)
         rLatOdd  = dLatOdd  * ((j % self.__nz(1)) + oddPos[0] / 2 ** 17)

@@ -359,6 +359,9 @@ class SubListener(threading.Thread):
                     if 'vertRate' in ssrWrapped:
                         data.update({"vertRate": ssrWrapped['vertRate']})
                     
+                    # Flight status data
+                    if 'fs' in ssrWrapped:
+                        data.update({"fs": ssrWrapped['fs']})
                     # Velocity data
                     
                     # For airborne aircraft
@@ -435,6 +438,10 @@ class SubListener(threading.Thread):
                 # Scan for emergency flag.
                 if 'emergency' in ssrWrapped:
                     data.update({"emergency": ssrWrapped['emergency']})
+                
+                # Mode A squawk code if we have one!
+                if 'aSquawk' in ssrWrapped:
+                    data.update({"aSquawk": ssrWrapped['aSquawk']})
                 
                 # Check for emergency conditions.
                 data.update(self.getEmergencyInfo(ssrWrapped))

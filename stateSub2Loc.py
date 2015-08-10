@@ -79,6 +79,9 @@ class SubListener(threading.Thread):
                 if 'category' in stateWrapped:
                     locStr = locStr + "; cat " + stateWrapped['category']
                 
+                if 'fs' in stateWrapped:
+                    locStr = locStr + " [" + str(stateWrapped['fs']) + "]"
+                
                 # Add vertical status if we know it (air/ground)
                 if 'vertStat' in stateWrapped:
                     locStr = locStr + " (" + stateWrapped['vertStat'] + ")"

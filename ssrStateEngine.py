@@ -291,19 +291,18 @@ class SubListener(threading.Thread):
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":
                 
-                # Mode A squawk code if we have one!
-                if 'aSquawk' in ssrWrapped:
-                    data.update({"aSquawk": ssrWrapped['aSquawk']})
                 
-                # Vertical status data
-                if 'vertStat' in ssrWrapped:
-                    data.update({"vertStat": ssrWrapped['vertStat']})
-                
-                # Do we have data we care about?
-                if ssrWrapped['df'] == 11:
-                    
+                if 'icaoAAHx' in ssrWrapped:
                     # Try to get existing data.
                     data = self.pullState(ssrWrapped['icaoAAHx'])
+                    
+                    # Mode A squawk code if we have one!
+                    if 'aSquawk' in ssrWrapped:
+                        data.update({"aSquawk": ssrWrapped['aSquawk']})
+                    
+                    # Vertical status data
+                    if 'vertStat' in ssrWrapped:
+                        data.update({"vertStat": ssrWrapped['vertStat']})
                     
                     # Check for emergency conditions.
                     data.update(self.getEmergencyInfo(ssrWrapped))
@@ -316,28 +315,10 @@ class SubListener(threading.Thread):
                     
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
-                    
+                        
                     # Scan for emergency flag.
                     if 'emergency' in ssrWrapped:
                         data.update({"emergency": ssrWrapped['emergency']})
-                
-                elif ssrWrapped['df'] == 17:
-                    
-                    # Try to get existing data.
-                    data = self.pullState(ssrWrapped['icaoAAHx'])
-                    
-                    # Check for emergency conditions.
-                    data.update(self.getEmergencyInfo(ssrWrapped))
-                    
-                    # Scan for emergency flag.
-                    if 'emergency' in ssrWrapped:
-                        data.update({"emergency": ssrWrapped['emergency']})
-                    
-                    # Set the last sensor we got a frame from
-                    data.update({"lastSrc": ssrWrapped['src']})
-                    
-                    # Set our datetime stamp for this data.
-                    data.update({"dts": ssrWrapped['dts']})
                     
                     # ID data
                     if 'idInfo' in ssrWrapped:
@@ -362,10 +343,11 @@ class SubListener(threading.Thread):
                     # Flight status data
                     if 'fs' in ssrWrapped:
                         data.update({"fs": ssrWrapped['fs']})
+                        
                     # Velocity data
                     
                     # For airborne aircraft
-                    if ssrWrapped['fmt'] == 19:
+                    if ((ssrWrapped['df'] == 17) or (ssrWrapped['df'] == 18)) and (ssrWrapped['fmt'] == 19):
                         if 'gndspeed' in ssrWrapped:
                             data.update({"velo": ssrWrapped['gndspeed'], "veloType": "gnd"})
                         if 'airspeed' in ssrWrapped:
@@ -388,7 +370,7 @@ class SubListener(threading.Thread):
                         data.update({"utc": ssrWrapped['utc']})
                     
                     
-                    # This needs more logic for decoding CPR, etc.
+                    # Decode location data.
                     if 'evenOdd' in ssrWrapped:
                         
                         # Update data with even and odd raw values.

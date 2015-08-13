@@ -156,13 +156,9 @@ class dataSource(threading.Thread):
 					
 			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
 			except Exception as e:
-				# If the transport endpoint is disconnected.
-				if e.errno == 107:
-					print(myName + " connection dropped.")
-				else:
-					# Dafuhq happened!?
-					print(myName + " went boom.")
-					pprint(e)
+				# Dafuhq happened!?
+				print(myName + " went boom.")
+				pprint(e)
 			
 	def formatSSRMsg(self, strMsg):
 		"""

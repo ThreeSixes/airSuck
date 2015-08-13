@@ -51,19 +51,19 @@ while(True) :
                     xDqd = dejsonify(dQd)
                     
                     if 'firstSeen' in xDqd:
-                        if xDqd['firstSeen'] != None:
+                        if xDqd['firstSeen'] != 'None':
                             xDqd['firstSeen'] = toDatetime(xDqd['firstSeen'])
                     
                     if 'lastSeen' in xDqd:
-                        if xDqd['lastSeen'] != None:
+                        if xDqd['lastSeen'] != 'None':
                             xDqd['lastSeen'] = toDatetime(xDqd['lastSeen'])
                     
                     if 'evenTs' in xDqd:
-                        if xDqd['evenTs'] != None:
+                        if xDqd['evenTs'] != 'None':
                             xDqd['evenTs'] = toDatetime(xDqd['evenTs'])
                     
                     if 'oddTs' in xDqd:
-                        if xDqd['oddTs'] != None:
+                        if xDqd['oddTs'] != 'None':
                             xDqd['oddTs'] = toDatetime(xDqd['oddTs'])
                     
                     serializeState(xDqd)

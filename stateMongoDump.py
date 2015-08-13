@@ -25,6 +25,7 @@ def toDatetime(strDateTime):
     """
     Convert utcnow() datetime string back to a datetime object.
     """
+    
     return datetime.datetime.strptime(strDateTime, "%Y-%m-%d %H:%M:%S.%f")
 
 # Decapsulate the JSON data.
@@ -48,12 +49,23 @@ while(True) :
                 else:
                     # We have data so we should break it out of JSON formatting.
                     xDqd = dejsonify(dQd)
-                    xDqd['firstSeen'] = toDatetime(xDqd['firstSeen'])
-                    xDqd['lastSeen'] = toDatetime(xDqd['lastSeen'])
+                    
+                    if 'firstSeen' in xDqd:
+                        if xDqd['firstSeen'] != None:
+                            xDqd['firstSeen'] = toDatetime(xDqd['firstSeen'])
+                    
+                    if 'lastSeen' in xDqd:
+                        if xDqd['lastSeen'] != None:
+                            xDqd['lastSeen'] = toDatetime(xDqd['lastSeen'])
+                    
                     if 'evenTs' in xDqd:
-                        xDqd['evenTs'] = toDatetime(xDqd['evenTs'])
+                        if xDqd['evenTs'] != None:
+                            xDqd['evenTs'] = toDatetime(xDqd['evenTs'])
+                    
                     if 'oddTs' in xDqd:
-                        xDqd['oddTs'] = toDatetime(xDqd['oddTs'])
+                        if xDqd['oddTs'] != None:
+                            xDqd['oddTs'] = toDatetime(xDqd['oddTs'])
+                    
                     serializeState(xDqd)
                 
         except KeyboardInterrupt:

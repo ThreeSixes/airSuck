@@ -50,8 +50,10 @@ while(True) :
                     xDqd = dejsonify(dQd)
                     xDqd['firstSeen'] = toDatetime(xDqd['firstSeen'])
                     xDqd['lastSeen'] = toDatetime(xDqd['lastSeen'])
-                    xDqd['evenTs'] = toDatetime(xDqd['evenTs'])
-                    xDqd['oddTs'] = toDatetime(xDqd['oddTs'])
+                    if 'evenTs' in xDad:
+                        xDqd['evenTs'] = toDatetime(xDqd['evenTs'])
+                    if 'oddTs' in xDad:
+                        xDqd['oddTs'] = toDatetime(xDqd['oddTs'])
                     serializeState(xDqd)
                 
         except KeyboardInterrupt:

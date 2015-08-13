@@ -28,6 +28,7 @@ class ssrParse:
     
     # Do we set the names of DFs, formats, etc.?
     decodeNames = False
+
     
     ####################
     # Config Functions #
@@ -736,6 +737,9 @@ class ssrParse:
             
             # Get our DF (downlink format)
             retVal['df'] = binData[0] >> 3
+            
+            # Get CRC bytes.
+            retVal['crc'] = (binData[-3] << 16) + (binData[-2] << 8) + (binData[-1])
             
             # Short air-to-air ACAS
             if(retVal['df'] == 0):

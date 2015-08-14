@@ -330,7 +330,7 @@ class SubListener(threading.Thread):
                             crcGood = True
                 
                 # Account for DF types that we aren't sure about CRC data that could contain good stuff.
-                if ssrWrapped['df'] in (1, 2, 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 23):
+                if ssrWrapped['df'] in (1, 2, 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 23):
                     crcGood = True
                 
                 if crcGood == False:

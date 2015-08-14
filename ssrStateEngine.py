@@ -240,6 +240,12 @@ class SubListener(threading.Thread):
             except Exception as e:
                 pprint(e)
         
+        if 'supersonic' in retVal:
+            try:
+                retVal['supersonic'] = int(retVal['supersonic'])
+            except Exception as e:
+                pprint(e)
+        
         if 'survStat' in retVal:
             try:
                 retVal['survStat'] = int(retVal['survStat'])
@@ -273,7 +279,16 @@ class SubListener(threading.Thread):
         self.redis.publish(destPubSub, jsonData)
         
         return
-    
+
+    def crcInt2Hex(self, crcInt):
+        """
+        crcInt2Hex(crcInt)
+        
+        Convert the CRC value as in intteger to a hex string.
+        Returns a hex string.
+        """
+        
+        return binascii.hexlify(chr((crcInt >> 16) & 0xff) + chr((crcInt >> 8) & 0xff) + chr((crcInt & 0xff)))
 
     def worker(self, work):
         # Do work on the data returned from the subscriber.
@@ -291,10 +306,38 @@ class SubListener(threading.Thread):
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":
                 
+                # Set our good CRC flag to false by default.
+                crcGood = False
                 
-                if 'icaoAAHx' in ssrWrapped:
-                    # Try to get existing data.
-                    data = self.pullState(ssrWrapped['icaoAAHx'])
+                # Do we have a matching CRC value?
+                if ssrWrapped['crcFrame'] == ssrWrapped['cmpCrc']:
+                    # See if we have a DF type that doesn't XOR the transmitter's ICAO address with the CRC.
+                    if ssrWrapped['df'] in (11, 17, 18, 19):
+                        crcGood = True
+                else:
+                    # See if we have a DF type that XORs the transmitter's ICAO address with the CRC.
+                    if ssrWrapped['df'] in (0, 4, 5, 20, 21):
+                        # XOR the computed and frame CRC values to get a potential ICAO AA
+                        potAA = self.crcInt2Hex(ssrWrapped['crcFrame'] ^ ssrWrapped['cmpCrc'])
+                        
+                        # See if we're aware of the potential valid AA.
+                        data = self.pullState(potAA)
+                        
+                        # If we have info on the AA, load it.
+                        if len(data) > 0:
+                            # Make sure we assign the icaoAAHx value, and indicate we have a good CRC value.
+                            ssrWrapped.update({'icaoAAHx': potAA})
+                            crcGood = True
+                
+                # Account for DF types that we aren't sure about CRC data that could contain good stuff.
+                if ssrWrapped['df'] in (1, 2, 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 23):
+                    crcGood = True
+                
+                # If we have an aircraft address specified and a good CRC...
+                if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
+                    # Try to get existing data, assuming we didn't get it already.
+                    if len(data) < 0:
+                        data = self.pullState(ssrWrapped['icaoAAHx'])
                     
                     # Mode A squawk code if we have one!
                     if 'aSquawk' in ssrWrapped:

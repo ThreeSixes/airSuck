@@ -1,3 +1,13 @@
+"""
+ssrPrase by ThreeSixes (https://github.com/ThreeSixes)
+
+This class is part of the airSuck project.
+
+Some code in this class was taken from or inspired by code in Malcom Robb's dump1090 fork, and the CRC algorightm comes from Bistromath's gr-air-modes project.
+https://github.com/MalcolmRobb/dump1090
+https://github.com/bistromath/gr-air-modes
+"""
+
 ############
 # Imports. #
 ############
@@ -17,19 +27,22 @@ class ssrParse:
     ssrParse only supports parsing of DF (downlink format) data so far.
     
     the principal method is ssrParse(strData) with strData being a binary string of SSR data.
-    
-    Some code in this class was taken from or inspired by code in Malcom Robb's dump1090 fork.
-    https://github.com/MalcolmRobb/dump1090
     """
     
-    ###################
-    # Class-wide vars #
-    ###################
+    #####################
+    # Class constructor #
+    #####################
     
-    # Do we set the names of DFs, formats, etc.?
-    decodeNames = False
+    
+    def __init__(self):
+        # Do we set the names of DFs, formats, etc.?
+        self.decodeNames = False
+    
+        # CRC stuff
+        self.__crcPoly = 0xfff409
+        self.__crc24Mask = 0xffffff
+        self.__crcTable = self.buildCrcTable()
 
-    
     ####################
     # Config Functions #
     ####################
@@ -73,83 +86,46 @@ class ssrParse:
         
         return binascii.unhexlify(asciiHx)
     
-    def crcChk(self, data):
+    def buildCrcTable(self):
         """
-        crcChk(data)
-        24-Bit CRC check against DF11 and DF17, since other data types seem to have the ICAO  XOR'd with the sender's address.
-        This method is based on the dump1090's modesChecksum() in mode_s.c
+        buildCrcTable()
         
-        I AM BROKEN
+        Create CRC value table for improved CRC computation performance.
+        
+        Returns the CRC table.
         """
         
-        # CRC sum table from dump1090's mode_s.c
-        ckSumTable = [
-        0x3935ea, 0x1c9af5, 0xf1b77e, 0x78dbbf, 0xc397db, 0x9e31e9, 0xb0e2f0, 0x587178,
-        0x2c38bc, 0x161c5e, 0x0b0e2f, 0xfa7d13, 0x82c48d, 0xbe9842, 0x5f4c21, 0xd05c14,
-        0x682e0a, 0x341705, 0xe5f186, 0x72f8c3, 0xc68665, 0x9cb936, 0x4e5c9b, 0xd8d449,
-        0x939020, 0x49c810, 0x24e408, 0x127204, 0x093902, 0x049c81, 0xfdb444, 0x7eda22,
-        0x3f6d11, 0xe04c8c, 0x702646, 0x381323, 0xe3f395, 0x8e03ce, 0x4701e7, 0xdc7af7,
-        0x91c77f, 0xb719bb, 0xa476d9, 0xadc168, 0x56e0b4, 0x2b705a, 0x15b82d, 0xf52612,
-        0x7a9309, 0xc2b380, 0x6159c0, 0x30ace0, 0x185670, 0x0c2b38, 0x06159c, 0x030ace,
-        0x018567, 0xff38b7, 0x80665f, 0xbfc92b, 0xa01e91, 0xaff54c, 0x57faa6, 0x2bfd53,
-        0xea04ad, 0x8af852, 0x457c29, 0xdd4410, 0x6ea208, 0x375104, 0x1ba882, 0x0dd441,
-        0xf91024, 0x7c8812, 0x3e4409, 0xe0d800, 0x706c00, 0x383600, 0x1c1b00, 0x0e0d80,
-        0x0706c0, 0x038360, 0x01c1b0, 0x00e0d8, 0x00706c, 0x003836, 0x001c1b, 0xfff409,
-        0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000,
-        0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000,
-        0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000]
+        crc = 0
+        crcTable = []
         
-        # Hold our return value.
-        retVal = False
+        for i in range(0, 256):
+            crc = i << 16
+            
+            for j in range(0, 8):
+                if int(crc & 0x800000) > 0:
+                    crc = ((crc << 1) ^ self.__crcPoly) & self.__crc24Mask
+                else:
+                    crc = (crc << 1) & self.__crc24Mask
+            
+            crcTable.append((crc & self.__crc24Mask))
         
-        # Hold our remainder and CRC values.
+        return crcTable
+    
+    def getCrc(self, data):
+        """
+        getCrc(data)
+        
+        Compute the CRC value of a given frame.
+        
+        Returns the CRC value as an int.
+        """
+        
         crc = 0
         
-        # Get the length in bytes of our data in bytes.
-        dataLen = len(data)
+        for i in range(0, len(data)):
+            crc = self.__crcTable[((crc >> 16) ^ data[i]) & 0xff] ^ (crc << 8)
         
-        # Get the last three bytes of CRC (24 bits)
-        specCrc = (data[dataLen - 3] << 16) | (data[dataLen - 2] << 8) | data[dataLen - 1]
-        
-        # Get the ICAO address as an int.
-        icaoAAInt = self.getIcaoAAInt(data)
-        
-        # Convert our length in bytes to bits.
-        dataLen *= 8
-        
-        # Figoure out where in the checksum table we need to start.
-        tableOffset = 122 - dataLen
-        
-        # Remove the last 24 bits (3 bytes) from the length of the data.
-        dataLen -= 24
-        
-        # Load the first byte.
-        byteCtr = 0
-        thisByte = data[byteCtr]
-        
-        # Compute the CRC, bit by bit.
-        for i in range(0, (dataLen - 1)):
-            # If we're at an 8th bit...
-            if((i & 7) == 0):
-                # increment the byte counter
-                byteCtr += 1
-                # Get the new byte.
-                thisByte = data[byteCtr]
-            
-            # Check for a bit set
-            if ((thisByte & 0x80) > 0):
-                crc ^= ckSumTable[tableOffset + i]
-            
-            # Slide one bit left.
-            thisByte = thisByte << 1
-            
-        # Compute final CRC value.
-        retVal = (crc ^ icaoAAInt) & 0xffffff
-        
-        print("Debug computed CRC " + str(retVal))
-        print("Debug provided CRC " + str(specCrc))
-        
-        return retVal
+        return (crc & self.__crc24Mask)
     
     def formatString(self, subject):
         """
@@ -738,8 +714,9 @@ class ssrParse:
             # Get our DF (downlink format)
             retVal['df'] = binData[0] >> 3
             
-            # Get CRC bytes.
-            retVal['crc'] = (binData[-3] << 16) + (binData[-2] << 8) + (binData[-1])
+            # Get the frame's CRC value and compute the CRC value of the frame.
+            retVal['frameCrc'] = (binData[-3] << 16) + (binData[-2] << 8) + (binData[-1])
+            retVal['cmpCrc'] = self.getCrc(binData[0:-3])
             
             # Short air-to-air ACAS
             if(retVal['df'] == 0):

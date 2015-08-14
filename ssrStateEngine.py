@@ -312,7 +312,7 @@ class SubListener(threading.Thread):
                 # Do we have a matching CRC value?
                 if ssrWrapped['frameCrc'] == ssrWrapped['cmpCrc']:
                     # See if we have a DF type that doesn't XOR the transmitter's ICAO address with the CRC.
-                    if ssrWrapped['df'] in (11, 17, 18, 19):
+                    if ssrWrapped['df'] in (17, 18, 19):
                         crcGood = True
                 else:
                     # See if we have a DF type that XORs the transmitter's ICAO address with the CRC.
@@ -330,7 +330,7 @@ class SubListener(threading.Thread):
                             crcGood = True
                 
                 # Account for DF types that we aren't sure about CRC data that could contain good stuff.
-                if ssrWrapped['df'] in (1, 2, 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 23):
+                if ssrWrapped['df'] in (11, 16):
                     crcGood = True
                 
                 if crcGood == False:

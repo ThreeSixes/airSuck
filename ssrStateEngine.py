@@ -339,7 +339,7 @@ class SubListener(threading.Thread):
                 # If we have an aircraft address specified and a good CRC...
                 if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
                     # Try to get existing data, assuming we didn't get it already.
-                    if len(data) < 0:
+                    if len(data) == 0:
                         data = self.pullState(ssrWrapped['icaoAAHx'])
                     
                     # Mode A squawk code if we have one!

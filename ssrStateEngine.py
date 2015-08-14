@@ -310,7 +310,7 @@ class SubListener(threading.Thread):
                 crcGood = False
                 
                 # Do we have a matching CRC value?
-                if ssrWrapped['crcFrame'] == ssrWrapped['cmpCrc']:
+                if ssrWrapped['frameCrc'] == ssrWrapped['cmpCrc']:
                     # See if we have a DF type that doesn't XOR the transmitter's ICAO address with the CRC.
                     if ssrWrapped['df'] in (11, 17, 18, 19):
                         crcGood = True
@@ -318,7 +318,7 @@ class SubListener(threading.Thread):
                     # See if we have a DF type that XORs the transmitter's ICAO address with the CRC.
                     if ssrWrapped['df'] in (0, 4, 5, 20, 21):
                         # XOR the computed and frame CRC values to get a potential ICAO AA
-                        potAA = self.crcInt2Hex(ssrWrapped['crcFrame'] ^ ssrWrapped['cmpCrc'])
+                        potAA = self.crcInt2Hex(ssrWrapped['frameCrc'] ^ ssrWrapped['cmpCrc'])
                         
                         # See if we're aware of the potential valid AA.
                         data = self.pullState(potAA)

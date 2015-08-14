@@ -333,6 +333,9 @@ class SubListener(threading.Thread):
                 if ssrWrapped['df'] in (1, 2, 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 23):
                     crcGood = True
                 
+                if crcGood == False:
+                    print("Bad CRC detected in frame:\n DF " + str(ssrWrapped['df']) + ": " + ssrWrapped['data'])
+                
                 # If we have an aircraft address specified and a good CRC...
                 if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
                     # Try to get existing data, assuming we didn't get it already.

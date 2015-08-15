@@ -301,8 +301,9 @@ class SubListener(threading.Thread):
             # Set up our data structure
             data = {}
             
-            # Set our datetime stamp for this data.
-            data.update({"dts": ssrWrapped['dts']})
+            if 'dts' in ssrWrapped:
+                # Set our datetime stamp for this data.
+                data.update({"dts": ssrWrapped['dts']})
             
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":

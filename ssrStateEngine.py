@@ -59,14 +59,16 @@ class SubListener(threading.Thread):
         # Create properly-formatted name for the state hash table we're creating.
         fullName = str('state:' + objName)
         
+        # Delete the original timestamp.
+        thisTime = cacheData.pop('dts', None)
+        
+        # Set the first seen data.
+        self.redis.hsetnx(fullName, 'firstSeen', thisTime)
+        
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
             
-            # Pull the original timestamp.
-            thisTime = cacheData['dts']
-            
-            # Set the first seen data if this is the first time we're seeing the specified AA.
-            self.redis.hsetnx(fullName, 'firstSeen', thisTime)
+            cacheData.update({'lastSeen': thisTime})
             
             # Set each specified value.
             for thisKey in cacheData:
@@ -301,10 +303,6 @@ class SubListener(threading.Thread):
             # Set up our data structure
             data = {}
             
-            if 'dts' in ssrWrapped:
-                # Set our datetime stamp for this data.
-                data.update({"dts": ssrWrapped['dts']})
-            
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":
                 
@@ -357,6 +355,9 @@ class SubListener(threading.Thread):
                     
                     # Set the last sensor we got a frame from
                     data.update({"lastSrc": ssrWrapped['src']})
+                    
+                    # Set our datetime stamp for this data.
+                    data.update({"dts": ssrWrapped['dts']})
                     
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

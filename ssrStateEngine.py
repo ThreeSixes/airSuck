@@ -59,16 +59,13 @@ class SubListener(threading.Thread):
         # Create properly-formatted name for the state hash table we're creating.
         fullName = str('state:' + objName)
         
-        print(objName + " - " + str(cacheData['dts']))        
-        
         # Delete the original timestamp.
         thisTime = cacheData.pop('dts', None)
         
         
-        
         # Set the first seen data.
         self.redis.hsetnx(fullName, 'firstSeen', thisTime)
-
+        
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
             

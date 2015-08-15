@@ -71,13 +71,23 @@ class SubListener(threading.Thread):
                     # Add sign and unit to string.
                     locStr = locStr + " (" + signExtra + str(stateWrapped['vertRate']) + "ft/min)"
                 
+                if 'velo' in stateWrapped:
+                    
+                    if 'supersonic' in stateWrapped:
+                        if stateWrapped['supersonic'] == True:
+                            ssExtra = "**"
+                        else:
+                            ssExtra = ""
+                    
+                    locStr = locStr + ", " + ssExtra + str(stateWrapped['velo']) + " kt (" + stateWrapped['veloType'] + ")"
+                
                 # Put in the heading if we know it.
                 if 'heading' in stateWrapped:
-                    locStr = locStr + " - " + str(stateWrapped['heading']) + " deg"
+                    locStr = locStr + ", " + str(stateWrapped['heading']) + " deg"
                 
                 # Add aircraft category if we know it.
                 if 'category' in stateWrapped:
-                    locStr = locStr + "; cat " + stateWrapped['category']
+                    locStr = locStr + ", cat " + stateWrapped['category']
                 
                 if 'fs' in stateWrapped:
                     locStr = locStr + " [" + str(stateWrapped['fs']) + "]"

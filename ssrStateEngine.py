@@ -68,8 +68,6 @@ class SubListener(threading.Thread):
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
             
-            cacheData.update({'lastSeen': thisTime})
-            
             # Set each specified value.
             for thisKey in cacheData:
                 self.redis.hset(fullName, thisKey, cacheData[thisKey])
@@ -371,6 +369,9 @@ class SubListener(threading.Thread):
                         # Set our datetime stamp for this data.
                         data.update({"dts": ssrWrapped['dts']})
                         
+                        # Set our lastSeen time stamp for this data.
+                        data.update({"lastSeen": ssrWrapped['dts']})
+                        
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
                             
@@ -479,6 +480,9 @@ class SubListener(threading.Thread):
                     # Mode A squawk code if we have one!
                     if 'aSquawk' in ssrWrapped:
                         data.update({"aSquawk": ssrWrapped['aSquawk']})
+                    
+                    # Set our lastSeen time stamp for this data.
+                    data.update({"lastSeen": ssrWrapped['dts']})
                     
                     # Check for emergency conditions.
                     data.update(self.getEmergencyInfo(ssrWrapped))

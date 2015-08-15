@@ -59,8 +59,12 @@ class SubListener(threading.Thread):
         # Create properly-formatted name for the state hash table we're creating.
         fullName = str('state:' + objName)
         
+        print(objName + " - " + str(cacheData['dts']))        
+        
         # Delete the original timestamp.
         thisTime = cacheData.pop('dts', None)
+        
+        
         
         # Set the first seen data.
         self.redis.hsetnx(fullName, 'firstSeen', thisTime)
@@ -304,6 +308,9 @@ class SubListener(threading.Thread):
             # Set up our data structure
             data = {}
             
+            # Set our datetime stamp for this data.
+            data.update({"dts": ssrWrapped['dts']})
+            
             # Do we hvae mode s?
             if ssrWrapped['mode'] == "s":
                 
@@ -356,9 +363,6 @@ class SubListener(threading.Thread):
                     
                     # Set the last sensor we got a frame from
                     data.update({"lastSrc": ssrWrapped['src']})
-                    
-                    # Set our datetime stamp for this data.
-                    data.update({"dts": ssrWrapped['dts']})
                     
                     # Enqueue processed state data.
                     self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

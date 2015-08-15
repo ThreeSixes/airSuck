@@ -64,15 +64,16 @@ class SubListener(threading.Thread):
         
         # Set the first seen data.
         self.redis.hsetnx(fullName, 'firstSeen', thisTime)
-        
+
         # Update or create cached data, if we have more than just a name
         if type(cacheData) == dict:
-            
-            cacheData.update({'lastSeen': thisTime})
             
             # Set each specified value.
             for thisKey in cacheData:
                 self.redis.hset(fullName, thisKey, cacheData[thisKey])
+        
+        # Set the last seen data.
+        self.redis.hset(fullName, 'lastSeen', thisTime)
         
         # Set expiration on the hash entry.
         self.redis.expire(fullName, expireTime)

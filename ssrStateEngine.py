@@ -264,6 +264,12 @@ class SubListener(threading.Thread):
             except Exception as e:
                 pprint(e)
         
+        if 'fs' in retVal:
+            try:
+                retVal['fs'] = int(retVal['fs'])
+            except Exception as e:
+                pprint(e)
+        
         return retVal
 
     def enqueueData(self, statusData):

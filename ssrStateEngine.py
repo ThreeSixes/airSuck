@@ -427,6 +427,8 @@ class SubListener(threading.Thread):
                         if 'utc' in ssrWrapped:
                             data.update({"utc": ssrWrapped['utc']})
                         
+                        print(ssrWrapped['icaoAAHx'] + ' 0 of 9 DTS: ' + str(ssrWrapped['dts']))
+                        
                         # Decode location data.
                         if 'evenOdd' in ssrWrapped:
                             

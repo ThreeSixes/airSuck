@@ -440,7 +440,7 @@ class SubListener(threading.Thread):
                             else:
                                 # Set odd data.
                                 data.update({"oddLat": ssrWrapped['rawLat'], "oddLon": ssrWrapped['rawLon'], "oddTs": ssrWrapped['dts'], "lastFmt": ssrWrapped['evenOdd']})
-                                print(ssrWrapped['icaoAAHx'] + ' 2 of XSXX update data with odd data')
+                                print(ssrWrapped['icaoAAHx'] + ' 2 of 9 update data with odd data')
                             
                             print(ssrWrapped['icaoAAHx'] + ' 3 of 9 updated data with e/o data')
                             
@@ -455,7 +455,7 @@ class SubListener(threading.Thread):
                                 
                                 print(ssrWrapped['icaoAAHx'] + ' 5 of 9 pulled even/odd data')
                                 
-                                fmt = data['lastFmt']
+                                fmt = ssrWrapped['evenOdd']
                                 
                                 print(ssrWrapped['icaoAAHx'] + ' 6 of 9 got lastFmt')
                                 

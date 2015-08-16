@@ -102,6 +102,9 @@ class SubListener(threading.Thread):
         # Make sure we have some sort of data.
         if type(dataPull) == dict:
             retVal = dataPull
+            
+            print("Cache hit!")
+            pprint(retVal)
         
         else:
             # If not, return a blank dict.

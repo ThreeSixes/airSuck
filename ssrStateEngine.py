@@ -446,6 +446,7 @@ class SubListener(threading.Thread):
                             print(ssrWrapped['icaoAAHx'] + ' 3 of 9 updated data with e/o data')
                             
                             dbgStr = ""
+                            
                             if 'evenTs' in data:
                                 dbgStr = " even: " + str(data['evenTs'])
                                 
@@ -453,6 +454,7 @@ class SubListener(threading.Thread):
                                 dbgStr = dbgStr + " odd: " + str(data['oddTs'])
                             
                             print(ssrWrapped['icaoAAHx'] + ' 3a of 9 - ' + dbgStr)
+                            print(ssrWrapped['icaoAAHx'] + ' 3b of 9 - ' + str(data))
                             
                             # If we have even and odd lat/lon data
                             if ('evenTs' in data) and ('oddTs' in data):

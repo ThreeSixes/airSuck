@@ -427,11 +427,10 @@ class SubListener(threading.Thread):
                         if 'utc' in ssrWrapped:
                             data.update({"utc": ssrWrapped['utc']})
                         
-                        print(ssrWrapped['icaoAAHx'] + ' 0 of 9 DTS: ' + str(ssrWrapped['dts']))
-                        
                         # Decode location data.
                         if 'evenOdd' in ssrWrapped:
                             
+                            print(ssrWrapped['icaoAAHx'] + ' 0 of 9 DTS: ' + str(ssrWrapped['dts']))
                             print(ssrWrapped['icaoAAHx'] + ' 1 of 9 detected even/odd')
                             
                             # Update data with even and odd raw values.
@@ -446,8 +445,17 @@ class SubListener(threading.Thread):
                             
                             print(ssrWrapped['icaoAAHx'] + ' 3 of 9 updated data with e/o data')
                             
+                            dbgStr = ""
+                            if 'evenTs' in data:
+                                dbgStr = " even: " + str(data['evenTs'])
+                                
+                            if 'oddTs' in data:
+                                dbgStr = dbgStr + " odd: " + str(data['evenTs'])
+                            
+                            print(ssrWrapped['icaoAAHx'] + ' 3a of 9 - ' + dbgStr)
+                            
                             # If we have even and odd lat/lon data
-                            if ("evenTs" in data) and ("oddTs" in data):
+                            if ('evenTs' in data) and ('oddTs' in data):
                                 
                                 print(ssrWrapped['icaoAAHx'] + ' 4 of 9 detected evenTs and oddTs')
                                 

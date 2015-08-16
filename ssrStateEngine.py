@@ -373,9 +373,6 @@ class SubListener(threading.Thread):
                         # Set our lastSeen time stamp for this data.
                         data.update({"lastSeen": ssrWrapped['dts']})
                         
-                        # Enqueue processed state data.
-                        self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
-                            
                         # Scan for emergency flag.
                         if 'emergency' in ssrWrapped:
                             data.update({"emergency": ssrWrapped['emergency']})
@@ -488,7 +485,7 @@ class SubListener(threading.Thread):
                                 
                                 except Exception as e:
                                     pprint(e)
-                        
+                                
                                 print(ssrWrapped['icaoAAHx'] + ' 9 of 9 end of location decoding')
                         
                         # Enqueue processed state data.

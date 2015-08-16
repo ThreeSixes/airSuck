@@ -427,44 +427,56 @@ class SubListener(threading.Thread):
                         if 'utc' in ssrWrapped:
                             data.update({"utc": ssrWrapped['utc']})
                         
-                        
                         # Decode location data.
                         if 'evenOdd' in ssrWrapped:
+                            
+                            print(ssrWrapped['icaoAAHx'] + ' 1 of 9 detected even/odd')
                             
                             # Update data with even and odd raw values.
                             if ssrWrapped['evenOdd'] == 0:
                                 # Set even data.
                                 data.update({"evenLat": ssrWrapped['rawLat'], "evenLon": ssrWrapped['rawLon'], "evenTs": ssrWrapped['dts'], "lastFmt": ssrWrapped['evenOdd']})
+                                print(ssrWrapped['icaoAAHx'] + ' 2 of 9 update data with even data')
                             else:
                                 # Set odd data.
                                 data.update({"oddLat": ssrWrapped['rawLat'], "oddLon": ssrWrapped['rawLon'], "oddTs": ssrWrapped['dts'], "lastFmt": ssrWrapped['evenOdd']})
-                                                        
+                                print(ssrWrapped['icaoAAHx'] + ' 2 of XSXX update data with odd data')
+                            
+                            print(ssrWrapped['icaoAAHx'] + ' 3 of 9 updated data with e/o data')
+                            
                             # If we have even and odd lat/lon data
                             if ("evenTs" in data) and ("oddTs" in data):
+                                
+                                print(ssrWrapped['icaoAAHx'] + ' 4 of 9 detected evenTs and oddTs')
                                 
                                 # Pull even and odd data.
                                 evenData = [data['evenLat'], data['evenLon']]
                                 oddData = [data['oddLat'], data['oddLon']]
                                 
-                                #if data['lastFmt'] == 0:
-                                #    hackFmt = 1
-                                #else:
-                                #    hackFmt = 0
+                                print(ssrWrapped['icaoAAHx'] + ' 5 of 9 pulled even/odd data')
                                 
                                 fmt = data['lastFmt']
+                                
+                                print(ssrWrapped['icaoAAHx'] + ' 6 of 9 got lastFmt')
                                 
                                 # Decode location
                                 try:
                                     # Original version:
                                     locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
                                     
+                                    print(ssrWrapped['icaoAAHx'] + ' 7 of 9 decoded location')
+                                    
                                     # Location data
                                     if type(locData) == list:
                                         # Set location data.
                                         data.update({"lat": locData[0], "lon": locData[1]})
+                                        
+                                        print(ssrWrapped['icaoAAHx'] + ' 8 of 9 location data good - updating data.')
                                 
                                 except Exception as e:
-                                    pass
+                                    pprint(e)
+                        
+                                print(ssrWrapped['icaoAAHx'] + ' 9 of 9 end of location decoding')
                         
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

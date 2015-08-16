@@ -324,6 +324,10 @@ class SubListener(threading.Thread):
                         # See if we have a DF type that doesn't XOR the transmitter's ICAO address with the CRC.
                         if ssrWrapped['df'] in (17, 18, 19):
                             crcGood = True
+                            
+                            # Try to pull existing data!
+                            data = self.pullState(ssrWrapped['icaoAAHx'])
+                            
                     else:
                         # See if we have a DF type that XORs the transmitter's ICAO address with the CRC.
                         if ssrWrapped['df'] in (0, 4, 5, 20, 21):
@@ -348,9 +352,6 @@ class SubListener(threading.Thread):
                     
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
-                        # Try to get existing data, assuming we didn't get it already.
-                        if len(data) == 0:
-                            data = self.pullState(ssrWrapped['icaoAAHx'])
                         
                         # Mode A squawk code if we have one!
                         if 'aSquawk' in ssrWrapped:

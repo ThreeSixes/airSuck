@@ -450,7 +450,7 @@ class SubListener(threading.Thread):
                                 dbgStr = " even: " + str(data['evenTs'])
                                 
                             if 'oddTs' in data:
-                                dbgStr = dbgStr + " odd: " + str(data['evenTs'])
+                                dbgStr = dbgStr + " odd: " + str(data['oddTs'])
                             
                             print(ssrWrapped['icaoAAHx'] + ' 3a of 9 - ' + dbgStr)
                             

@@ -56,30 +56,35 @@ class SubListener(threading.Thread):
         Returns all data in the cache.
         """
         
-        # Create properly-formatted name for the state hash table we're creating.
-        fullName = str('state:' + objName)
-        
-        # Delete the original timestamp.
-        thisTime = cacheData.pop('dts', None)
-        
-        # Set the first seen data.
-        self.redis.hsetnx(fullName, 'firstSeen', thisTime)
-        
-        # Update or create cached data, if we have more than just a name
-        if type(cacheData) == dict:
+        try:
+            # Create properly-formatted name for the state hash table we're creating.
+            fullName = str('state:' + objName)
             
-            # Set each specified value.
-            for thisKey in cacheData:
-                self.redis.hset(fullName, thisKey, cacheData[thisKey])
+            # Delete the original timestamp.
+            thisTime = cacheData.pop('dts', None)
+            
+            # Set the first seen data.
+            self.redis.hsetnx(fullName, 'firstSeen', thisTime)
+            
+            # Update or create cached data, if we have more than just a name
+            if type(cacheData) == dict:
+                
+                # Set each specified value.
+                for thisKey in cacheData:
+                    self.redis.hset(fullName, thisKey, cacheData[thisKey])
+            
+            # Set expiration on the hash entry.
+            self.redis.expire(fullName, expireTime)
+            
+            retVal = self.redis.hgetall(fullName)
+            
+            retVal.update({'addr': objName})
+            
+            retVal = self.fixDataTypes(retVal)
         
-        # Set expiration on the hash entry.
-        self.redis.expire(fullName, expireTime)
-        
-        retVal = self.redis.hgetall(fullName)
-        
-        retVal.update({'addr': objName})
-        
-        retVal = self.fixDataTypes(retVal)
+        except Exception as e:
+            print("Blew up trying to update data in Redis.")
+            pprint(e)
         
         return retVal
     

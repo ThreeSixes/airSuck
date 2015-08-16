@@ -312,7 +312,7 @@ class SubListener(threading.Thread):
                 
                 # Add the type specifier to our data.
                 data.update({'type': ssrWrapped['type']})
-                
+                    
                 # Do we hvae mode s?
                 if ssrWrapped['mode'] == "s":
                     
@@ -326,7 +326,7 @@ class SubListener(threading.Thread):
                             crcGood = True
                             
                             # Try to pull existing data!
-                            data = self.pullState(ssrWrapped['icaoAAHx'])
+                            data.update(self.pullState(ssrWrapped['icaoAAHx']))
                             
                     else:
                         # See if we have a DF type that XORs the transmitter's ICAO address with the CRC.
@@ -335,7 +335,7 @@ class SubListener(threading.Thread):
                             potAA = self.crcInt2Hex(ssrWrapped['frameCrc'] ^ ssrWrapped['cmpCrc'])
                             
                             # See if we're aware of the potential valid AA.
-                            data = self.pullState(potAA)
+                            data.update(self.pullState(potAA))
                             
                             # If we have info on the AA, load it.
                             if len(data) > 0:

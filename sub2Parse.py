@@ -18,7 +18,7 @@ from ssrParse import ssrParse
 
 # Which queue do we subscribe to?
 targetSub = "ssrFeed"
-targetHost = "127.0.0.1"
+targetHost = "brick"
 
 # Set up the SSR parser
 ssrEngine = ssrParse()
@@ -49,6 +49,16 @@ class SubListener(threading.Thread):
         # Make sure we got good data from json.loads
         if (type(ssrWrapped) == dict):
             
+            # Set up dict to hold our reprocessed data.
+            ssrParsed = {}
+            
+            # Get relevant data added by sources, etc.
+            ssrParsed.update({"src": ssrWrapped['src']})
+            ssrParsed.update({"dts": ssrWrapped['dts']})
+            ssrParsed.update({"type": ssrWrapped['type']})
+            ssrParsed.update({"dataOrigin": ssrWrapped['dataOrigin']})
+            ssrParsed.update({"data": ssrWrapped['data']})
+            
             # Get the hex data as a string
             strMsg = ssrWrapped['data']
             
@@ -59,13 +69,13 @@ class SubListener(threading.Thread):
             parsed = ssrEngine.ssrParse(binData)
             
             # Add the processed fields to our existing info.
-            ssrWrapped.update(parsed)
+            ssrParsed.update(parsed)
             
             # Now sort the data by key alphabetically for easy viewing.
-            sorted(ssrWrapped)
+            sorted(ssrParsed)
             
             # Flatten the data so it's more easily searched.
-            jsonData = json.dumps(ssrWrapped)
+            jsonData = json.dumps(ssrParsed)
             
             # Dump the data
             print(jsonData)

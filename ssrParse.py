@@ -1045,23 +1045,6 @@ class ssrParse:
                         # Get the NUC/NAC
                         retVal['nxc'] = (binData[5] & 0x38) >> 3
                         
-                        # Get the GNSS vs. Baro delta flag, where 0 = GNSS > Baro, 1 = Baro > GNSS
-                        altDeltaSign = binData[6] >> 7
-                        
-                        # Get the difference in altitude between GNSS and Baro instruments.
-                        altDeltaBytes = binData[6] & 0x7f
-                        
-                        # See if we have the necessary instuments to set the value (!=0)
-                        if altDeltaBytes == 1:
-                            # A value of 1 means there's no difference between readings
-                            retVal['altDeltaBytes'] = 0
-                        
-                        # We have a value.
-                        elif altDeltaBytes >= 2:
-                            # Scale to 25 ft.
-                            retVal['altDelta'] = altDeltaBytes * 25
-                            retVal['altDeltaSign'] = altDeltaSign
-                        
                         # Get turn bits (reserved for future)
                         #manuBits = binData[5] & 0x03
                         
@@ -1070,24 +1053,37 @@ class ssrParse:
                         
                         # Get Vertical rate data, and the vertical rate sign bit.
                         vertSign = (binData[8] >> 3) & 0x01
-                        vertRateRaw = ((binData[8] & 0x07) << 6) | ((binData[8] & 0xfc) >> 2)
+                        vertRateRaw = ((binData[8] & 0x07) << 6) | ((binData[9] & 0xfc) >> 2)
                         
                         # If we have vert rate data...
                         if vertRateRaw > 0:
+                            # Adjust for vertical rate offset where 1 = 0, 2 = 1, etc.
                             vertRateRaw -= 1
                             
-                            # Adjust fo vertical sign.
+                            # Adjust for vertical rate sign.
                             if vertSign == 1:
                                 vertRateRaw = 0 - vertRateRaw
                             
-                            # Adjust for scale
+                            # Adjust for 64 ft. scale
                             retVal['vertRate'] = vertRateRaw * 64
                             
-                            # Get Geometric height diff
-                            geoSign = (binData[9] >> 7) & 0x01
+                            # Get the geometric height difference sign bit
+                            geoSign = (binData[10] >> 7) & 0x01
                             
-                            # Get the raw height data value.
-                            getHeightDiffRaw = binData[9] & 0xef
+                            # Get the raw geometric height difference data.
+                            geoHeightDiffRaw = binData[10] & 0x7f
+                            
+                            # If we have valid data...
+                            if geoHeightDiffRaw > 0:
+                                # Remove offset where 1 = 0, 2 = 1, etc.
+                                geoHeightDiffRaw -= 1
+                                
+                                # If we have a geometric alt below the baro alt, then make the value negative.
+                                if geoSign == 1:
+                                    geoHeightDiffRaw = 0 - geoHeightDiffRaw
+                                
+                                # Scale to 25 feet.
+                                retVal['altDelta'] = geoHeightDiffRaw * 25
                         
                         # Do we have a supersonic aircraft?
                         if (subType == 2) or (subType == 4):

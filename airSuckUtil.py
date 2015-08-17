@@ -39,4 +39,31 @@ class airSuckUtil:
         
         return self.havRad2Km * c
     
-    
+    def bearing2Cardinal(self, bearing):
+        """
+        Get cardinal directionality from a given bearing. Returns a string indicating the cardinal direction.
+        """
+        
+        retVal = ""
+        
+        # Create 45 degree sectors starting at 0 to 22.5 degress, ending at 337.5 to 359 degrees.
+        if (bearing >= 0) and (bearing <= 22.5):
+            retVal = "N"
+        elif (bearing > 22.5) and (bearing <=  67.5):
+            retVal = "NE"
+        elif (bearing > 67.5) and (bearing <=  112.5):
+            retVal = "E"
+        elif (bearing > 112.5) and (bearing <=  157.5):
+            retVal = "SE"
+        elif (bearing > 157.5) and (bearing <=  202.5):
+            retVal = "S"
+        elif (bearing > 202.5) and (bearing <=  247.5):
+            retVal = "SW"
+        elif (bearing > 247.5) and (bearing <=  292.5):
+            retVal = "W"
+        elif (bearing > 292.5) and (bearing <=  337.5):
+            retVal = "NW"
+        elif (bearing > 337.5) and (bearing <  360):
+            retVal = "N"
+        
+        return retVal

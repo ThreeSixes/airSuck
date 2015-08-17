@@ -58,7 +58,7 @@ class SubListener(threading.Thread):
                 
                 # If we know the altitude put it in, too.
                 if 'alt' in stateWrapped:
-                    locStr = locStr + " @ " + str(stateWrapped['alt']) + "ft"
+                    locStr = locStr + " @ " + str(stateWrapped['alt']) + " ft"
                 
                 # If we know the vertical rate put it in as well.
                 if 'vertRate' in stateWrapped:
@@ -69,7 +69,7 @@ class SubListener(threading.Thread):
                         signExtra = "+"
                     
                     # Add sign and unit to string.
-                    locStr = locStr + " (" + signExtra + str(stateWrapped['vertRate']) + "ft/min)"
+                    locStr = locStr + " (" + signExtra + str(stateWrapped['vertRate']) + " ft/min)"
                 
                 if 'velo' in stateWrapped:
                     

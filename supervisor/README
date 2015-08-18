@@ -1,0 +1,3 @@
+This folder contains scripts for use with Supervisor to keep the Python code running like a daemon. This script assumes airSuck's files are stored under /opt/airsuck/.
+
+In order to use these scripts place all the airSuck files in /opt/airSuck/ and then copy the config files in this directory files to supervisor's conf.d folder (usuall in /etc/supervisor/conf.d/).

@@ -144,6 +144,13 @@ class SubListener(threading.Thread):
                 
         return retVal
     
+    # Convert datetime objects expressed as a string back to datetime
+    def str2Datetime(self, strDateTime):
+        """
+        Convert utcnow() datetime string back to a datetime object.
+        """
+        
+        return datetime.datetime.strptime(strDateTime, "%Y-%m-%d %H:%M:%S.%f")
     
     def fixDataTypes(self, statusData):
         """
@@ -272,7 +279,7 @@ class SubListener(threading.Thread):
                 retVal['fs'] = int(retVal['fs'])
             except Exception as e:
                 pprint(e)
-        
+                
         return retVal
 
     def enqueueData(self, statusData):
@@ -314,6 +321,8 @@ class SubListener(threading.Thread):
                 
                 # Set up our data structure
                 data = {}
+                
+                ssrWrapped = self.fixDataTypes(ssrWrapped)
                 
                 # Add the type specifier to our data.
                 data.update({'type': ssrWrapped['type']})
@@ -432,7 +441,7 @@ class SubListener(threading.Thread):
                         
                         # Decode location data.
                         if 'evenOdd' in ssrWrapped:
-                                                        
+                            
                             # Update data with even and odd raw values.
                             if ssrWrapped['evenOdd'] == 0:
                                 # Set even data.
@@ -444,24 +453,39 @@ class SubListener(threading.Thread):
                             # If we have even and odd lat/lon data
                             if ('evenTs' in data) and ('oddTs' in data):
                                 
-                                # Pull even and odd data.
-                                evenData = [data['evenLat'], data['evenLon']]
-                                oddData = [data['oddLat'], data['oddLon']]
+                                # Get time delta.
+                                delta10 = datetime.timedelta(seconds=10)
                                 
-                                fmt = ssrWrapped['evenOdd']
+                                # Get the age of our even and odd data.
+                                evenAge = self.str2Datetime(data['lastSeen']) - self.str2Datetime(data['evenTs'])
+                                oddAge = self.str2Datetime(data['lastSeen']) - self.str2Datetime(data['oddTs'])
                                 
-                                # Decode location
-                                try:
-                                    # Original version:
-                                    locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
+                                # See if our lat/lon timestamps are within 10 seconds of each other.
+                                if (evenAge < delta10) and (oddAge < delta10):
                                     
-                                    # Location data
-                                    if type(locData) == list:
-                                        # Set location data.
-                                        data.update({"lat": locData[0], "lon": locData[1]})
+                                    # Pull even and odd data.
+                                    evenData = [data['evenLat'], data['evenLon']]
+                                    oddData = [data['oddLat'], data['oddLon']]
+                                    
+                                    fmt = ssrWrapped['evenOdd']
+                                    
+                                    # Decode location
+                                    try:
+                                        # Original version:
+                                        locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
+                                        
+                                        # Location data
+                                        if type(locData) == list:
+                                            # Set location data.
+                                            data.update({"lat": locData[0], "lon": locData[1]})
+                                    
+                                    except Exception as e:
+                                        pprint(e)
+                                #else:
+                                #    print("Date punt from " + ssrWrapped['icaoAAHx'] + ":")
+                                #    pprint(evenAge)
+                                #    pprint(oddAge)
                                 
-                                except Exception as e:
-                                    pprint(e)
                                 
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

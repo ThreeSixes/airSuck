@@ -22,8 +22,8 @@ from pprint import pprint
 
 #Target Redis queues
 redisQueues = {
-	"targetQ": "ssrReliable",	# Reliable queue for DB serialization
-	"targetPub": "ssrFeed",		# Pub/sub queue for other subscribers
+	"targetQ": "airReliable",	# Reliable queue for DB serialization
+	"targetPub": "airFeed",		# Pub/sub queue for other subscribers
 	"dedupeExp": 3			# Redis hash table entry expiry
 }
 

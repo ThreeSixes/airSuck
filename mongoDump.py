@@ -8,7 +8,7 @@ import datetime
 from pprint import pprint
 
 #Redis queue name
-targetQ = "ssrReliable"
+targetQ = "airReliable"
 
 # Redis instance for queueing.
 rQ = redis.StrictRedis()

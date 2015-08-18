@@ -15,7 +15,7 @@ from pprint import pprint
 #################
 
 # Which queue do we subscribe to?
-targetSub = "ssrFeed"
+targetSub = "airFeed"
 targetHost = 'brick'
 
 ##############################

@@ -17,7 +17,7 @@ from ssrParse import ssrParse
 #################
 
 # Which queue do we subscribe to?
-targetSub = "ssrFeed"
+targetSub = "airFeed"
 targetHost = "brick"
 
 # Set up the SSR parser

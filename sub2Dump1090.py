@@ -18,7 +18,7 @@ from pprint import pprint
 #################
 
 # Which queue do we subscribe to?
-targetSub = "ssrFeed"
+targetSub = "airFeed"
 targetHost = "127.0.0.1"
 
 # Submit data to a dump1090 instance via TCP 30001

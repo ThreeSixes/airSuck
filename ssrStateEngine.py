@@ -20,7 +20,7 @@ from pprint import pprint
 
 # Which queue do we subscribe to?
 targetHost = "brick"
-targetSub = "ssrFeed"
+targetSub = "airFeed"
 destReliable = "airState"
 destPubSub = "airStateFeed"
 

@@ -1,5 +1,13 @@
 #!/usr/bin/python
 
+"""
+sub2parse by ThreeSixes (https://github.com/ThreeSixes)
+
+This project is licensed under GPLv3. See COPYING for dtails.
+
+This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
+"""
+
 ############
 # Imports. #
 ############

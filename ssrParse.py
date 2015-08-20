@@ -1,7 +1,9 @@
 """
 ssrPrase by ThreeSixes (https://github.com/ThreeSixes)
 
-This class is part of the airSuck project.
+This project is licensed under GPLv3. See COPYING for dtails.
+
+This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
 
 Some code in this class was taken from or inspired by code in Malcom Robb's dump1090 fork, and the CRC algorightm comes from Bistromath's gr-air-modes project.
 https://github.com/MalcolmRobb/dump1090

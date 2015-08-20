@@ -1,5 +1,13 @@
-# This code was derived completely from gr-air-modes by Bistromath at https://github.com/bistromath/gr-air-modes/cpr.py
+"""
+cprMath by ThreeSixes (https://github.com/ThreeSixes)
 
+This project is licensed under GPLv3. See COPYING for dtails.
+
+This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
+
+This code was originally written by Bistomath and was re-factored to be a class by ThreeSIxes.
+https://github.com/bistromath/gr-air-modes
+"""
 
 ###########
 # Imports #

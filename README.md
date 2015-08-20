@@ -26,6 +26,7 @@ Clients:
 Test files:
   - sub2CrCTest.py - Checks CRC sums and performs XOR operations on frames. This was developed for testing.
   - ssrParseTest.py - Tests decoding of one or more manually entered frames by the ssrParse class. This was developed for testing.
+  - cprMathTest.py - Class for testing Compact Position Reporting (CPR) algorithm. This was developed for testing.
 
 Support config files:
   - supervisor/airSuck-dump1090Connector.conf - Supversior config file to keep dump1090Connector.py running as a daemon. 

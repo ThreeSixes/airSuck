@@ -337,11 +337,13 @@ class SubListener(threading.Thread):
                     if ssrWrapped['frameCrc'] == ssrWrapped['cmpCrc']:
                         # See if we have a DF type that doesn't XOR the transmitter's ICAO address with the CRC.
                         if ssrWrapped['df'] in (17, 18, 19):
-                            crcGood = True
-                            
-                            # Try to pull existing data!
-                            data.update(self.pullState(ssrWrapped['icaoAAHx']))
-                            
+                            # Make sure we actually have an AA.
+                            if 'icaoAAHx' in ssrWrapped:
+                                crcGood = True
+                                
+                                # Try to pull existing data!
+                                data.update(self.pullState(ssrWrapped['icaoAAHx']))
+                        
                     else:
                         # See if we have a DF type that XORs the transmitter's ICAO address with the CRC.
                         if ssrWrapped['df'] in (0, 4, 5, 20, 21):

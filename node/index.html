@@ -1,55 +1,117 @@
 <!doctype html>
 <html>
   <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    
     <title>Socket.IO state queue viewer</title>
+    
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      .msgBx { width: 100%; border: 0px; font-size: 10px; }
-    </style>
-    <!-- Include the Socket.IO JS package -->
-    <script src="socket.io/socket.io.js"></script>
-  </head>
-  <body>
-    <!-- We're magically making the message appear here. -->
-    <span class="msgBx" id="message">Waiting for message data...</span>
-    <script>
-      // Store message data.
-      var msgText = ""
-      var msgArray = []
+      * { margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-size: 10px;
+          font-family:
+            Helvetica,
+            Arial,
+            "Lucida Grande",
+            sans-serif;
+        }
       
-      // Scrollify
-      function scrollify(message) {
-        // Blank the return string.
-        var retVal = "";
-        
-        // Push the array down 1 element and put the new frame on the top of it.
-        msgArray.unshift(0);
-        msgArray[0] = message;
-        
-        // Trim the end of the array to 10 elements.
-        if (msgArray.length > 10) {
-          msgArray = msgArray.slice(0, 9)
-        }
-        
-        // Build the ultimate string.
-        for (var i = 0; i < (msgArray.length); i++) {
-          retVal = retVal + msgArray[i] + "\r\n<BR/>\r\n";
-        }
-        
-        // Return our text block.
-        return retVal;
+      .msgBx {
+        width: 100%;
+        border: 1px solid;
+        border-color: #000000;
+        background-color: #cccccc;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
       }
       
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      #map {
+        height: 100%;
+      }
+    
+    </style>
+    
+    <!-- Include the Socket.IO JS package -->
+    <script src="socket.io/socket.io.js"></script>
+    
+  </head>
+  <body>
+    
+    <!-- The Giggle map goes here. -->
+    <div id="map"></div>
+    
+    <form>
+      <!-- We're magically making the message appear here. -->
+      <input type="text" class="msgBx" id="message" value="Waiting for message data..." />
+    </form>
+    
+    <script>      
       // Instanciate Socket.IO
       var socket = io();
       
       // Find the target message box
       var msgBox = document.getElementById("message");
       
+      var contentString = '<div id="content">'+
+        '<div id="siteNotice">'+
+        '</div>'+
+        '<h1 id="firstHeading" class="firstHeading">Aircraft marker</h1>'+
+        '<div id="bodyContent">'+
+        '<p>Stuff goes here.</p>'+
+        '</div>'+
+        '</div>';
+      
       // When we get a message, put it in the box.
       socket.on('message', function(msg){
-        msgBox.innerHTML = scrollify(msg);
+        msgBox.value = msg;
       });
+    
+      // This example adds a predefined symbol (an arrow) to a polyline.
+      // Setting offset to 100% places the arrow at the end of the line.
+      
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 9,
+          center: {lat: 45.533785, lng: -122.586410},
+          mapTypeId: google.maps.MapTypeId.TERRAIN
+        });
+        
+        var infowindow = new google.maps.InfoWindow({
+          content: contentString
+        });  
+        
+        var genericMarker = {
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 1.5,
+          strokeColor: '#ff0000',
+          rotation: 270,
+          title: 'Aircraft'
+        };
+        
+        var marker = new google.maps.Marker({
+          position: {lat: 45.533785, lng: -122.586410},
+          icon: genericMarker,
+          map: map
+        });
+        
+        marker.addListener('click', function() {
+          infowindow.open(map, marker);
+        });
+      }
     </script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?&callback=initMap&signed_in=true" async defer>
+    </script>
+
   </body>
 </html>

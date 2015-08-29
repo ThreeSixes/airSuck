@@ -4,17 +4,42 @@
     <title>Socket.IO state queue viewer</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      #message { width: 100%; }
+      .msgBx { width: 100%; border: 0px; }
     </style>
     <!-- Include the Socket.IO JS package -->
     <script src="socket.io/socket.io.js"></script>
   </head>
   <body>
-    <form>
-      <!-- We're magically making the message appear here. -->
-      <input type="text" id="message" value="Waiting for message data..."/>
-    </form>
+    <!-- We're magically making the message appear here. -->
+    <span class="msgBx" id="message">Waiting for message data...</span>
     <script>
+      // Store message data.
+      var msgText = ""
+      var msgArray = []
+      
+      // Scrollify
+      function scrollify(message) {
+        // Blank the return string.
+        var retVal = "";
+        
+        // Push the array down 1 element and put the new frame on the top of it.
+        msgArray.unshift(0);
+        msgArray[0] = message;
+        
+        // Trim the end of the array to 10 elements.
+        if (msgArray.length > 10) {
+          msgArray = msgArray.slice(0, 9)
+        }
+        
+        // Build the ultimate string.
+        for (var i = 0; i < (msgArray.length); i++) {
+          retVal = retVal + msgArray[i] + "\r\n<BR/>\r\n";
+        }
+        
+        // Return our text block.
+        return retVal;
+      }
+      
       // Instanciate Socket.IO
       var socket = io();
       
@@ -23,7 +48,7 @@
       
       // When we get a message, put it in the box.
       socket.on('message', function(msg){
-        msgBox.value = msg;
+        msgBox.innerHTML = scrollify(msg);
       });
     </script>
   </body>

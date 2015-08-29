@@ -1,17 +1,17 @@
+// Settings
 var webPort = 8090;
 var redisPort = 6379;
 var redisHost = "brick";
 var redisQueue = 'airStateFeed';
 
+// Set up our needed libraries.
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var redis = require('redis');
 var client = redis.createClient(redisPort, redisHost);
 
-var glbSocket = null
-
-// Serve index.html
+// Serve index.html if a browser asks for it.
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });

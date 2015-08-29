@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO state queue viewer</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      #message { width: 100%; }
+    </style>
+    <!-- Include the Socket.IO JS package -->
+    <script src="socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <form>
+      <!-- We're magically making the message appear here. -->
+      <input type="text" id="message" value="Waiting for message data..."/>
+    </form>
+    <script>
+      // Instanciate Socket.IO
+      var socket = io();
+      
+      // Find the target message box
+      var msgBox = document.getElementById("message");
+      
+      // When we get a message, put it in the box.
+      socket.on('message', function(msg){
+        msgBox.value = msg;
+      });
+    </script>
+  </body>
+</html>

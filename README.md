@@ -9,6 +9,7 @@ File list:
   - mongoDump.py - Stores incoming raw data from sources in a database for storage and reprocessing if necessary.
   - ssrStateEngine.py - Handles processing of stateful ADS-B data to build aircraft location data, call signs, etc. This process dumps aircraft state updates on a pub/sub queue for handling by other processes, and on a reliable queue for storage in MongoDB.
   - stateMongoDump.py - Stores state data in MongoDB for later processing.
+  - node/stateNode.js - Node.js server for passing state JSON to a browser or other service. Requires Node.js and the following Node.js packages: redis, express, socket.io
 
 Libraries:
   - ssrParse.py - Supports decoding of binary ADS-B data into relevant fields.
@@ -33,4 +34,5 @@ Support config files:
   - supervisor/airSuck-mongoDump.conf - Supervisor config file to keep mongoDump.py running as a daemon.
   - supervisor/airSuck-ssrStateEngine.conf - Supervisor config file to keep ssrStateEngine.py running as a daemon.
   - supervisor/airSuck-stateMongoDump.conf - Supervisor config file to keep stateMongoDump.py running as a daemon.
+  - supervisor/airSuck-stateNode.conf - Supervisor config file to keep node/stateNode.js running as a daemon.
   - The above files are all split out as individual config files to facilitate running some or all of these files on one or more servers. This makes it easier to split out roles in a multi-host environment.

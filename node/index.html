@@ -29,6 +29,17 @@
         right: 0;
       }
       
+      .dbgBx {
+        width: 100%;
+        border: 1px solid;
+        border-color: #000000;
+        background-color: #cccccc;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+      }
+      
       html, body {
         height: 100%;
         margin: 0;
@@ -42,76 +53,117 @@
     </style>
     
     <!-- Include the Socket.IO JS package -->
-    <script src="socket.io/socket.io.js"></script>
-    
+    <script src="socket.io/socket.io.js" type="text/javascript"></script>
+    <!-- Include the Google Maps API -->
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?&callback=initMap&signed_in=true" async defer></script>
   </head>
   <body>
-    
     <!-- The Giggle map goes here. -->
     <div id="map"></div>
     
     <form>
+      <input type="text" class="dbgBx" id="debugBx" value="Debug stream..." />
       <!-- We're magically making the message appear here. -->
       <input type="text" class="msgBx" id="message" value="Waiting for message data..." />
     </form>
     
-    <script>      
+    <script type="text/javascript">      
       // Instanciate Socket.IO
       var socket = io();
+      
+      // Generic string to use in order to test the pop-up message box for the marker.
+      var contentString = '<div id="content">' +
+        '<div id="siteNotice">' +
+        '</div>' +
+        '<h1 id="firstHeading" class="firstHeading">Aircraft marker</h1>' +
+        '<div id="bodyContent">' +
+        '<p>Stuff goes here.</p>' +
+        '</div>' +
+        '</div>';
+      
+      // Make sure all the Google Maps objects are global.
+      var map = null;
+      var marker = null;
+      var genericIcon = null;
+      var genericMarker = null;
+      var infoWindow = null;
+      
+      // Find the debugger box.
+      var debugBox = document.getElementById("debugBx");
       
       // Find the target message box
       var msgBox = document.getElementById("message");
       
-      var contentString = '<div id="content">'+
-        '<div id="siteNotice">'+
-        '</div>'+
-        '<h1 id="firstHeading" class="firstHeading">Aircraft marker</h1>'+
-        '<div id="bodyContent">'+
-        '<p>Stuff goes here.</p>'+
-        '</div>'+
-        '</div>';
+      // Move our marker
+      function teleportMarker(markerData) {
+        var hdgStr = null;
+        
+        // If we have the marker configured and have location data...
+        if (marker != null && markerData.lat) {
+          
+          // If we have a heading update the marker's heading and set the heading debug string.
+          if (markerData.heading) {
+            genericIcon.rotation = markerData.heading;
+            marker.setIcon(genericIcon);
+            hdgStr = " @ " + markerData.heading + " deg";
+          }
+          
+          // Update debug output.
+          debugBox.value = "Teleport to " + markerData.lat + ", " + markerData.lon + hdgStr;
+          
+          // Build LAT/LON object for Google maps.
+          var teleportTo = new google.maps.LatLng(markerData.lat, markerData.lon);
+          
+          // Move the marker hopefully?
+          marker.setPosition(teleportTo);
+        }
+      }
       
       // When we get a message, put it in the box.
       socket.on('message', function(msg){
+        // Dump the JSON string to the message box.
         msgBox.value = msg;
+        
+        // JSONify the JSON string.
+        msgJSON = JSON.parse(msg);
+        
+        // See if we want to move the marker.
+        teleportMarker(msgJSON);
       });
     
-      // This example adds a predefined symbol (an arrow) to a polyline.
-      // Setting offset to 100% places the arrow at the end of the line.
-      
+      // Initialize the Google map.
       function initMap() {
-        var map = new google.maps.Map(document.getElementById('map'), {
+        // Set up the map object.
+        map = new google.maps.Map(document.getElementById('map'), {
           zoom: 9,
           center: {lat: 45.533785, lng: -122.586410},
           mapTypeId: google.maps.MapTypeId.TERRAIN
-        });
-        
-        var infowindow = new google.maps.InfoWindow({
-          content: contentString
         });  
         
-        var genericMarker = {
-          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 1.5,
-          strokeColor: '#ff0000',
-          rotation: 270,
-          title: 'Aircraft'
-        };
+        // Create a generic icon to use as a template.
+        genericIcon = new google.maps.Marker({
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 1.5,
+            strokeColor: '#ff0000',
+            rotation: 0,
+            title: 'Aircraft'
+        });
         
-        var marker = new google.maps.Marker({
+        // Create a generic marker at an initial test location.
+        marker = new google.maps.Marker({
           position: {lat: 45.533785, lng: -122.586410},
-          icon: genericMarker,
+          icon: genericIcon,
           map: map
         });
         
+        // Create our generic info window.
+        infoWindow = new google.maps.InfoWindow({content: contentString});
+        
+        // Create the listener for when we click on the marker.
         marker.addListener('click', function() {
-          infowindow.open(map, marker);
+          infoWindow.open(map, marker);
         });
       }
     </script>
-    
-    <script src="https://maps.googleapis.com/maps/api/js?&callback=initMap&signed_in=true" async defer>
-    </script>
-
   </body>
 </html>

@@ -54,10 +54,15 @@
     
     </style>
     
+    <!-- Include jQuery because normal JS sucks. -->
+    <script src="jquery-2.1.4.min.js" type="text/javascript"></script>
+    
     <!-- Include the Socket.IO JS package -->
     <script src="socket.io/socket.io.js" type="text/javascript"></script>
+    
     <!-- Include the Google Maps API -->
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?&callback=initMap&signed_in=true" async defer></script>
+  
   </head>
   <body>
     <!-- The Giggle map goes here. -->
@@ -85,16 +90,10 @@
       
       // Make sure all the Google Maps objects are global.
       var map = null;
-      var genericIcon = null;
-      var genericMarker = null;
-      var infoWindow = null;
       var mapLoaded = false;
       
       // Create a generic array to hold our vehicle data.
       var vehData = {};
-      
-      // Create a generic object to hold our vehicle markers.
-      var vehMarker = {};
       
       // Find the debugger box.
       var debugBox = document.getElementById("debugBx");
@@ -163,48 +162,65 @@
         
         // See if we have a vehicle in our vehicle data.
         if (vehName in vehData) {
-          // Assign the contents of the object.
-          vehData[vehName] = msgJSON;
+          // Update the properties for the aircraft.
+          $.extend(true, vehData[vehName], msgJSON);
+        } else {
+          // Add a new vehicle.
+          vehData[vehName] = {};
+          
+          // Create our icon for vehicles that have heading data.
+          ndIcon = new google.maps.Marker({
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 3,
+            strokeColor: '#ff0000'
+          });
+          
+          // Create our marker.
+          aMarker = new google.maps.Marker({
+            icon: ndIcon,
+            map: map,
+          });
           
           // Create objects for the aircraft's marker and the info window.
-          vehData[vehName] = objMerge(vehData[vehName], msgJSON);
+          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker});
           
-          // Create our icon.
-          anIcon = new google.maps.Marker({
-            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-            scale: 1.5,
-            strokeColor: '#ff0000',
-            rotation: 0,
-            title: 'Aircraft'
+          // Create an infoWindow for our aircraft.
+          vehData[vehName].infoWindow = new google.maps.InfoWindow({content: contentString});
+          
+          // Set up the info window for this guy.
+          vehData[vehName].marker.addListener('click', function() {
+            vehData[vehName].infoWindow.open(map, vehData[vehName].marker);
           });
-            
-          // Create our marker.
-          vehMarker[vehName] = new google.maps.Marker({
-            icon: anIcon,
-            map: map
-          });
-          
-          // If we have a heading...
-          if (vehData[vehName].heading) {
-            // Set marker rotatoin.
-            vehMarker[vehName].icon.rotation = vehData[vehName].heading;
-          }
-          
-          console.log(vehMarker);
-        } else {
-          // Update the properties for the aircraft.
-          vehData[vehName] = objMerge(vehData[vehName], msgJSON);
         }
         
         // If we have latitude and by extension longitude data...
-        if (("lat" in vehData[vehName]) && mapLoaded) {  
+        if (("lat" in vehData[vehName]) && mapLoaded) {
           if (vehData[vehName].heading) {
-            // Set marker rotation.
-            vehMarker[vehName].icon.rotation = vehData[vehName].heading;
+            // Delete original marker.
+            vehData[vehName].marker.setMap(null);
+            
+            // Set up a new icon with desired rotation.
+            dirIcon = new google.maps.Marker({
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 1.5,
+              strokeColor: '#ff0000',
+              rotation: vehData[vehName].heading
+            });
+            
+            // Create our marker.
+            dirMarker = new google.maps.Marker({
+              icon: dirIcon,
+              map: map,
+            });
+            
+            debugBox.value = "Marker for " + vehData[vehName].addr + " re-created.";
+            
+            // Create objects for the aircraft's marker and the info window.
+            $.extend(true, vehData[vehName], msgJSON, {marker: dirMarker});
           }
           
           // Move the marker.
-          vehMarker[vehName].setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
+          vehData[vehName].marker.setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
         }
       });
       
@@ -233,14 +249,6 @@
           icon: genericIcon,
           map: map
         });
-        
-        // Create our generic info window.
-        infoWindow = new google.maps.InfoWindow({content: contentString});
-        
-        // Create the listener for when we click on the marker.
-        //marker.addListener('click', function() {
-        //  infoWindow.open(map, marker);
-        //});
         
         // The map loaded.
         mapLoaded = true;

@@ -16,6 +16,11 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
+// Serve a version of jQuery.
+app.get('/jquery-2.1.4.min.js', function(req, res){
+  res.sendFile(__dirname + '/jquery-2.1.4.min.js');
+});
+
 // When we have a message in Redis send it to all connected clients. 
 client.on("message", function (channel, message) {
   io.emit("message", message)

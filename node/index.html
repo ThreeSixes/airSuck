@@ -27,6 +27,7 @@
         bottom: 0;
         left: 0;
         right: 0;
+        opacity: 0.85;
       }
       
       .dbgBx {
@@ -38,6 +39,7 @@
         top: 0;
         left: 0;
         right: 0;
+        opacity: 0.85;
       }
       
       html, body {
@@ -83,10 +85,16 @@
       
       // Make sure all the Google Maps objects are global.
       var map = null;
-      var marker = null;
       var genericIcon = null;
       var genericMarker = null;
       var infoWindow = null;
+      var mapLoaded = false;
+      
+      // Create a generic array to hold our vehicle data.
+      var vehData = {};
+      
+      // Create a generic object to hold our vehicle markers.
+      var vehMarker = {};
       
       // Find the debugger box.
       var debugBox = document.getElementById("debugBx");
@@ -94,30 +102,53 @@
       // Find the target message box
       var msgBox = document.getElementById("message");
       
-      // Move our marker
-      function teleportMarker(markerData) {
-        var hdgStr = null;
+      
+      // Merge objects
+      function objMerge() {
+        obj = {};
+        for (var i=1; i<arguments.length; i++) {
+          for (var prop in arguments[i]) {
+            var val = arguments[i][prop];
+            if (typeof val == "object") { // this also applies to arrays or null!
+              objMerge(obj[prop], val);
+            } else {
+              obj[prop] = val;
+            }
+          }
+        }
+        
+        return obj;
+      }
+      
+      
+      // Debug.
+      function debugPrint(markerData) {
+        var hdgStr = "";
+        var debugStr = "";
         
         // If we have the marker configured and have location data...
-        if (marker != null && markerData.lat) {
+        if (markerData.marker && markerData.lat) {
           
           // If we have a heading update the marker's heading and set the heading debug string.
           if (markerData.heading) {
-            genericIcon.rotation = markerData.heading;
-            marker.setIcon(genericIcon);
             hdgStr = " @ " + markerData.heading + " deg";
           }
           
+          // Check for a squawk code
+          if (markerData.idInfo) {
+            debugStr = markerData.idInfo + " ";
+          }
+          
+          // Check for a squawk code
+          if (markerData.aSquawk) {
+            debugStr = debugStr + "(" + markerData.aSquawk + ") ";
+          }
+          
           // Update debug output.
-          debugBox.value = "Teleport to " + markerData.lat + ", " + markerData.lon + hdgStr;
-          
-          // Build LAT/LON object for Google maps.
-          var teleportTo = new google.maps.LatLng(markerData.lat, markerData.lon);
-          
-          // Move the marker hopefully?
-          marker.setPosition(teleportTo);
+          debugBox.value = "Teleport " + debugStr + "[" + markerData.addr + "] to " + markerData.lat + ", " + markerData.lon + hdgStr;
         }
       }
+      
       
       // When we get a message, put it in the box.
       socket.on('message', function(msg){
@@ -127,31 +158,78 @@
         // JSONify the JSON string.
         msgJSON = JSON.parse(msg);
         
-        // See if we want to move the marker.
-        teleportMarker(msgJSON);
-      });
-    
-      // Initialize the Google map.
-      function initMap() {
-        // Set up the map object.
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 9,
-          center: {lat: 45.533785, lng: -122.586410},
-          mapTypeId: google.maps.MapTypeId.TERRAIN
-        });  
+        // Vehicle name
+        vehName = "veh" + msgJSON.addr;
         
-        // Create a generic icon to use as a template.
-        genericIcon = new google.maps.Marker({
+        // See if we have a vehicle in our vehicle data.
+        if (vehName in vehData) {
+          // Assign the contents of the object.
+          vehData[vehName] = msgJSON;
+          
+          // Create objects for the aircraft's marker and the info window.
+          vehData[vehName] = objMerge(vehData[vehName], msgJSON);
+          
+          // Create our icon.
+          anIcon = new google.maps.Marker({
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
             scale: 1.5,
             strokeColor: '#ff0000',
             rotation: 0,
             title: 'Aircraft'
+          });
+            
+          // Create our marker.
+          vehMarker[vehName] = new google.maps.Marker({
+            icon: anIcon,
+            map: map
+          });
+          
+          // If we have a heading...
+          if (vehData[vehName].heading) {
+            // Set marker rotatoin.
+            vehMarker[vehName].icon.rotation = vehData[vehName].heading;
+          }
+          
+          console.log(vehMarker);
+        } else {
+          // Update the properties for the aircraft.
+          vehData[vehName] = objMerge(vehData[vehName], msgJSON);
+        }
+        
+        // If we have latitude and by extension longitude data...
+        if (("lat" in vehData[vehName]) && mapLoaded) {  
+          if (vehData[vehName].heading) {
+            // Set marker rotation.
+            vehMarker[vehName].icon.rotation = vehData[vehName].heading;
+          }
+          
+          // Move the marker.
+          vehMarker[vehName].setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
+        }
+      });
+      
+      
+      // Initialize the Google map.
+      function initMap() {
+        
+        // Set up the map object.
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 9,
+          center: {lat: 45.533785, lng: -122.586410},
+          mapTypeId: google.maps.MapTypeId.TERRAIN
+        });
+        
+        // Create a generic icon to use as a template.
+        genericIcon = new google.maps.Marker({
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 1.5,
+          strokeColor: '#ff0000',
+          rotation: 0,
+          title: 'Aircraft'
         });
         
         // Create a generic marker at an initial test location.
-        marker = new google.maps.Marker({
-          position: {lat: 45.533785, lng: -122.586410},
+        genericMarker = new google.maps.Marker({
           icon: genericIcon,
           map: map
         });
@@ -160,9 +238,12 @@
         infoWindow = new google.maps.InfoWindow({content: contentString});
         
         // Create the listener for when we click on the marker.
-        marker.addListener('click', function() {
-          infoWindow.open(map, marker);
-        });
+        //marker.addListener('click', function() {
+        //  infoWindow.open(map, marker);
+        //});
+        
+        // The map loaded.
+        mapLoaded = true;
       }
     </script>
   </body>

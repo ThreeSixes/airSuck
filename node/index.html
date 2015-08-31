@@ -1,10 +1,19 @@
+<!--
+AirSuck geospatial viewer by ThreeSixes (https://github.com/ThreeSixes)
+
+This project is licensed under GPLv3. See COPYING for dtails.
+
+This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
+"""
+-->
+
 <!doctype html>
 <html>
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     
-    <title>Socket.IO state queue viewer</title>
+    <title>AirSuck geospatial viewer</title>
     
     <style>
       * { margin: 0;
@@ -101,54 +110,6 @@
       // Find the target message box
       var msgBox = document.getElementById("message");
       
-      
-      // Merge objects
-      function objMerge() {
-        obj = {};
-        for (var i=1; i<arguments.length; i++) {
-          for (var prop in arguments[i]) {
-            var val = arguments[i][prop];
-            if (typeof val == "object") { // this also applies to arrays or null!
-              objMerge(obj[prop], val);
-            } else {
-              obj[prop] = val;
-            }
-          }
-        }
-        
-        return obj;
-      }
-      
-      
-      // Debug.
-      function debugPrint(markerData) {
-        var hdgStr = "";
-        var debugStr = "";
-        
-        // If we have the marker configured and have location data...
-        if (markerData.marker && markerData.lat) {
-          
-          // If we have a heading update the marker's heading and set the heading debug string.
-          if (markerData.heading) {
-            hdgStr = " @ " + markerData.heading + " deg";
-          }
-          
-          // Check for a squawk code
-          if (markerData.idInfo) {
-            debugStr = markerData.idInfo + " ";
-          }
-          
-          // Check for a squawk code
-          if (markerData.aSquawk) {
-            debugStr = debugStr + "(" + markerData.aSquawk + ") ";
-          }
-          
-          // Update debug output.
-          debugBox.value = "Teleport " + debugStr + "[" + markerData.addr + "] to " + markerData.lat + ", " + markerData.lon + hdgStr;
-        }
-      }
-      
-      
       // When we get a message, put it in the box.
       socket.on('message', function(msg){
         // Dump the JSON string to the message box.
@@ -168,7 +129,7 @@
           // Add a new vehicle.
           vehData[vehName] = {};
           
-          // Create our icon for vehicles that have heading data.
+          // Create our icon for vehicles that don't have bearing data.
           ndIcon = new google.maps.Marker({
             path: google.maps.SymbolPath.CIRCLE,
             scale: 3,
@@ -181,7 +142,7 @@
             map: map,
           });
           
-          // Create objects for the aircraft's marker and the info window.
+          // Create objects for the aircraft's marker and current data.
           $.extend(true, vehData[vehName], msgJSON, {marker: aMarker});
           
           // Create an infoWindow for our aircraft.
@@ -196,10 +157,8 @@
         // If we have latitude and by extension longitude data...
         if (("lat" in vehData[vehName]) && mapLoaded) {
           if (vehData[vehName].heading) {
-            // Delete original marker.
-            vehData[vehName].marker.setMap(null);
             
-            // Set up a new icon with desired rotation.
+            // Set up a new icon with desired rotation, and to indicate there's bearing data for the vehicle.
             dirIcon = new google.maps.Marker({
               path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
               scale: 1.5,
@@ -207,16 +166,8 @@
               rotation: vehData[vehName].heading
             });
             
-            // Create our marker.
-            dirMarker = new google.maps.Marker({
-              icon: dirIcon,
-              map: map,
-            });
-            
-            debugBox.value = "Marker for " + vehData[vehName].addr + " re-created.";
-            
-            // Create objects for the aircraft's marker and the info window.
-            $.extend(true, vehData[vehName], msgJSON, {marker: dirMarker});
+            // Modify the icon to have the correct rotation, and to indicate there's bearing data.
+            vehData[vehName].marker.setIcon(dirIcon);
           }
           
           // Move the marker.
@@ -233,21 +184,6 @@
           zoom: 9,
           center: {lat: 45.533785, lng: -122.586410},
           mapTypeId: google.maps.MapTypeId.TERRAIN
-        });
-        
-        // Create a generic icon to use as a template.
-        genericIcon = new google.maps.Marker({
-          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 1.5,
-          strokeColor: '#ff0000',
-          rotation: 0,
-          title: 'Aircraft'
-        });
-        
-        // Create a generic marker at an initial test location.
-        genericMarker = new google.maps.Marker({
-          icon: genericIcon,
-          map: map
         });
         
         // The map loaded.

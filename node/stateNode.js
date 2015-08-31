@@ -1,3 +1,9 @@
+//  stateNode.js by ThreeSixes (https://github.com/ThreeSixes)
+//
+//  This project is licensed under GPLv3. See COPYING for dtails.
+//
+//  This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
+
 // Settings
 var webPort = 8090;
 var redisPort = 6379;

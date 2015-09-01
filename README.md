@@ -36,3 +36,7 @@ Support config files:
   - supervisor/airSuck-stateMongoDump.conf - Supervisor config file to keep stateMongoDump.py running as a daemon.
   - supervisor/airSuck-stateNode.conf - Supervisor config file to keep node/stateNode.js running as a daemon.
   - The above files are all split out as individual config files to facilitate running some or all of these files on one or more servers. This makes it easier to split out roles in a multi-host environment.
+
+AirSuck Geospatial viewer web page:
+  - node/index.html - Main page served when you're connected to the stateNode service with a browser. This page displays data about vehicles being received by airSuck on Google Maps.
+  - node/jquery-2.1.4.min.js - jQuery javascript library served locally. (See https://jquery.com)

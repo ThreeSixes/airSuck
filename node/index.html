@@ -143,7 +143,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           });
           
           // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
-          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker, last3d: "none"});
+          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker, lastPos: "none"});
           
           // Create an infoWindow for our aircraft.
           vehData[vehName].infoWindow = new google.maps.InfoWindow({content: contentString});
@@ -158,9 +158,9 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         if (("lat" in vehData[vehName]) && mapLoaded) {
           
           // Figure out where we are in 3D space to determine whether or not we should move the marker.
-          var this3d = vehData[vehName].lat + "," + vehData[vehName].lon;
+          var thisPos = vehData[vehName].lat + "," + vehData[vehName].lon;
           
-          if (vehData[vehName].last3d != this3d) {
+          if (vehData[vehName].lastPos != thisPos) {
             
             if (vehData[vehName].heading) {
               
@@ -176,10 +176,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
               vehData[vehName].marker.setIcon(dirIcon);
               
               // Debug message.
-              debugBox.value = "New position for " + vehData[vehName].addr + ". Icon redrawn. 3D data before last3d reset: " + vehData[vehName].last3d + " -> " + this3d;
+              debugBox.value = "New position for " + vehData[vehName].addr + ". Icon redrawn. Position data before lastPos reset: " + vehData[vehName].lastPos + " -> " + thisPos;
               
               // Set the 3D data with what we have now.
-              vehData[vehName].last3d = this3d;
+              vehData[vehName].lastPos = thisPos;
             }
             
             // Move the marker.

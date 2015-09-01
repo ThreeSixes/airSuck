@@ -29,7 +29,7 @@ expireTime = 300
 
 # CPR stuff.
 cprProc = cprMath()
-
+cprExpireSec = 20
 
 ##############################
 # Classes for handling data. #
@@ -456,14 +456,14 @@ class SubListener(threading.Thread):
                             if ('evenTs' in data) and ('oddTs' in data):
                                 
                                 # Get time delta.
-                                delta10 = datetime.timedelta(seconds=10)
+                                timeDelta = datetime.timedelta(seconds=cprExpireSec)
                                 
                                 # Get the age of our even and odd data.
                                 evenAge = self.str2Datetime(data['lastSeen']) - self.str2Datetime(data['evenTs'])
                                 oddAge = self.str2Datetime(data['lastSeen']) - self.str2Datetime(data['oddTs'])
                                 
-                                # See if our lat/lon timestamps are within 10 seconds of each other.
-                                if (evenAge < delta10) and (oddAge < delta10):
+                                # See if our lat/lon timestamps are within n seconds of each other.
+                                if (evenAge < timeDelta) and (oddAge < timeDelta):
                                     
                                     # Pull even and odd data.
                                     evenData = [data['evenLat'], data['evenLon']]

@@ -142,8 +142,8 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             map: map,
           });
           
-          // Create objects for the aircraft's marker and current data.
-          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker});
+          // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
+          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker, last3d: "none"});
           
           // Create an infoWindow for our aircraft.
           vehData[vehName].infoWindow = new google.maps.InfoWindow({content: contentString});
@@ -156,22 +156,35 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         
         // If we have latitude and by extension longitude data...
         if (("lat" in vehData[vehName]) && mapLoaded) {
-          if (vehData[vehName].heading) {
-            
-            // Set up a new icon with desired rotation, and to indicate there's bearing data for the vehicle.
-            dirIcon = new google.maps.Marker({
-              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 1.5,
-              strokeColor: '#ff0000',
-              rotation: vehData[vehName].heading
-            });
-            
-            // Modify the icon to have the correct rotation, and to indicate there's bearing data.
-            vehData[vehName].marker.setIcon(dirIcon);
-          }
           
-          // Move the marker.
-          vehData[vehName].marker.setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
+          // Figure out where we are in 3D space to determine whether or not we should move the marker.
+          var this3d = vehData[vehName].lat + "," + vehData[vehName].lon;
+          
+          if (vehData[vehName].last3d != this3d) {
+            
+            if (vehData[vehName].heading) {
+              
+              // Set up a new icon with desired rotation, and to indicate there's bearing data for the vehicle.
+              dirIcon = new google.maps.Marker({
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 1.5,
+                strokeColor: '#ff0000',
+                rotation: vehData[vehName].heading
+              });
+              
+              // Modify the icon to have the correct rotation, and to indicate there's bearing data.
+              vehData[vehName].marker.setIcon(dirIcon);
+              
+              // Debug message.
+              debugBox.value = "New position for " + vehData[vehName].addr + ". Icon redrawn. 3D data before last3d reset: " + vehData[vehName].last3d + " -> " + this3d;
+              
+              // Set the 3D data with what we have now.
+              vehData[vehName].last3d = this3d;
+            }
+            
+            // Move the marker.
+            vehData[vehName].marker.setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
+          }
         }
       });
       

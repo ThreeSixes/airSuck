@@ -93,7 +93,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         '</div>' +
         '<h1 id="firstHeading" class="firstHeading">Aircraft marker</h1>' +
         '<div id="bodyContent">' +
-        '<p>Stuff goes here.</p>' +
+        '<p>No data yet.</p>' +
         '</div>' +
         '</div>';
       
@@ -119,58 +119,54 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       
       // How often we should check for expired vehicles in seconds.
       var vehExpireCheckInterval = 1 * 1000;
+    
+      // Initialize the Google map.
+      function initMap() {
+       console.log("Maps loading...");
+        
+        // Set up the map object.
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 9,
+          center: {lat: 45.555080, lng: -122.115890},
+          mapTypeId: google.maps.MapTypeId.TERRAIN
+        });
+        
+        // The map loaded.
+        mapLoaded = true;
+      }
       
       // Create icons for vehicles.
       function iconFactory(vehName) {
         var newIcon = null;
         var iconPath = null;
+        var vehColor = inactiveVehicle;
         
         // If we're active make the icon bright red, else dark red.
         if (vehData[vehName].active == true) {
-          
-          // If we have heading data, set the icon and its size.
-          if ('heading' in vehData[vehName]) {
-            // Create our icon for a vehicle with heading data.
-            newIcon = new google.maps.Marker({
-              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 1.5,
-              strokeColor: activeVehicle,
-              rotation: vehData[vehName].heading
-            });
-          } else {
-            
-            // Create our icon for a vehicle without heading data.
-            newIcon = new google.maps.Marker({
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 3.0,
-              strokeColor: activeVehicle
-            });
-          }
+          vehColor = activeVehicle; 
+        }
+        
+        // If we have heading data for the vehicle
+        if ('heading' in vehData[vehName]) {
+          // Create our icon for a vehicle with heading data.
+          newIcon = new google.maps.Marker({
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 1.5,
+            strokeColor: vehColor,
+            rotation: vehData[vehName].heading
+          });
         } else {
-          if ('heading' in vehData[vehName]) {
-            
-            // Create our icon for a vehicle with heading data.
-            newIcon = new google.maps.Marker({
-              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 1.5,
-              strokeColor: inactiveVehicle,
-              rotation: vehData[vehName].heading
-            });
-          } else {
-            
-            // Create our icon for a vehicle without heading data.
-            newIcon = new google.maps.Marker({
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 3.0,
-              strokeColor: inactiveVehicle
-            });
-          }
+          // Create our icon for a vehicle without heading data.
+          newIcon = new google.maps.Marker({
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 3.0,
+            strokeColor: vehColor
+          });
         }
         
         // And return it.
         return newIcon;
       }
-      
       
       // Expire vehicles.
       function expireVehicles() {
@@ -219,6 +215,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       
       // When we get a message, put it in the box.
       socket.on('message', function(msg){
+        if (!mapLoaded) {
+          console.log("Maps not loaded. Discarding aircraft data.");
+          return;
+        }
+        
         // Dump the JSON string to the message box.
         msgBox.value = msg;
         
@@ -243,13 +244,16 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           });
           
           // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
-          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker, lastPos: "none", lastUpdate: new Date().getTime(), active: true});
-          
-          // Create an infoWindow for our aircraft.
-          //vehData[vehName].infoWindow = new google.maps.InfoWindow({content: contentString});
+          $.extend(true, vehData[vehName], msgJSON,
+            {marker: aMarker,
+            lastPos: "none",
+            lastUpdate: new Date().getTime(),
+            active: true,
+            infoWindow: new google.maps.InfoWindow({content: contentString})
+          });
           
           // Set up the info window for this guy.
-          //vehData[vehName].marker.addListener('click', function() {
+          //google.maps.event.addListener('click', function() {
           //  vehData[vehName].infoWindow.open(map, vehData[vehName].marker);
           //});
         }
@@ -275,24 +279,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         }
       });
       
-      
-      // Initialize the Google map.
-      function initMap() {
-        
-        // Set up the map object.
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 9,
-          center: {lat: 45.555080, lng: -122.115890},
-          mapTypeId: google.maps.MapTypeId.TERRAIN
-        });
-        
-        // The map loaded.
-        mapLoaded = true;
-      }
-      
       // Start the vehcile expiration routine which should be executed at the specified interval.
       window.setInterval(function(){
-        expireVehicles();
+        // If our map has been loaded then we can start "expiring" vehicles.
+        if (mapLoaded) { expireVehicles(); }
       }, vehExpireCheckInterval);
     </script>
   </body>

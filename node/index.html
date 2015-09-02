@@ -119,7 +119,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       
       // How often we should check for expired vehicles in seconds.
       var vehExpireCheckInterval = 1 * 1000;
-    
+      
       // Initialize the Google map.
       function initMap() {
        console.log("Maps loading...");
@@ -249,7 +249,8 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             lastPos: "none",
             lastUpdate: new Date().getTime(),
             active: true,
-            infoWindow: new google.maps.InfoWindow({content: contentString})
+            infoWindow: new google.maps.InfoWindow({content: contentString}),
+            track: []
           });
           
           // Set up the info window for this guy.
@@ -266,6 +267,16 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           
           // If we have new position daa...
           if (vehData[vehName].lastPos != thisPos) {
+            var storePoint = [null, null, null]; // Lat, Lon, Alt
+            var storeAlt = null;
+            
+            // If we have altitude data, we should store it.
+            if ("alt" in vehData[vehName]) {
+              storeAlt = vehData[vehName].alt;
+            }
+            
+            // Add our new point to the track array.
+            vehData[vehName].track.push([vehData[vehName].lat, vehData[vehName].lon, storeAlt]);
             
             // Modify the icon to have the correct rotation, and to indicate there's bearing data.
             vehData[vehName].marker.setIcon(iconFactory(vehName, true));

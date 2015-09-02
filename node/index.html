@@ -97,9 +97,13 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         '</div>' +
         '</div>';
       
-      // Make sure all the Google Maps objects are global.
+      // Global Google Maps objects are global. :)
       var map = null;
       var mapLoaded = false;
+      
+      // Color settings for icons active and inactive.
+      var activeVehicle = "#ff0000";
+      var inactiveVehicle = "#660000";
       
       // Create a generic array to hold our vehicle data.
       var vehData = {};
@@ -109,6 +113,109 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       
       // Find the target message box
       var msgBox = document.getElementById("message");
+      
+      // Max age of vehicles in minutes.
+      var vehAge = 2 * (60 * 1000);
+      
+      // How often we should check for expired vehicles in seconds.
+      var vehExpireCheckInterval = 1 * 1000;
+      
+      // Create icons for vehicles.
+      function iconFactory(vehName) {
+        var newIcon = null;
+        var iconPath = null;
+        
+        // If we're active make the icon bright red, else dark red.
+        if (vehData[vehName].active == true) {
+          
+          // If we have heading data, set the icon and its size.
+          if ('heading' in vehData[vehName]) {
+            // Create our icon for a vehicle with heading data.
+            newIcon = new google.maps.Marker({
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 1.5,
+              strokeColor: activeVehicle,
+              rotation: vehData[vehName].heading
+            });
+          } else {
+            
+            // Create our icon for a vehicle without heading data.
+            newIcon = new google.maps.Marker({
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 3.0,
+              strokeColor: activeVehicle
+            });
+          }
+        } else {
+          if ('heading' in vehData[vehName]) {
+            
+            // Create our icon for a vehicle with heading data.
+            newIcon = new google.maps.Marker({
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 1.5,
+              strokeColor: inactiveVehicle,
+              rotation: vehData[vehName].heading
+            });
+          } else {
+            
+            // Create our icon for a vehicle without heading data.
+            newIcon = new google.maps.Marker({
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 3.0,
+              strokeColor: inactiveVehicle
+            });
+          }
+        }
+        
+        // And return it.
+        return newIcon;
+      }
+      
+      
+      // Expire vehicles.
+      function expireVehicles() {
+        // Set the time we started the process of checking.
+        var checkStart = new Date().getTime();
+        
+        // Loop through every vehicle we have data on
+        for (var veh in vehData) {
+          // Compute the time delta and set up halflife.
+          var vehDelta = checkStart - vehData[veh].lastUpdate;
+          var vehHalflife = vehAge / 2;
+          var vehNotNuked = true;
+          
+          // Check to see if we haven't heard from them in our age time.
+          if (vehDelta >= vehAge) {
+            
+            // Remove the marker for the expred vehicle and nuke the vehicle's object.
+            vehData[veh].marker.setMap(null);
+            vehData[veh] = null;
+            delete vehData[veh];
+            vehNotNuked = false;
+            
+          } else if ((vehDelta >= vehHalflife) && (vehData[veh].active == true)) {
+            
+            // Deactivate vehicle and change the icon for it.
+            vehData[veh].active = false;
+            vehData[veh].marker.setIcon(iconFactory(veh));
+          } else {
+            // If it's marked as inactive the reactivate it.
+            if ((vehDelta < vehHalflife) && (vehData[veh].active == false)) {
+              
+              // Activate vehicle and change the icon for it.
+              vehData[veh].active = true;
+              vehData[veh].marker.setIcon(iconFactory(veh));
+            }
+          }
+          
+          // If we have position data
+          if (vehNotNuked && vehData[veh].lat) {
+            // Redraw the marker.
+            vehData[veh].marker.setPosition({lat: vehData[veh].lat, lng: vehData[veh].lon});
+          }
+        }
+      }
+      
       
       // When we get a message, put it in the box.
       socket.on('message', function(msg){
@@ -124,34 +231,27 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         // See if we have a vehicle in our vehicle data.
         if (vehName in vehData) {
           // Update the properties for the aircraft.
-          $.extend(true, vehData[vehName], msgJSON);
+          $.extend(true, vehData[vehName], msgJSON, {lastUpdate: new Date().getTime()});
         } else {
           // Add a new vehicle.
           vehData[vehName] = {};
           
-          // Create our icon for vehicles that don't have bearing data.
-          ndIcon = new google.maps.Marker({
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 3,
-            strokeColor: '#ff0000'
-          });
-          
           // Create our marker.
           aMarker = new google.maps.Marker({
-            icon: ndIcon,
-            map: map,
+            icon: iconFactory(vehName, true),
+            map: map
           });
           
           // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
-          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker, lastPos: "none"});
+          $.extend(true, vehData[vehName], msgJSON, {marker: aMarker, lastPos: "none", lastUpdate: new Date().getTime(), active: true});
           
           // Create an infoWindow for our aircraft.
-          vehData[vehName].infoWindow = new google.maps.InfoWindow({content: contentString});
+          //vehData[vehName].infoWindow = new google.maps.InfoWindow({content: contentString});
           
           // Set up the info window for this guy.
-          vehData[vehName].marker.addListener('click', function() {
-            vehData[vehName].infoWindow.open(map, vehData[vehName].marker);
-          });
+          //vehData[vehName].marker.addListener('click', function() {
+          //  vehData[vehName].infoWindow.open(map, vehData[vehName].marker);
+          //});
         }
         
         // If we have latitude and by extension longitude data...
@@ -160,27 +260,14 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           // Figure out where we are in 3D space to determine whether or not we should move the marker.
           var thisPos = vehData[vehName].lat + "," + vehData[vehName].lon;
           
+          // If we have new position daa...
           if (vehData[vehName].lastPos != thisPos) {
             
-            if (vehData[vehName].heading) {
-              
-              // Set up a new icon with desired rotation, and to indicate there's bearing data for the vehicle.
-              dirIcon = new google.maps.Marker({
-                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                scale: 1.5,
-                strokeColor: '#ff0000',
-                rotation: vehData[vehName].heading
-              });
-              
-              // Modify the icon to have the correct rotation, and to indicate there's bearing data.
-              vehData[vehName].marker.setIcon(dirIcon);
-              
-              // Debug message.
-              debugBox.value = "New position for " + vehData[vehName].addr + ". Icon redrawn. Position data before lastPos reset: " + vehData[vehName].lastPos + " -> " + thisPos;
-              
-              // Set the 3D data with what we have now.
-              vehData[vehName].lastPos = thisPos;
-            }
+            // Modify the icon to have the correct rotation, and to indicate there's bearing data.
+            vehData[vehName].marker.setIcon(iconFactory(vehName, true));
+            
+            // Set the 3D data with what we have now.
+            vehData[vehName].lastPos = thisPos;
             
             // Move the marker.
             vehData[vehName].marker.setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
@@ -202,6 +289,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         // The map loaded.
         mapLoaded = true;
       }
+      
+      // Start the vehcile expiration routine which should be executed at the specified interval.
+      window.setInterval(function(){
+        expireVehicles();
+      }, vehExpireCheckInterval);
     </script>
   </body>
 </html>

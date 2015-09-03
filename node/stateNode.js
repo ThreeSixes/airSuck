@@ -16,6 +16,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var redis = require('redis');
 var client = redis.createClient(redisPort, redisHost);
+var dates = new Date();
 
 // Serve index.html if a browser asks for it.
 app.get('/', function(req, res){
@@ -36,7 +37,7 @@ client.on("message", function (channel, message) {
 // When have a new socket.io connection...
 io.on('connection', function(socket){
   // Log a message to the console
-  console.log("New client @ " + socket.request.connection.remoteAddress)
+  console.log(dates.toISOString().replace(/T/, ' ') + " - New client @ " + socket.request.connection.remoteAddress)
   
   // If they try to send us something give some generic error message.
   socket.on('message', function(msg){

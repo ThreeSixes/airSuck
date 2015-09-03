@@ -50,7 +50,7 @@ while(True) :
         try:
                 # Pull oldest entry from the queue.
                 dQd = rQ.rpop(targetQ)
-    
+                
                 # If we have no data sleep for our configured delay to save CPU.
                 if(dQd == None):
                     time.sleep(checkDelay)

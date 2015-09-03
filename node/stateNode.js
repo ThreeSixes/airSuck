@@ -5,17 +5,15 @@
 //  This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
 
 // Settings
-var webPort = 8090;
-var redisPort = 6379;
-var redisHost = "brick";
-var redisQueue = 'airStateFeed';
+var cfg = require('./config.js');
+var config = cfg.getConfig();
 
 // Set up our needed libraries.
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var redis = require('redis');
-var client = redis.createClient(redisPort, redisHost);
+var client = redis.createClient(config.redisPort, config.redisHost);
 var dates = new Date();
 
 // Serve index.html if a browser asks for it.
@@ -46,9 +44,9 @@ io.on('connection', function(socket){
 });
 
 // Start the HTTP server up on our specified port.
-http.listen(webPort, function(){
-  console.log('airSuck-stateNode.js listening on *:' + webPort);
+http.listen(config.webPort, function(){
+  console.log('airSuck-stateNode.js listening on *:' + config.webPort);
 });
 
 // Subscribe to the state queue.
-client.subscribe(redisQueue);
+client.subscribe(config.redisQueue);

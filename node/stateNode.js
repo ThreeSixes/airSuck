@@ -7,6 +7,7 @@
 // Settings
 var cfg = require('./config.js');
 var config = cfg.getConfig();
+var keepaliveInterval = 15 * 1000;
 
 // Set up our needed libraries.
 var app = require('express')();
@@ -14,7 +15,6 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var redis = require('redis');
 var client = redis.createClient(config.redisPort, config.redisHost);
-var dates = new Date();
 
 // Serve index.html if a browser asks for it.
 app.get('/', function(req, res){
@@ -29,13 +29,12 @@ app.get('/jquery-2.1.4.min.js', function(req, res){
 // When we have a message in Redis send it to all connected clients. 
 client.on("message", function (channel, message) {
   io.emit("message", message)
-  //console.log("MSG: " + message)
 });
 
 // When have a new socket.io connection...
 io.on('connection', function(socket){
   // Log a message to the console
-  console.log(dates.toISOString().replace(/T/, ' ') + " - New client @ " + socket.request.connection.remoteAddress)
+  console.log(new Date().toISOString().replace(/T/, ' ') + " - New client @ " + socket.request.connection.remoteAddress)
   
   // If they try to send us something give some generic error message.
   socket.on('message', function(msg){
@@ -47,6 +46,20 @@ io.on('connection', function(socket){
 http.listen(config.webPort, function(){
   console.log('airSuck-stateNode.js listening on *:' + config.webPort);
 });
+
+// Transmit a keepalive to all connected clients.
+setTimeout(function() {
+  // Create formatted date string.
+  dateStr = new Date().toISOString().replace(/T/, ' ');
+  dateStr = dateStr.substring(0, dateStr.length - 5);
+  
+  console.log(new Date().toISOString().replace(/T/, ' ') + " - Sent keepalive")
+  
+  // Send keepalive message.
+  io.emit("{\"keepalive\": \"" + dateStr + "\"}");
+  
+  // Schedule another keepalive in our specified interval.
+}, keepaliveInterval);
 
 // Subscribe to the state queue.
 client.subscribe(config.redisQueue);

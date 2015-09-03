@@ -1,0 +1,9 @@
+Example config files for airSuck.
+
+config.js is used to configure stateNode.js. This file should be coped to the code root folder under node/.
+
+Configuration options include:
+webPort - HTTP port node.js should listen on. Default should be 8090.
+redisHost - Hostname for the Redis server hosting the state pub/sub queue.
+redisPort - Redis state pub/sub queue server port. Default should be 6379.
+redisQueue - The name of the state pub/sub queue to pull data from.

@@ -48,18 +48,20 @@ http.listen(config.webPort, function(){
 });
 
 // Transmit a keepalive to all connected clients.
-setTimeout(function() {
+function txKeepalive() {
   // Create formatted date string.
   dateStr = new Date().toISOString().replace(/T/, ' ');
   dateStr = dateStr.substring(0, dateStr.length - 5);
   
+  // Log keepalive transmission.
   console.log(new Date().toISOString().replace(/T/, ' ') + " - Sent keepalive")
   
   // Send keepalive message.
-  io.emit("{\"keepalive\": \"" + dateStr + "\"}");
-  
-  // Schedule another keepalive in our specified interval.
-}, keepaliveInterval);
+  io.emit("message", "{\"keepalive\": \"" + dateStr + "\"}");
+}
+
+// Schedule another keepalive in our specified interval.
+setTimeout(txKeepalive(), keepaliveInterval);
 
 // Subscribe to the state queue.
 client.subscribe(config.redisQueue);

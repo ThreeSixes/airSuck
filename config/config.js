@@ -10,6 +10,7 @@
 exports.getConfig = function() {
     return {
         webPort: 8090, // Port we want node.js to serve HTTP on.
+        keepaliveInterval: (30 * 1000), // Set default interval to 30 sec
         redisHost: "<hostname here>", // Redis host with the state pub/sub queue.
         redisPort: 6379, // Redis TCP port
         redisQueue: 'airStateFeed' // Name of the pub/sub queue.

@@ -7,7 +7,6 @@
 // Settings
 var cfg = require('./config.js');
 var config = cfg.getConfig();
-var keepaliveInterval = 15 * 1000;
 
 // Set up our needed libraries.
 var app = require('express')();
@@ -44,7 +43,11 @@ io.on('connection', function(socket){
 
 // Start the HTTP server up on our specified port.
 http.listen(config.webPort, function(){
-  console.log('airSuck-stateNode.js listening on *:' + config.webPort);
+  // Log That we're now listening.
+  console.log(new Date().toISOString().replace(/T/, ' ') + ' - stateNode.js listening on *:' + config.webPort);
+  
+  // Send a keepalive and schedule the next keepalive xmission.
+  txKeepalive();
 });
 
 // Transmit a keepalive to all connected clients.
@@ -54,14 +57,15 @@ function txKeepalive() {
   dateStr = dateStr.substring(0, dateStr.length - 5);
   
   // Log keepalive transmission.
-  console.log(new Date().toISOString().replace(/T/, ' ') + " - Sent keepalive")
+  //console.log(new Date().toISOString().replace(/T/, ' ') + " - Sent keepalive")
   
   // Send keepalive message.
   io.emit("message", "{\"keepalive\": \"" + dateStr + "\"}");
+  
+  // Schedule our keepalive in our specified interval.
+  setTimeout(txKeepalive, config.keepaliveInterval);
 }
-
-// Schedule another keepalive in our specified interval.
-setTimeout(txKeepalive(), keepaliveInterval);
 
 // Subscribe to the state queue.
 client.subscribe(config.redisQueue);
+

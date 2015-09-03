@@ -226,6 +226,12 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         // JSONify the JSON string.
         msgJSON = JSON.parse(msg);
         
+        // Don't continue processing the keepalive.
+        if ('keepalive' in msgJSON) {
+          console.log("RX keepalive.");
+          return;
+        }
+        
         // Vehicle name
         vehName = "veh" + msgJSON.addr;
         
@@ -237,26 +243,28 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           // Add a new vehicle.
           vehData[vehName] = {};
           
-          // Create our marker.
-          aMarker = new google.maps.Marker({
-            icon: iconFactory(vehName, true),
-            map: map
-          });
-          
           // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
           $.extend(true, vehData[vehName], msgJSON,
-            {marker: aMarker,
-            lastPos: "none",
+            {lastPos: "none",
             lastUpdate: new Date().getTime(),
             active: true,
             infoWindow: new google.maps.InfoWindow({content: contentString}),
             track: []
           });
           
+          // Create our marker.
+          aMarker = new google.maps.Marker({
+            icon: iconFactory(vehName, true),
+            map: map
+          });
+          
+          // Run a second extend operation to set the marker.
+          $.extend(true, vehData[vehName], {marker: aMarker});
+          
           // Set up the info window for this guy.
-          //google.maps.event.addListener('click', function() {
-          //  vehData[vehName].infoWindow.open(map, vehData[vehName].marker);
-          //});
+          google.maps.event.addListener('click', function() {
+            vehData[vehName].infoWindow.open(map, vehData[vehName].marker);
+          });
         }
         
         // If we have latitude and by extension longitude data...

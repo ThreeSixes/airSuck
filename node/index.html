@@ -212,9 +212,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         }
       }
       
-      
-      // When we get a message, put it in the box.
-      socket.on('message', function(msg){
+      function handleMessage(msg){
         if (!mapLoaded) {
           console.log("Maps not loaded. Discarding aircraft data.");
           return;
@@ -228,7 +226,6 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         
         // Don't continue processing the keepalive.
         if ('keepalive' in msgJSON) {
-          console.log("RX keepalive.");
           return;
         }
         
@@ -248,7 +245,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             {lastPos: "none",
             lastUpdate: new Date().getTime(),
             active: true,
-            infoWindow: new google.maps.InfoWindow({content: contentString}),
+            allTheInfos: vehData[vehName].addr,
             track: []
           });
           
@@ -261,9 +258,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           // Run a second extend operation to set the marker.
           $.extend(true, vehData[vehName], {marker: aMarker});
           
-          // Set up the info window for this guy.
-          //google.maps.event.addListener('click', function() {
-          //  vehData[vehName].infoWindow.open(map, vehData[vehName].marker);
+          // Marker function
+          //google.maps.event.addListener(vehData[vehName].marker, 'click', function(X) {
+          //  infoWin.setContent(vehData[vehName].allTheInfos);
+          //  infoWin.open(map, vehData[vehName].marker);
           //});
         }
         
@@ -296,7 +294,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             vehData[vehName].marker.setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
           }
         }
-      });
+      }
+      
+      // When we get a message, put it in the box.
+      socket.on('message', handleMessage);
       
       // Start the vehcile expiration routine which should be executed at the specified interval.
       window.setInterval(function(){

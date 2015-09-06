@@ -346,6 +346,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           var headingStr = "--";
           var vertStatStr = "--";
           var posStr = "";
+          var supersonicStr = "--";
           
           // If we have a plane/flight ID
           if ("idInfo" in vehData[vehName]) {
@@ -403,15 +404,23 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             posStr = vehData[vehName].lat.toFixed(5) + ", " + vehData[vehName].lon.toFixed(5);
           }
           
+          // If we have supersonic data...
+          if ("supersonic" in vehData[vehName]) {
+            if (vehData[vehName].supersonic == 0) {
+              supersonicStr = "No";
+            } else if (vehData[vehName].supersonic == 1) {
+              supersonicStr = "Yes";
+            }
+          }
+          
           // Build our table.
           retVal = "<table class=\"infoTable\">";
           retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
           retVal += "<tr><td class=\"tblHeader\">Category</td><td class=\"tblCell\">" + catStr + "</td><td class=\"tblHeader\">Flight status</td><td class=\"tblCell\">" + fsStr + "</td></tr>";
-          retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Air/Ground</td><td class=\"tblCell\">" + vertStatStr + "</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
           retVal += "<tr><td class=\"tblHeader\">Altitude</td><td class=\"tblCell\">" + altStr + " ft</td><td class=\"tblHeader\">Climb rate</td><td class=\"tblCell\">" + vertRateStr + " ft/min</td></tr>";
-          retVal += "<tr><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
           retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
-          retVal += "<tr><td class=\"tblHeader\">Supersonic</td><td class=\"tblCell\">" + "" + "</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Air/Ground</td><td class=\"tblCell\">" + vertStatStr + "</td><td class=\"tblHeader\">Supersonic</td><td class=\"tblCell\">" + supersonicStr + "</td></tr>";
           retVal += "</table>";
         }
         

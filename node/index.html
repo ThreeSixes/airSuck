@@ -471,8 +471,12 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           
           // If we have position data
           if (changed && vehNotNuked && vehData[veh].lat) {
-            // Redraw the marker.
-            vehData[veh].marker.setPosition(new google.maps.LatLng(vehData[veh].lat, vehData[veh].lon));
+            // Create Google maps position object.
+            var newPos = new google.maps.LatLng(vehData[veh].lat, vehData[veh].lon);
+            
+            // Redraw the marker and move inte infowindow.
+            vehData[veh].marker.setPosition(newPos);
+            vehData[vehName].info.setPosition(newPos);
           }
         }
       }

@@ -271,7 +271,7 @@ destPubSub = "airStateFeed"
 expireTime = 300
 
 # How long to wait in order to play the next point.
-stepDelay = 1
+stepDelay = 2
 
 ##############################
 # Classes for handling data. #

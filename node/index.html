@@ -1,5 +1,5 @@
 <!--
-AirSuck geospatial viewer by ThreeSixes (https://github.com/ThreeSixes)
+AirSuck geospatial viewer by ThreeSixes (https://github.com/ThreeSixes) and Matt Lambert <matthewjohnlambert@gmail.com>
 
 This project is licensed under GPLv3. See COPYING for dtails.
 
@@ -60,6 +60,27 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       #map {
         height: 100%;
       }
+      
+      .vehInfoHeader {
+        text-align: center;
+        font-weight: bold;
+      }
+      
+      .tblHeader {
+        font-weight: bold;
+      }
+      
+       #mapStyleBox {
+        text-align: left;
+        font-family: Roboto, Arial, sans-serif;
+        position: absolute;
+        top: 20px!important;
+        left: 5px!important;
+      }
+      
+      .mapStyleSelector {
+        font-size: 12px;
+      }
     
     </style>
     
@@ -86,16 +107,6 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
     <script type="text/javascript">      
       // Instanciate Socket.IO
       var socket = io();
-      
-      // Generic string to use in order to test the pop-up message box for the marker.
-      var contentString = '<div id="content">' +
-        '<div id="siteNotice">' +
-        '</div>' +
-        '<h1 id="firstHeading" class="firstHeading">Aircraft marker</h1>' +
-        '<div id="bodyContent">' +
-        '<p>No data yet.</p>' +
-        '</div>' +
-        '</div>';
       
       // Global Google Maps objects are global. :)
       var map = null;
@@ -128,8 +139,141 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         map = new google.maps.Map(document.getElementById('map'), {
           zoom: 9,
           center: {lat: 45.555080, lng: -122.115890},
-          mapTypeId: google.maps.MapTypeId.TERRAIN
+          mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+            mapTypeIds: [google.maps.MapTypeId.TERRAIN, google.maps.MapTypeId.SATELLITE]
+            },
+          mapTypeControl: false
         });
+        
+        // Set default map to terrain.
+        map.setMapTypeId(google.maps.MapTypeId.TERRAIN);
+        
+                // Create the monochrome map style
+        var monoStyle = [
+          {
+            "featureType": "landscape.man_made",
+            "elementType": "geometry",
+            "stylers": [
+              { "color": "#808080" },
+              { "lightness": 35 }
+            ]
+          },{
+            "featureType": "landscape.natural",
+            "elementType": "geometry",
+            "stylers": [
+              { "color": "#808080" },
+              { "lightness": 58 }
+            ]
+          },{
+            "featureType": "poi.park",
+            "stylers": [
+              { "visibility": "off" }
+            ]
+          },{
+            "featureType": "water",
+            "elementType": "geometry",
+            "stylers": [
+              { "color": "#444444" }
+            ]
+          },{
+            "featureType": "road.local",
+            "elementType": "geometry",
+            "stylers": [
+              { "color": "#ffffff" }
+            ]
+          },{
+            "featureType": "road.arterial",
+            "elementType": "geometry",
+            "stylers": [
+              { "color": "#ffffff" }
+            ]
+          },{
+            "featureType": "road.highway",
+            "elementType": "geometry",
+            "stylers": [
+              { "color": "#ffffff" }
+            ]
+          },{
+            "featureType": "road.highway",
+            "elementType": "labels",
+            "stylers": [
+              { "visibility": "off" }
+            ]
+          },{
+            "featureType": "road.arterial",
+            "elementType": "labels",
+            "stylers": [
+              { "visibility": "off" }
+            ]
+          },{
+            "featureType": "poi",
+            "elementType": "geometry",
+            "stylers": [
+              { "color": "#808080" },
+              { "lightness": 22 }
+            ]
+          }
+        ];
+       
+               // Create the map style control div to override the default google maps control
+        // DOM elements must be set as JS vars to pass through google maps functions
+        // Set up the main style control container
+        var styleControlContainer = document.createElement('div');
+        styleControlContainer.id = 'mapStyleBox';
+        styleControlContainer.className = 'mapControlStyle';
+        styleControlContainer.index = 1000;
+        
+        // Create a select box container
+        var styleSelectBox = document.createElement('select');
+        styleSelectBox.className = 'mapStyleSelector';
+        
+        // Set up the map style options
+        var terrainMap = document.createElement('option');
+        terrainMap.className = 'mapStyleSelector';
+        terrainMap.value = 'Terrain';
+        terrainMap.innerHTML = 'Terrain';
+        var satelliteMap = document.createElement('option');
+        satelliteMap.className = 'mapStyleSelector';
+        satelliteMap.value = 'Satellite';
+        satelliteMap.innerHTML = 'Satellite';
+        var monoMap = document.createElement('option');
+        monoMap.className = 'mapStyleSelector';
+        monoMap.value = 'Monochrome';
+        monoMap.innerHTML = 'Monochrome';
+        
+        // Add the style options to the main style control container
+        styleControlContainer.appendChild(styleSelectBox);
+        styleSelectBox.appendChild(terrainMap);
+        styleSelectBox.appendChild(satelliteMap);
+        styleSelectBox.appendChild(monoMap);
+        
+        // Add a listener to change the map type via the select box
+        styleSelectBox.addEventListener('change',function(e){
+            switch (this.value) {
+              case "Terrain":
+                // load the terrain map and clear any style overrides
+                map.setMapTypeId(google.maps.MapTypeId.TERRAIN);
+                map.set('styles',null);
+                break;
+              case "Satellite":
+                // load the satellite map and clear any style overrides
+                map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
+                map.set('styles',null);
+                break;
+              case "Monochrome":
+                // load the terrain map and add a custom style
+                map.setMapTypeId(google.maps.MapTypeId.TERRAIN);
+                map.set('styles',monoStyle);
+                break;
+              default:
+                map.setMapTypeId(google.maps.MapTypeId.TERRAIN);
+                map.set('styles',null);
+            }
+          });
+        
+        // Load the custom controls through the map controls interface
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(styleControlContainer);
         
         // The map loaded.
         mapLoaded = true;
@@ -176,8 +320,83 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         // Which position type do we have?
         // ADS-B/SSR
         if (vehData[vehName].type == "airSSR") {
-          retVal = "<b>ICAO " + vehData[vehName] + "</b><br/>";
-          retVal = retVal + vehData[vehName].lastSeen;
+          // Build an aircraft identity string.
+          var idStr = "";
+          var catStr = "--";
+          var fsStr = "-";
+          var altStr = "--";
+          var vertRateStr = "--";
+          var vrSign = "";
+          var veloStr = "--";
+          var headingStr = "--";
+          var vertStatStr = "--";
+          var posStr = "";
+          
+          // If we have a plane/flight ID
+          if ("idInfo" in vehData[vehName]) {
+            idStr += vehData[vehName].idInfo + " ";
+          }
+          
+          // And if we have a squawk code...
+          if ("aSquawk" in vehData[vehName]) {
+            idStr += "(" + vehData[vehName].aSquawk + ") ";
+          }
+          
+          // We should always have an ICAO address.
+          idStr += "[" + vehData[vehName].addr.toUpperCase() + "]";
+          
+          // If we have flight status data...
+          if ("fs" in vehData[vehName]) {
+            fsStr = vehData[vehName].fs;
+          }
+          
+          // If we have category data...
+          if ("category" in vehData[vehName]) {
+            catStr = vehData[vehName].category;
+          }
+          
+          // If we have altitude data...
+          if ("alt" in vehData[vehName]) {
+            altStr = vehData[vehName].alt;
+          }
+          
+          // If we have vertical rate data...
+          if ("vertRate" in vehData[vehName]) {
+            if (vehData[vehName].vertRate > 0) {
+              vrSign = "+";
+            }
+            vertRateStr = vrSign + vehData[vehName].vertRate;
+          }
+          
+          // If we have velocity data...
+          if ("velo" in vehData[vehName]) {
+            veloStr = vehData[vehName].velo;
+          }
+          
+          // If we have vertical status data...
+          if ("vertStat" in vehData[vehName]) {
+            vertStatStr = vehData[vehName].vertStat;
+          }
+          
+          // If we have heading data...
+          if ("heading" in vehData[vehName]) {
+            headingStr = vehData[vehName].heading;
+          }
+          
+          // If we have position data...
+          if ("lat" in vehData[vehName]) {
+            posStr = vehData[vehName].lat.toFixed(5) + ", " + vehData[vehName].lon.toFixed(5);
+          }
+          
+          // Build our table.
+          retVal = "<table>";
+          retVal += "<tr><td colspan=6 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Category</td><td>" + catStr + "</td><td class=\"tblHeader\">Flight status</td><td>" + fsStr + "</td><td class=\"tblHeader\">Air/Ground</td><td>" + vertStatStr + "</td</tr>";
+          retVal += "<tr><td class=\"tblHeader\">Velocity</td><td>" + veloStr + " kt</td><td class=\"tblHeader\">Altitude</td><td>" + altStr + " ft</td><td class=\"tblHeader\">Climb rate</td><td>" + vertRateStr + " ft/min</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Heading</td><td>" + headingStr + " deg</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=4>" + posStr + "</td></tr>";
+          retVal += "<tr>><td class=\"tblHeader\">Supersonic</td><td>" + "" + "</td></tr>";
+          retVal += "</table>";
         }
         
         
@@ -266,7 +485,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           $.extend(true, vehData[vehName], msgJSON, {lastUpdate: new Date().getTime()});
           
           // Set the content box.
-          //vehData[vehName].info.setContent(vehData[vehName].allTheInfos);
+          vehData[vehName].info.setContent(infoFactory(vehName));
         } else {
           // Add a new vehicle.
           vehData[vehName] = {
@@ -304,7 +523,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           $.extend(true, vehData[vehName], {marker: aMarker, info: infowindow});
           
           // Set the content box.
-          vehData[vehName].info.setContent(vehData[vehName].addr.toUpperCase());
+          vehData[vehName].info.setContent(infoFactory(vehName));
           
         }
         

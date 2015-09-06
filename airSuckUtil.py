@@ -75,3 +75,21 @@ class airSuckUtil:
             retVal = "N"
         
         return retVal
+    
+    def coords2Bearing(self, coordsA, coordsB):
+        pstartLat = math.radians(coordsA[0])
+        startLong = math.radians(coordsA[1])
+        endLat = math.radians(coordsB[0])
+        endLong = math.radians(coordsB[1])
+        
+        dLong = endLong - startLong
+        
+        dPhi = math.log(math.tan(endLat/2.0+math.pi/4.0)/math.tan(startLat/2.0+math.pi/4.0))
+        if abs(dLong) > math.pi:
+             if dLong > 0.0:
+                 dLong = -(2.0 * math.pi - dLong)
+             else:
+                 dLong = (2.0 * math.pi + dLong)
+        
+        return ((math.degrees(math.atan2(dLong, dPhi)) + 360.0) % 360.0)
+    

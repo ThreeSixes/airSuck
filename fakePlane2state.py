@@ -271,7 +271,7 @@ destPubSub = "airStateFeed"
 expireTime = 300
 
 # How long to wait in order to play the next point.
-stepDelay = 1000
+stepDelay = 1
 
 ##############################
 # Classes for handling data. #
@@ -292,19 +292,19 @@ class SubListener(threading.Thread):
         while True:
             # Loop though plane A
             for coords in planes['planeA']['path']:
-                self.redis.publish(self.destPubSub, json.dumps({'type': 'airSSR', 'addr': planes['planeA']['addr'], 'idInfo': planes['planeA']['idInfo'], 'aSquawk': planes['planeA']['aSquawk'], 'alt': planes['planeA']['alt'], 'lat': coords[0], 'lon': coords[1]}))
+                self.redis.publish(self.destPubSub, json.dumps({'type': 'airSSR', 'addr': planes['planeA']['addr'], 'idInfo': planes['planeA']['idInfo'], 'aSquawk': planes['planeA']['aSquawk'], 'alt': planes['planeA']['alt'], 'lon': coords[0], 'lat': coords[1]}))
                 # Wait a bit before continuing.
                 time.sleep(stepDelay)
             
             # Loop through plane B
             for coords in planes['planeB']['path']:
-                self.redis.publish(self.destPubSub, json.dumps({'type': 'airSSR', 'addr': planes['planeB']['addr'], 'idInfo': planes['planeB']['idInfo'], 'aSquawk': planes['planeB']['aSquawk'], 'alt': planes['planeB']['alt'], 'lat': coords[0], 'lon': coords[1]}))
+                self.redis.publish(self.destPubSub, json.dumps({'type': 'airSSR', 'addr': planes['planeB']['addr'], 'idInfo': planes['planeB']['idInfo'], 'aSquawk': planes['planeB']['aSquawk'], 'alt': planes['planeB']['alt'], 'lon': coords[0], 'lat': coords[1]}))
                 # Wait a bit before continuing.
                 time.sleep(stepDelay)
             
             # Loop through plane C
             for coords in planes['planeC']['path']:
-                self.redis.publish(self.destPubSub, json.dumps({'type': 'airSSR', 'addr': planes['planeC']['addr'], 'idInfo': planes['planeC']['idInfo'], 'aSquawk': planes['planeC']['aSquawk'], 'alt': planes['planeC']['alt'], 'lat': coords[0], 'lon': coords[1]}))
+                self.redis.publish(self.destPubSub, json.dumps({'type': 'airSSR', 'addr': planes['planeC']['addr'], 'idInfo': planes['planeC']['idInfo'], 'aSquawk': planes['planeC']['aSquawk'], 'alt': planes['planeC']['alt'], 'lon': coords[0], 'lat': coords[1]}))
                 # Wait a bit before continuing.
                 time.sleep(stepDelay)
     

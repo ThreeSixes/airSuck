@@ -61,6 +61,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         height: 100%;
       }
       
+      .infoTable {
+        border: 0px;
+      }
+      
       .vehInfoHeader {
         text-align: center;
         font-weight: bold;
@@ -68,6 +72,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       
       .tblHeader {
         font-weight: bold;
+        border: 0px;
+      }
+      
+      .tblCell {
+        border: 0px;
       }
       
        #mapStyleBox {
@@ -175,6 +184,12 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             "elementType": "geometry",
             "stylers": [
               { "color": "#444444" }
+            ]
+          },{
+            "featureType": "water",
+            "elementType": "labels",
+            "stylers": [
+              { "color": "#e0e0e0" }
             ]
           },{
             "featureType": "road.local",
@@ -389,13 +404,14 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           }
           
           // Build our table.
-          retVal = "<table>";
-          retVal += "<tr><td colspan=6 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
-          retVal += "<tr><td class=\"tblHeader\">Category</td><td>" + catStr + "</td><td class=\"tblHeader\">Flight status</td><td>" + fsStr + "</td><td class=\"tblHeader\">Air/Ground</td><td>" + vertStatStr + "</td</tr>";
-          retVal += "<tr><td class=\"tblHeader\">Velocity</td><td>" + veloStr + " kt</td><td class=\"tblHeader\">Altitude</td><td>" + altStr + " ft</td><td class=\"tblHeader\">Climb rate</td><td>" + vertRateStr + " ft/min</td></tr>";
-          retVal += "<tr><td class=\"tblHeader\">Heading</td><td>" + headingStr + " deg</td></tr>";
-          retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=4>" + posStr + "</td></tr>";
-          retVal += "<tr>><td class=\"tblHeader\">Supersonic</td><td>" + "" + "</td></tr>";
+          retVal = "<table class=\"infoTable\">";
+          retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Category</td><td class=\"tblCell\">" + catStr + "</td><td class=\"tblHeader\">Flight status</td><td class=\"tblCell\">" + fsStr + "</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Air/Ground</td><td class=\"tblCell\">" + vertStatStr + "</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Altitude</td><td class=\"tblCell\">" + altStr + " ft</td><td class=\"tblHeader\">Climb rate</td><td class=\"tblCell\">>" + vertRateStr + " ft/min</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
+          retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
+          retVal += "<tr>><td class=\"tblHeader\">Supersonic</td><td class=\"tblCell\">" + "" + "</td></tr>";
           retVal += "</table>";
         }
         

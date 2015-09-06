@@ -168,6 +168,23 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         return newIcon;
       }
       
+      
+      // Create info windows for vehicles.
+      function infoFactory(vehName) {
+        var retVal = null;
+        
+        // Which position type do we have?
+        // ADS-B/SSR
+        if (vehData[vehName].type == "airSSR") {
+          retVal = "<b>ICAO " + vehData[vehName] + "</b><br/>";
+          retVal = retVal + vehData[vehName].lastSeen;
+        }
+        
+        
+        // Return information to be included in the infoWindow's contents.
+        return retVal;
+      }
+      
       // Expire vehicles.
       function expireVehicles() {
         // Set the time we started the process of checking.
@@ -183,7 +200,8 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           // Check to see if we haven't heard from them in our age time.
           if (vehDelta >= vehAge) {
             
-            // Remove the marker for the expred vehicle and nuke the vehicle's object.
+            // Close an open info window, nuke the marker for the expred vehicle, and nuke the vehicle's object.
+            vehData[veh].info.close();
             vehData[veh].marker.setMap(null);
             vehData[veh] = null;
             delete vehData[veh];
@@ -212,6 +230,15 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         }
       }
       
+      // Move the vehicle's marker and infoWindow
+      function moveVehicle(thisVehicle) {
+        thisLocation = {lat: thisVehicle.lat, lng: thisVehicle.lon}
+        
+        // Move the marker and infoWindow to our position.
+        thisVehicle.marker.setPosition(thisLocation);
+        thisVehicle.info.setPosition(thisLocation);
+      }
+      
       function handleMessage(msg){
         if (!mapLoaded) {
           console.log("Maps not loaded. Discarding aircraft data.");
@@ -233,42 +260,58 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         vehName = "veh" + msgJSON.addr;
         
         // See if we have a vehicle in our vehicle data.
+        // #### This decides to update an object or create a new one as necessary. Updates to the info window and such should be here.
         if (vehName in vehData) {
           // Update the properties for the aircraft.
           $.extend(true, vehData[vehName], msgJSON, {lastUpdate: new Date().getTime()});
+          
+          // Set the content box.
+          //vehData[vehName].info.setContent(vehData[vehName].allTheInfos);
         } else {
           // Add a new vehicle.
-          vehData[vehName] = {};
-          
-          // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
-          $.extend(true, vehData[vehName], msgJSON,
-            {lastPos: "none",
+          vehData[vehName] = {
+            lastPos: "none",
             lastUpdate: new Date().getTime(),
             active: true,
-            allTheInfos: vehData[vehName].addr,
             track: []
-          });
+          };
+          
+          // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
+          $.extend(true, vehData[vehName], msgJSON);
           
           // Create our marker.
           aMarker = new google.maps.Marker({
             icon: iconFactory(vehName, true),
             map: map
           });
+            
+          // Create our info window.
+          var infowindow = new google.maps.InfoWindow({
+            content: ""
+          });
           
-          // Run a second extend operation to set the marker.
-          $.extend(true, vehData[vehName], {marker: aMarker});
+          // Add listener to marker to open info window
+          aMarker.addListener('click', function() {
+            infowindow.open(map, aMarker);
+          });
           
-          // Marker function
-          //google.maps.event.addListener(vehData[vehName].marker, 'click', function(X) {
-          //  infoWin.setContent(vehData[vehName].allTheInfos);
-          //  infoWin.open(map, vehData[vehName].marker);
-          //});
+          // Add listener to marker to show the path
+          aMarker.addListener('rightclick', function() {
+            console.log("Show path for plane: " + vehData[vehName].addr);
+          });
+          
+          // Run a second extend operation to set the marker and info window
+          $.extend(true, vehData[vehName], {marker: aMarker, info: infowindow});
+          
+          // Set the content box.
+          vehData[vehName].info.setContent(vehData[vehName].addr.toUpperCase());
+          
         }
         
         // If we have latitude and by extension longitude data...
         if (("lat" in vehData[vehName]) && mapLoaded) {
           
-          // Figure out where we are in 3D space to determine whether or not we should move the marker.
+          // Figure out where we are in 2D space to determine whether or not we should move the marker.
           var thisPos = vehData[vehName].lat + "," + vehData[vehName].lon;
           
           // If we have new position daa...
@@ -287,11 +330,15 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             // Modify the icon to have the correct rotation, and to indicate there's bearing data.
             vehData[vehName].marker.setIcon(iconFactory(vehName, true));
             
-            // Set the 3D data with what we have now.
+            // Set the 2D data with what we have now.
             vehData[vehName].lastPos = thisPos;
             
             // Move the marker.
-            vehData[vehName].marker.setPosition({lat: msgJSON.lat, lng: msgJSON.lon});
+            vehData[vehName].marker.setPosition({lat: vehData[vehName].lat, lng: vehData[vehName].lon});
+            
+            // Set the initial location of the info window
+            vehData[vehName].info.setPosition({lat: vehData[vehName].lat, lng: vehData[vehName].lon});
+            
           }
         }
       }
@@ -304,6 +351,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         // If our map has been loaded then we can start "expiring" vehicles.
         if (mapLoaded) { expireVehicles(); }
       }, vehExpireCheckInterval);
+    
     </script>
   </body>
 </html>

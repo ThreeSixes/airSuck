@@ -101,6 +101,9 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
     
     <!-- Include the Google Maps API -->
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?&callback=initMap&signed_in=true" async defer></script>
+    
+    <!-- Include color ramp system rainbowvis-js -->
+    <script src="rainbowvis.js" type="text/javascript"></script>
   
   </head>
   <body>
@@ -158,7 +161,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         // Set default map to terrain.
         map.setMapTypeId(google.maps.MapTypeId.TERRAIN);
         
-                // Create the monochrome map style
+        // Create the monochrome map style
         var monoStyle = [
           {
             "featureType": "landscape.man_made",
@@ -289,6 +292,12 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         
         // Load the custom controls through the map controls interface
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(styleControlContainer);
+        
+        // Set default map to monochrome.
+        map.setMapTypeId(google.maps.MapTypeId.TERRAIN);
+        map.set('styles',monoStyle);
+        // Set the selectbox to monochrome
+        styleSelectBox.options[2].selected = true;
         
         // The map loaded.
         mapLoaded = true;
@@ -524,7 +533,18 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             lastPos: "none",
             lastUpdate: new Date().getTime(),
             active: true,
-            track: []
+            pathPoly: new google.maps.Polyline({
+              map: map,
+              clickable: false,
+              draggable: false,
+              editable: false,
+              geodesic: false,
+              strokeOpacity: 0.8,
+              strokeWeight: 2.0,
+              visible: false,
+              zIndex: 1000,
+              path: new google.maps.MVCArray()
+            })
           };
           
           // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
@@ -548,7 +568,16 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           
           // Add listener to marker to show the path
           aMarker.addListener('rightclick', function() {
-            console.log("Show path for plane: " + vehData[vehName].addr);
+            console.log("Show/hide path for plane: " + vehData[vehName].addr);
+            // Check to see if the path is visible and reverse the visiblity
+            if (vehData[vehName].pathPoly.getVisible() == true) {
+              vehData[vehName].pathPoly.setVisible(false);
+              console.log("Visibility: " + vehData[vehName].pathPoly.getVisible());
+            } else {
+              vehData[vehName].pathPoly.setVisible(true);
+              console.log("Visibility: " + vehData[vehName].pathPoly.getVisible());
+              console.log(vehData[vehName].pathPoly.getPath());
+            }
           });
           
           // Run a second extend operation to set the marker and info window
@@ -574,17 +603,26 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
               storeAlt = vehData[vehName].alt;
             }
             
-            // Add our new point to the track array.
-            vehData[vehName].track.push([vehData[vehName].lat, vehData[vehName].lon, storeAlt]);
+            // Create a new Google Maps LatLng object to use for the next two steps:
+            newPos = new google.maps.LatLng(vehData[vehName].lat, vehData[vehName].lon);
+            
+            // copy the path object
+            var pathObject = vehData[vehName].pathPoly.getPath();
+            
+            // update with the new path
+            pathObject.push(point);
+            
+            // push back to the polyline
+            vehData[vehName].pathPoly.setPath(pathObject);
+            
+            // TESTING COLOR - set by height
+            vehData[vehName].pathPoly.setOptions({strokeColor: "#" + polyRamp.colourAt(vehData[vehName].alt/1000)});
             
             // Modify the icon to have the correct rotation, and to indicate there's bearing data.
             vehData[vehName].marker.setIcon(iconFactory(vehName, true));
             
             // Set the 2D data with what we have now.
             vehData[vehName].lastPos = thisPos;
-            
-            // Create a new Google Maps LatLng object to use for the next two steps:
-            newPos = new google.maps.LatLng(vehData[vehName].lat, vehData[vehName].lon);
             
             // Move the marker.
             vehData[vehName].marker.setPosition(newPos);

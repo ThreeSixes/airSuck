@@ -569,6 +569,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
               vehData[this.vehName].info.close();
               vehData[this.vehName].info.shown = false;
             } else {
+              // Else, open it.
               vehData[this.vehName].info.open(map, vehData[this.vehName].marker);
               vehData[this.vehName].info.shown = true;
             }
@@ -581,7 +582,6 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
               vehData[this.vehName].pathPoly.setVisible(false);
             } else {
               vehData[this.vehName].pathPoly.setVisible(true);
-              console.log(vehData[this.vehName].pathPoly.getPath());
             }
           });
           

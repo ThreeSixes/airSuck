@@ -120,6 +120,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       // Instanciate Socket.IO
       var socket = io();
       
+      // Instanciate RainbowVis and set global color ramp by plane height
+      var polyRamp = new Rainbow();
+      polyRamp.setNumberRange(0,45);
+      polyRamp.setSpectrum('yellow','red');
+      
       // Global Google Maps objects are global. :)
       var map = null;
       var mapLoaded = false;
@@ -610,7 +615,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             var pathObject = vehData[vehName].pathPoly.getPath();
             
             // update with the new path
-            pathObject.push(point);
+            pathObject.push(newPos);
             
             // push back to the polyline
             vehData[vehName].pathPoly.setPath(pathObject);

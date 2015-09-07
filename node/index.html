@@ -462,6 +462,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             // Close an open info window, nuke the marker for the expred vehicle, and nuke the vehicle's object.
             vehData[veh].info.close();
             vehData[veh].marker.setMap(null);
+            vehData[veh].pathPoly.setVisible(false);
             vehData[veh] = null;
             delete vehData[veh];
             vehNotNuked = false;
@@ -556,24 +557,30 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             
           // Create our info window.
           var infowindow = new google.maps.InfoWindow({
-            content: ""
+            content: "",
+            shown: false
           });
           
           // Add listener to marker to open info window
           aMarker.addListener('click', function() {
-            infowindow.open(map, vehData[this.vehName].marker);
+            // If our infoWindow is being shown...
+            if (vehData[this.vehName].info.shown) {
+              // Close it.
+              vehData[this.vehName].info.close();
+              vehData[this.vehName].info.shown = false;
+            } else {
+              vehData[this.vehName].info.open(map, vehData[this.vehName].marker);
+              vehData[this.vehName].info.shown = true;
+            }
           });
           
           // Add listener to marker to show the path
           aMarker.addListener('rightclick', function() {
-            console.log("Show/hide path for plane: " + vehData[vehName].addr);
             // Check to see if the path is visible and reverse the visiblity
             if (vehData[this.vehName].pathPoly.getVisible() == true) {
               vehData[this.vehName].pathPoly.setVisible(false);
-              console.log("Visibility: " + vehData[this.vehName].pathPoly.getVisible());
             } else {
               vehData[this.vehName].pathPoly.setVisible(true);
-              console.log("Visibility: " + vehData[this.vehName].pathPoly.getVisible());
               console.log(vehData[this.vehName].pathPoly.getPath());
             }
           });

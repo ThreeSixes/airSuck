@@ -591,6 +591,10 @@ class ssrParse:
         
         retVal = False
         
+        # Check for unmanned aicraft with lost comms
+        if aSquawk == "7400":
+            retVal = "Unmanned aircraft, lost comms"
+        
         # Check for hijack
         if aSquawk == "7500":
             retVal = "Hijack"
@@ -702,7 +706,7 @@ class ssrParse:
         
         # This dict will hold all the information we're able to decode from frames
         retVal = {}
-                
+        
         # Get length in bytes.
         retVal['len'] = len(binData)
         

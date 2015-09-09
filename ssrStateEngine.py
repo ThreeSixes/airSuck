@@ -382,7 +382,7 @@ class SubListener(threading.Thread):
                     if 'aSquawk' in ssrWrapped:
                         
                         # Add the new metadata from the mode A squawk to our global metadata dictionary.
-                        metaData.update({aMeta: airSuckUtil.modeA2Meta(ssrWrapped['aSquawk'], airSuckUtil.regionUSA)})
+                        metaData.update({aMeta: airSuckUtil.modeA2Meta(ssrWrapped['aSquawk'], 0)})
                     
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):

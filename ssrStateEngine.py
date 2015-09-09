@@ -509,6 +509,7 @@ class SubListener(threading.Thread):
                                 
                         
                         # If we have some sort of metadata
+                        print(str(len(metaData)))
                         if len(metaData) > 0:
                             # Add the metadata to the data dictionary
                             data.update({'meta': metaData})

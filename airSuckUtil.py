@@ -116,7 +116,7 @@ class airSuckUtil:
         
         # By default the data is not notable, and there's no metadata to be assigned.
         notable = False
-        aMeta = ""
+        aMeta = None
         
         # Make the squawk code an int to make life a bit easier.
         aInt = int(aSquawk)
@@ -235,7 +235,7 @@ class airSuckUtil:
                 notable = True
         
         # If we have some sort of info about the squawk code...
-        if aMeta != "":
+        if aMeta != None:
             retVal = {'aMeta': aMeta, 'notable': notable}
         
         return retVal

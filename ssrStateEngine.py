@@ -380,11 +380,9 @@ class SubListener(threading.Thread):
                     
                     # Get mode A metadata.
                     if 'aSquawk' in ssrWrapped:
-                        # Get the metadata from mode A squawk codes.
-                        aMetaData = {aMeta: airSuckUtil.modeA2Meta(ssrWrapped['aSquawk'], airSuckUtil.regionUSA)}
                         
-                        # Add the new metadata to our global metadata dictionary.
-                        metaData.update(aMetaData)
+                        # Add the new metadata from the mode A squawk to our global metadata dictionary.
+                        metaData.update({aMeta: airSuckUtil.modeA2Meta(ssrWrapped['aSquawk'], airSuckUtil.regionUSA)})
                     
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
@@ -509,8 +507,10 @@ class SubListener(threading.Thread):
                                 #    pprint(oddAge)
                                 
                         
-                        # Add the metadata to the data dictionary
-                        data.update({'meta': metaData})
+                        # If we have some sort of metadata
+                        if len(metaData) > 0:
+                            # Add the metadata to the data dictionary
+                            data.update({'meta': metaData})
                         
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

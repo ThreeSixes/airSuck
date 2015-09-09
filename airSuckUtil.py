@@ -121,6 +121,8 @@ class airSuckUtil:
         # Make the squawk code an int to make life a bit easier.
         aInt = int(aSquawk)
         
+        print(str(aInt))
+        
         # Get data based on region.
         if region == self.regionUSA:
             # Unique Squawk codes

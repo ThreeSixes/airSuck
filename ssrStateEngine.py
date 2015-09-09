@@ -380,10 +380,10 @@ class SubListener(threading.Thread):
                         print("Bad CRC detected in frame:\n DF " + str(ssrWrapped['df']) + ": " + ssrWrapped['data'])
                     
                     # Get mode A metadata.
-                    if 'aSquawk' in ssrWrapped:
+                    #if 'aSquawk' in ssrWrapped:
                         
                         # Add the new metadata from the mode A squawk to our global metadata dictionary.
-                        metaData.update(self.asu.modeA2Meta(ssrWrapped['aSquawk'], self.asu.regionUSA))
+                    #    metaData.update(self.asu.modeA2Meta(ssrWrapped['aSquawk'], self.asu.regionUSA))
                     
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
@@ -509,9 +509,9 @@ class SubListener(threading.Thread):
                                 
                         
                         # If we have some sort of metadata
-                        if len(metaData) > 0:
+                        #if len(metaData) > 0:
                             # Add the metadata to the data dictionary
-                            data.update({'meta': metaData})
+                        #    data.update({'meta': metaData})
                         
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

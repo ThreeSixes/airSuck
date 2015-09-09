@@ -19,6 +19,7 @@ import threading
 import binascii
 import datetime
 from cprMath import cprMath
+from airSuckUtil import airSuckUtil
 from pprint import pprint
 
 
@@ -334,9 +335,12 @@ class SubListener(threading.Thread):
                 
                 # Add the type specifier to our data.
                 data.update({'type': ssrWrapped['type']})
-                    
+                
                 # Do we hvae mode s?
                 if ssrWrapped['mode'] == "s":
+                    
+                    # Save space for mode A metadata.
+                    metaData = {}
                     
                     # Set our good CRC flag to false by default.
                     crcGood = False
@@ -373,6 +377,14 @@ class SubListener(threading.Thread):
                     
                     if crcGood == False:
                         print("Bad CRC detected in frame:\n DF " + str(ssrWrapped['df']) + ": " + ssrWrapped['data'])
+                    
+                    # Get mode A metadata.
+                    if 'aSquawk' in ssrWrapped:
+                        # Get the metadata from mode A squawk codes.
+                        aMetaData = {aMeta: airSuckUtil.modeA2Meta(ssrWrapped['aSquawk'], airSuckUtil.regionUSA)}
+                        
+                        # Add the new metadata to our global metadata dictionary.
+                        metaData.update(aMetaData)
                     
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
@@ -496,7 +508,10 @@ class SubListener(threading.Thread):
                                 #    pprint(evenAge)
                                 #    pprint(oddAge)
                                 
-                                
+                        
+                        # Add the metadata to the data dictionary
+                        data.update({'meta': metaData})
+                        
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
                         

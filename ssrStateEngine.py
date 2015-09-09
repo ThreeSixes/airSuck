@@ -54,7 +54,8 @@ class SubListener(threading.Thread):
         self.destPubSub = destPubSub
         self.redis = r
         self.pubsub = self.redis.pubsub()
-        self.pubsub.subscribe(channels)    
+        self.pubsub.subscribe(channels)
+        self.asu = airSuckUtil()
     
     def updateState(self, objName, cacheData):
         """
@@ -382,7 +383,7 @@ class SubListener(threading.Thread):
                     if 'aSquawk' in ssrWrapped:
                         
                         # Add the new metadata from the mode A squawk to our global metadata dictionary.
-                        metaData.update({aMeta: airSuckUtil.modeA2Meta(ssrWrapped['aSquawk'], 0)})
+                        metaData.update({aMeta: self.asu.modeA2Meta(ssrWrapped['aSquawk'], self.asu.regionUSA)})
                     
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):

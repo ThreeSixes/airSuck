@@ -112,7 +112,7 @@ class airSuckUtil:
         (http://www.faa.gov/documentLibrary/media/Order/FINAL_Order_7110_66E_NBCAP.pdf)
         """
         
-        # Set metadata string to "none" by default.
+        # Sfet metadata string to "none" by default.
         aMeta = None
         
         # Make the squawk code an int to make life a bit easier.
@@ -123,8 +123,7 @@ class airSuckUtil:
             # Unique Squawk codes
             if aInt == 0:
                 aMeta = "Code 0000 shouldn't be used."
-                
-                
+            
             if aInt == 1200:
                 aMeta = "VFR"
             
@@ -198,13 +197,19 @@ class airSuckUtil:
             elif aInt == 5100 or aInt == 5377:
                 aMeta = "DoD aicraft inside US airpace but not on RADAR"
             
-            elif (aInt >= 4401 and aInt <= 4433) and (aInt >= 4466 and aInt <= 4477):
+            elif (aInt >= 4401 and aInt <= 4433) or (aInt >= 4466 and aInt <= 4477):
                 aMeta = "Special aircraft ops by LEO"
+            
+            elif (aInt >= 7601 and aInt <= 7607) or (aInt >= 7701 and aInt <= 7707):
+                aMeta = "Special aircraft ops by Federal LEO"
             
             elif (aInt >= 5000 and aInt <= 5057) or (aInt >= 5063 and aInt <= 5077) or (aInt >= 5400 and aInt <= 5077) or (aInt >= 6100 and aInt <= 6177) or (aInt >= 6400 and aInt <= 6477) or (aInt == 7501) or (aInt == 7577):
                 aMeta = "DoD aircraft, assigned by NORAD"
             
             elif (aInt >= 500 and aInt <= 777) or (aInt >= 1000 and aInt <= 1177) or (aInt >= 1300 and aInt <= 1377) or (aInt >= 1500 and aInt <= 1577) or (aInt >= 2100 and aInt <= 2477) or (aInt >= 4000 and aInt <= 4077):
                 aMeta = "FAA JO 7110.65 assignments"
+            
+            elif ((aInt >= 1400) and (aInt <= 1777)) or ((aInt >= 2000) and (aInt <= 2777)) or ((aInt >= 3000) and (aInt <= 3777)) or ((aInt >= 4000) and (aInt <= 4177)) or ((aInt >= 5600) and (aInt <= 5777)) or ((aInt >= 6000) and (aInt <= 6077)) or ((aInt >= 6200) and (aInt <= 6377)) or ((aInt >= 6500) and (aInt <= 6777)) or ((aInt >= 7000) and (aInt <= 7377)) or ((aInt >= 7610) and (aInt <= 7676)) or ((aInt >= 7710) and (aInt <= 7776)):
+                aMeta = "External ARTCC"
             
         return aMeta

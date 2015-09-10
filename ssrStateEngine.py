@@ -307,8 +307,8 @@ class SubListener(threading.Thread):
         self.redis.publish(destPubSub, jsonData)
         
         # We don't want to store mode a metadata in the DB, so just pull it off the dict.
-        if 'aMeta' in statusData:
-            statusData.pop('aMeta', None)
+        if 'aSquawkMeta' in statusData:
+            statusData.pop('aSquawkMeta', None)
             
         jsonData = json.dumps(statusData)
         self.redis.rpush(destReliable, jsonData)
@@ -396,7 +396,7 @@ class SubListener(threading.Thread):
                         # If we have usable data, add it.
                         if aMeta != None:
                             # Add the new metadata from the mode A squawk to our global metadata dictionary.
-                            data.update({'aMeta': aMeta})
+                            data.update({'aSquawkMeta': aMeta})
                     
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
@@ -435,7 +435,7 @@ class SubListener(threading.Thread):
                         
                         # Aircraft heading
                         if 'heading' in ssrWrapped:
-                            data.update({"heading": ssrWrapped['heading']})
+                            data.update({"heading": ssrWrapped['heading'], "headingMeata": "ADS-B"})
                         
                         # Altitude
                         if 'alt' in ssrWrapped:
@@ -454,9 +454,9 @@ class SubListener(threading.Thread):
                         # For airborne aircraft
                         if ((ssrWrapped['df'] == 17) or (ssrWrapped['df'] == 18)) and (ssrWrapped['fmt'] == 19):
                             if 'gndspeed' in ssrWrapped:
-                                data.update({"velo": ssrWrapped['gndspeed'], "veloType": "gnd"})
+                                data.update({"velo": ssrWrapped['gndspeed'], "veloType": "gnd", "veloMeta": "ADS-B"})
                             if 'airspeed' in ssrWrapped:
-                                data.update({"velo": ssrWrapped['airspeed'], "veloType": "air", "airspeedRef": ssrWrapped['airspeedRef']})
+                                data.update({"velo": ssrWrapped['airspeed'], "veloType": "air", "airspeedRef": ssrWrapped['airspeedRef'], "veloMeta": "ADS-B"})
                         
                         # Deal with vehicles on the ground here...
                         
@@ -510,15 +510,23 @@ class SubListener(threading.Thread):
                                         
                                         # Location data
                                         if type(locData) == list:
+                                            
+                                            # Since we have location data.
+                                            if ('lat' in data) and ('lon' in data):
+                                                # See if the we have moved...
+                                                if (data['lat'] != locData[0]) and (data['lon'] != locData[1]):
+                                                    # If we don't have a heading compute one.
+                                                    if not ('heading' in data) and not ('heading' in ssrWrapped):
+                                                        # Get the bearing based on the location we have.
+                                                        newHeading = self.asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
+                                                        # Add the heading to the traffic data
+                                                        data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
+                                            
                                             # Set location data.
-                                            data.update({"lat": locData[0], "lon": locData[1]})
+                                            data.update({"lat": locData[0], "lon": locData[1], "locationMeta": "CPRGlobal"})
                                     
                                     except Exception as e:
                                         pprint(e)
-                                #else:
-                                #    print("Date punt from " + ssrWrapped['icaoAAHx'] + ":")
-                                #    pprint(evenAge)
-                                #    pprint(oddAge)
                         
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

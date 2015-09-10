@@ -305,7 +305,7 @@ class SubListener(threading.Thread):
         
         # We don't want to store mode a metadata in the DB, so just pull it off the dict.
         if 'aMeta' in statusData:
-            statusData.remove('aMeta')
+            statusData.pop('aMeta', None)
             
         jsonData = json.dumps(statusData)
         self.redis.rpush(destReliable, jsonData)

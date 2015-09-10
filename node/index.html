@@ -79,7 +79,14 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         border: 0px;
       }
       
-       #mapStyleBox {
+      .tblEmerg {
+        font-weight: bold;
+        border: 0px;
+        background-color: #ffff00;
+        color: #ff0000;
+      }
+      
+      #mapStyleBox {
         text-align: left;
         font-family: Roboto, Arial, sans-serif;
         position: absolute;
@@ -435,6 +442,14 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           retVal += "<tr><td class=\"tblHeader\">Altitude</td><td class=\"tblCell\">" + altStr + " ft</td><td class=\"tblHeader\">Climb rate</td><td class=\"tblCell\">" + vertRateStr + " ft/min</td></tr>";
           retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
           retVal += "<tr><td class=\"tblHeader\">Air/Gnd</td><td class=\"tblCell\">" + vertStatStr + "</td><td class=\"tblHeader\">Supersonic</td><td class=\"tblCell\">" + supersonicStr + "</td></tr>";
+          
+          // If we have some sort of emergency...
+          if ('emergency' in vehData[vehName]) {
+            if ((vehData[vehName].emergency == true) && ("emergencyData" in vehData[vehName])) {
+              retVal += "<tr><td class=\"tblEmerg\" colspan=4>** EMERGENCY **</td></tr>";
+              retVal += "<td class=\"tblEmerg\" colspan=4>Description - " + vehData[vehName].emergencyData + "</td></tr>";
+            }
+          }
           
           // If we have Mode A metadata...
           if ("aMeta" in vehData[vehName]) {

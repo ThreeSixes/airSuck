@@ -301,8 +301,14 @@ class SubListener(threading.Thread):
         
         # Debug print instead of dumping data onto another queue.
         jsonData = json.dumps(statusData)
-        self.redis.rpush(destReliable, jsonData)
         self.redis.publish(destPubSub, jsonData)
+        
+        # We don't want to store mode a metadata in the DB, so just pull it off the dict.
+        if 'aMeta' in statusData:
+            statusData.removef('aMeta')
+            
+        jsonData = json.dumps(statusData)
+        self.redis.rpush(destReliable, jsonData)
         
         return
 

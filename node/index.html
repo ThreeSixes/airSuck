@@ -435,6 +435,13 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           retVal += "<tr><td class=\"tblHeader\">Altitude</td><td class=\"tblCell\">" + altStr + " ft</td><td class=\"tblHeader\">Climb rate</td><td class=\"tblCell\">" + vertRateStr + " ft/min</td></tr>";
           retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
           retVal += "<tr><td class=\"tblHeader\">Air/Ground</td><td class=\"tblCell\">" + vertStatStr + "</td><td class=\"tblHeader\">Supersonic</td><td class=\"tblCell\">" + supersonicStr + "</td></tr>";
+          
+          // If we have Mode A metadata...
+          if ("aMeta" in vehData[vehName]) {
+            retVal += "<tr><td class=\"tblHeader\" colspan=4>Mode A metadata</td></tr>";
+            retVal += "<tr><td class=\"tblCell\" colspan=4>" + vehData[vehName].aMeta + "</td></tr>";
+          }
+          
           retVal += "</table>";
         }
         

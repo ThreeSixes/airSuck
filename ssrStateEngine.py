@@ -513,10 +513,23 @@ class SubListener(threading.Thread):
                                             
                                             # Since we have location data.
                                             if ('lat' in data) and ('lon' in data):
+                                                
                                                 # See if the we have moved...
                                                 if (data['lat'] != locData[0]) and (data['lon'] != locData[1]):
-                                                    # If we don't have a heading compute one.
-                                                    if not ('heading' in data) and not ('heading' in ssrWrapped):
+                                                    
+                                                    # Derived heading flag
+                                                    derivedHeading = False;
+                                                    
+                                                    # See if we already have a derived heading
+                                                    if 'headingMeta' in data:
+                                                        
+                                                        # If we already have a GPS derived heading, set our flag.
+                                                        if data['headingMeta'] == "GPSDerived":
+                                                            derivedHeading = True;
+                                                    
+                                                    # If we don't have a heading compute or we've already derived one compute it again assuimng we didn't just get a new one from ADS-B.
+                                                    if (not ('heading' in data) or derivedHeading) and not ('heading' in ssrWrapped):
+                                                        
                                                         # Get the bearing based on the location we have.
                                                         newHeading = self.asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
                                                         # Add the heading to the traffic data

@@ -753,6 +753,13 @@ class ssrParse:
                 retVal['fs'] = fsData[0]
                 if self.decodeNames: retVal['fsName'] = fsData[1]
                 
+                # If we have a flight status that indicates an emergency...
+                if (retVal['fs'] >= 2) and (retVal['fs'] <= 4):
+                    retVal['emergency'] = True
+                    retVal['fsEmergency'] = True
+                else:
+                    retVal['fsEmergency'] = False
+                
                 # Downlink request data
                 dfData = self.getDwnlnkReq(binData)
                 

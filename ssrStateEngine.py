@@ -151,7 +151,10 @@ class SubListener(threading.Thread):
                     "Reserved"]
                     
                 retVal.update({'emergencyData': esText[data['es']]})
-                
+        else:
+            # Set emergency to false if there's no emergency.
+            retVal = {'emergency': False}
+        
         return retVal
     
     # Convert datetime objects expressed as a string back to datetime

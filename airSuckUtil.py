@@ -209,6 +209,9 @@ class airSuckUtil:
             elif (aInt >= 500 and aInt <= 777) or (aInt >= 1000 and aInt <= 1177) or (aInt >= 1300 and aInt <= 1377) or (aInt >= 1500 and aInt <= 1577) or (aInt >= 2100 and aInt <= 2477) or (aInt >= 4000 and aInt <= 4077):
                 aMeta = "FAA JO 7110.65 assignments"
             
+            elif ((0001) and (0077)) or ((aInt >= 4200) and (aInt <= 4377)) or ((aInt >= 4500) and (aInt <= 4777)) or ((aInt >= 5100) and (aInt <= 5377)) or ((aInt >= 5500) and (aInt <= 5577)):
+                aMeta = "Internal ARTCC"
+            
             elif ((aInt >= 1400) and (aInt <= 1777)) or ((aInt >= 2000) and (aInt <= 2777)) or ((aInt >= 3000) and (aInt <= 3777)) or ((aInt >= 4000) and (aInt <= 4177)) or ((aInt >= 5600) and (aInt <= 5777)) or ((aInt >= 6000) and (aInt <= 6077)) or ((aInt >= 6200) and (aInt <= 6377)) or ((aInt >= 6500) and (aInt <= 6777)) or ((aInt >= 7000) and (aInt <= 7377)) or ((aInt >= 7610) and (aInt <= 7676)) or ((aInt >= 7710) and (aInt <= 7776)):
                 aMeta = "External ARTCC"
             

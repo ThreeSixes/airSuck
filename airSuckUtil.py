@@ -172,9 +172,12 @@ class airSuckUtil:
             elif aInt == 7777:
                 aMeta = "Active DoD air defense mission, no ATC clearence"
             
+            elif aInt == 100 or aInt == 200 or aInt == 300 or aInt == 400 or aInt == 500 or aInt == 600 or aInt == 700 or aInt == 1000 or aInt == 1100 or aInt == 1300 or aInt == 2000 or aInt == 2100 or aInt == 2200 or aInt == 2300 or aInt == 2400 or aInt == 4000:
+                aMeta = "Non-discrete code"
+            
             # Squawk code blocks. Each block is expressed as NNxx where xx is the discreet part of each code and NN is the block.
-            elif (aInt >= 100) and (aInt <= 477):
-                aMeta = " Terminal / CERAP / Industry / Unique / Experimental"
+            elif ((aInt >= 101) and (aInt <= 177)) or ((aInt >= 201) and (aInt <= 277)) or ((aInt >= 301) and (aInt <= 377)) or ((aInt >= 401) and (aInt <= 477)):
+                aMeta = " Terminal/CERAP/Industry/Unique/Experimental"
             
             elif aInt >= 1207 and aInt <= 1272:
                 aMeta = "Discrete VFR"
@@ -200,16 +203,13 @@ class airSuckUtil:
             elif (aInt >= 7601 and aInt <= 7607) or (aInt >= 7701 and aInt <= 7707):
                 aMeta = "Special aircraft ops by Federal LEO"
             
-            elif (aInt >= 5000 and aInt <= 5057) or (aInt >= 5063 and aInt <= 5077) or (aInt >= 5400 and aInt <= 5077) or (aInt >= 6100 and aInt <= 6177) or (aInt >= 6400 and aInt <= 6477) or (aInt == 7501) or (aInt == 7577):
+            elif (aInt >= 5001 and aInt <= 5057) or (aInt >= 5063 and aInt <= 5077) or (aInt >= 5401 and aInt <= 5077) or (aInt >= 6101 and aInt <= 6177) or (aInt >= 6401 and aInt <= 6477) or (aInt == 7501) or (aInt == 7577):
                 aMeta = "DoD aircraft, assigned by NORAD"
             
-            elif (aInt >= 500 and aInt <= 777) or (aInt >= 1000 and aInt <= 1177) or (aInt >= 1300 and aInt <= 1377) or (aInt >= 1500 and aInt <= 1577) or (aInt >= 2000 and aInt <= 2477) or (aInt >= 4000 and aInt <= 4077):
-                aMeta = "Non-discrete code"
-            
-            elif ((0001) and (0077)) or ((aInt >= 4200) and (aInt <= 4377)) or ((aInt >= 4500) and (aInt <= 4777)) or ((aInt >= 5100) and (aInt <= 5377)) or ((aInt >= 5500) and (aInt <= 5577)):
+            elif (aInt >= 1 and aInt <= 77) or (aInt >= 4201 and aInt <= 4277) or (aInt >= 4301 and aInt <= 4377) or (aInt >= 4501 and aInt <= 4577) or (aInt >= 4601 and aInt <= 4677) or (aInt >= 5101 and aInt <= 5177) or (aInt >= 5201 and aInt <= 5277) or (aInt >= 5301 and aInt <= 5377) or (aInt >= 5501 and aInt <= 5577):
                 aMeta = "Internal ARTCC"
             
-            elif ((aInt >= 1400) and (aInt <= 1777)) or ((aInt >= 2000) and (aInt <= 2777)) or ((aInt >= 3000) and (aInt <= 3777)) or ((aInt >= 4000) and (aInt <= 4177)) or ((aInt >= 5600) and (aInt <= 5777)) or ((aInt >= 6000) and (aInt <= 6077)) or ((aInt >= 6200) and (aInt <= 6377)) or ((aInt >= 6500) and (aInt <= 6777)) or ((aInt >= 7000) and (aInt <= 7377)) or ((aInt >= 7610) and (aInt <= 7676)) or ((aInt >= 7710) and (aInt <= 7776)):
+            elif ((aInt >= 1401) and (aInt <= 1777)) or ((aInt >= 2001) and (aInt <= 2777)) or ((aInt >= 3001) and (aInt <= 3777)) or ((aInt >= 4001) and (aInt <= 4177)) or ((aInt >= 5601) and (aInt <= 5777)) or ((aInt >= 6001) and (aInt <= 6077)) or ((aInt >= 6201) and (aInt <= 6377)) or ((aInt >= 6501) and (aInt <= 6777)) or ((aInt >= 7001) and (aInt <= 7377)) or ((aInt >= 7611) and (aInt <= 7676)) or ((aInt >= 7711) and (aInt <= 7776)):
                 aMeta = "External ARTCC"
             
         return aMeta

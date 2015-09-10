@@ -177,7 +177,7 @@ class airSuckUtil:
             
             # Squawk code blocks. Each block is expressed as NNxx where xx is the discreet part of each code and NN is the block.
             elif ((aInt >= 101) and (aInt <= 177)) or ((aInt >= 201) and (aInt <= 277)) or ((aInt >= 301) and (aInt <= 377)) or ((aInt >= 401) and (aInt <= 477)):
-                aMeta = " Terminal/CERAP/Industry/Unique/Experimental"
+                aMeta = "Terminal/CERAP/Industry/Unique/Experimental"
             
             elif aInt >= 1207 and aInt <= 1272:
                 aMeta = "Discrete VFR"

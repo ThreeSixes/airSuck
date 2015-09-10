@@ -438,7 +438,8 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           
           // If we have Mode A metadata...
           if ("aMeta" in vehData[vehName]) {
-            retVal += "<tr><td class=\"tblHeader\">Metadata</td><td class=\"tblCell\" colspan=3>Mode A - " + vehData[vehName].aMeta + "</td></tr>";
+            retVal += "<tr><td class=\"tblHeader\" colspan=4>Metadata</td></tr>";
+            retVal += "<td class=\"tblCell\" colspan=4>Mode A - " + vehData[vehName].aMeta + "</td></tr>";
           }
           
           retVal += "</table>";

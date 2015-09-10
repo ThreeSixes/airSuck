@@ -204,7 +204,7 @@ class airSuckUtil:
                 aMeta = "DoD aircraft, assigned by NORAD"
             
             elif (aInt >= 500 and aInt <= 777) or (aInt >= 1000 and aInt <= 1177) or (aInt >= 1300 and aInt <= 1377) or (aInt >= 1500 and aInt <= 1577) or (aInt >= 2000 and aInt <= 2477) or (aInt >= 4000 and aInt <= 4077):
-                aMeta = "FAA JO 7110.65 assignments"
+                aMeta = "Non-discrete code"
             
             elif ((0001) and (0077)) or ((aInt >= 4200) and (aInt <= 4377)) or ((aInt >= 4500) and (aInt <= 4777)) or ((aInt >= 5100) and (aInt <= 5377)) or ((aInt >= 5500) and (aInt <= 5577)):
                 aMeta = "Internal ARTCC"

@@ -122,7 +122,7 @@ class airSuckUtil:
         if region == self.regionUSA:
             # Unique Squawk codes
             if aInt == 0:
-                aMeta = "Code 0000 shouldn't be used."
+                aMeta = "Shouldn't be assigned."
             
             if aInt == 1200:
                 aMeta = "VFR"
@@ -131,14 +131,14 @@ class airSuckUtil:
                 aMeta = "VFR near LAX"
             
             elif aInt == 1202:
-                aMeta = "VFR glider, no contact with ATC"
+                aMeta = "VFR glider, no ATC contact"
             
             elif aInt == 1205:
-                aMeta = "VFR helicopters in LA area"
+                aMeta = "VFR LA area helicopters"
             
             elif aInt == 1206:
-                aMeta = "VFR LEO/First responder/military/public service helicopters in LA area"
-            
+                aMeta = "VFR LA LEO/First responder/military/public svc helicopters"
+                
             elif aInt == 1234:
                 aMeta = "VFR pattern work"
             
@@ -158,7 +158,7 @@ class airSuckUtil:
                 aMeta = "High balloon op"
             
             elif aInt == 7400:
-                aMeta = "Unmanned aircraft, lost comms"                
+                aMeta = "UAV, lost comms"                
             
             elif aInt == 7500:
                 aMeta = "Hijacked aircraft"
@@ -179,34 +179,34 @@ class airSuckUtil:
             elif ((aInt >= 101) and (aInt <= 177)) or ((aInt >= 201) and (aInt <= 277)) or ((aInt >= 301) and (aInt <= 377)) or ((aInt >= 401) and (aInt <= 477)):
                 aMeta = "Terminal/CERAP/Industry/Unique/Experimental"
             
-            elif aInt >= 1207 and aInt <= 1272:
+            elif (aInt >= 1207) and (aInt <= 1272):
                 aMeta = "Discrete VFR"
             
-            elif aInt >= 4447 and aInt <= 4452:
+            elif (aInt >= 4447) and (aInt <= 4452):
                 aMeta = "Special aircraft ops state and federal LEO/Military"
             
-            elif aInt == 4440 or aInt == 4441:
+            elif (aInt == 4440) or (aInt == 4441):
                 aMeta = "Ops above FL600 for Lockheed/NASA from Moffett field"
             
-            elif aInt == 4442 or aInt == 4446:
+            elif (aInt >= 4442) or (aInt <= 4446):
                 aMeta = "Ops above FL600 for Lockheed from Air Force Plant 42"
             
-            elif aInt == 4454 or aInt == 4465:
-                aMeta = "Air Force special operations above FL600"
+            elif (aInt >= 4454) or (aInt <= 4465):
+                aMeta = "USAF spec ops above FL600"
             
-            elif aInt == 5100 or aInt == 5377:
-                aMeta = "DoD aicraft inside US airpace but not on RADAR"
+            elif ((aInt >= 5101) and (aInt <= 5177)) or ((aInt >= 5201) and (aInt <= 5277)) or ((aInt >= 5301) and (aInt >= 5377)):
+                aMeta = "DoD in US, not on RADAR"
             
             elif (aInt >= 4401 and aInt <= 4433) or (aInt >= 4466 and aInt <= 4477):
-                aMeta = "Special aircraft ops by LEO"
+                aMeta = "Special ops by LEO"
             
             elif (aInt >= 7601 and aInt <= 7607) or (aInt >= 7701 and aInt <= 7707):
-                aMeta = "Special aircraft ops by Federal LEO"
+                aMeta = "Special ops by Federal LEO"
             
             elif (aInt >= 5001 and aInt <= 5057) or (aInt >= 5063 and aInt <= 5077) or (aInt >= 5401 and aInt <= 5077) or (aInt >= 6101 and aInt <= 6177) or (aInt >= 6401 and aInt <= 6477) or (aInt == 7501) or (aInt == 7577):
-                aMeta = "DoD aircraft, assigned by NORAD"
+                aMeta = "DoD aircraft, NORAD assigned"
             
-            elif (aInt >= 1 and aInt <= 77) or (aInt >= 4201 and aInt <= 4277) or (aInt >= 4301 and aInt <= 4377) or (aInt >= 4501 and aInt <= 4577) or (aInt >= 4601 and aInt <= 4677) or (aInt >= 5101 and aInt <= 5177) or (aInt >= 5201 and aInt <= 5277) or (aInt >= 5301 and aInt <= 5377) or (aInt >= 5501 and aInt <= 5577):
+            elif ((aInt >= 1) and (aInt <= 77)) or ((aInt >= 4201) and (aInt <= 4277)) or ((aInt >= 4301) and (aInt <= 4377)) or ((aInt >= 4501) and (aInt <= 4577)) or ((aInt >= 4601) and (aInt <= 4677)) or ((aInt >= 5101) and (aInt <= 5177)) or ((aInt >= 5201) and (aInt <= 5277)) or ((aInt >= 5301) and (aInt <= 5377)) or ((aInt >= 5501) and (aInt <= 5577)):
                 aMeta = "Internal ARTCC"
             
             elif ((aInt >= 1401) and (aInt <= 1777)) or ((aInt >= 2001) and (aInt <= 2777)) or ((aInt >= 3001) and (aInt <= 3777)) or ((aInt >= 4001) and (aInt <= 4177)) or ((aInt >= 5601) and (aInt <= 5777)) or ((aInt >= 6001) and (aInt <= 6077)) or ((aInt >= 6201) and (aInt <= 6377)) or ((aInt >= 6501) and (aInt <= 6777)) or ((aInt >= 7001) and (aInt <= 7377)) or ((aInt >= 7611) and (aInt <= 7676)) or ((aInt >= 7711) and (aInt <= 7776)):

@@ -185,13 +185,13 @@ class airSuckUtil:
             elif (aInt >= 4447) and (aInt <= 4452):
                 aMeta = "Special aircraft ops state and federal LEO/Military"
             
-            elif (aInt == 4440) or (aInt == 4441):
+            elif (aInt == 4440) and (aInt == 4441):
                 aMeta = "Ops above FL600 for Lockheed/NASA from Moffett field"
             
-            elif (aInt >= 4442) or (aInt <= 4446):
+            elif (aInt >= 4442) and (aInt <= 4446):
                 aMeta = "Ops above FL600 for Lockheed from Air Force Plant 42"
             
-            elif (aInt >= 4454) or (aInt <= 4465):
+            elif (aInt >= 4454) and (aInt <= 4465):
                 aMeta = "USAF spec ops above FL600"
             
             elif ((aInt >= 5101) and (aInt <= 5177)) or ((aInt >= 5201) and (aInt <= 5277)) or ((aInt >= 5301) and (aInt >= 5377)):

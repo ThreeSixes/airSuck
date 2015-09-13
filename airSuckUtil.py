@@ -194,7 +194,7 @@ class airSuckUtil:
             elif (aInt >= 4454) and (aInt <= 4465):
                 aMeta = "USAF spec ops above FL600"
             
-            elif ((aInt >= 5101) and (aInt <= 5177)) or ((aInt >= 5201) and (aInt <= 5277)) or ((aInt >= 5301) and (aInt >= 5377)):
+            elif ((aInt >= 5101) and (aInt <= 5177)) or ((aInt >= 5201) and (aInt <= 5277)) or ((aInt >= 5301) and (aInt <= 5377)):
                 aMeta = "DoD in US, not on RADAR"
             
             elif (aInt >= 4401 and aInt <= 4433) or (aInt >= 4466 and aInt <= 4477):

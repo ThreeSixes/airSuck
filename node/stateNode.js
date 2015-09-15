@@ -78,4 +78,6 @@ function txKeepalive() {
 if (config.server.enabled) {
   // Subscribe to the state queue.
   client.subscribe(config.server.redisQueue);
+} else {
+    log("node.js server not enabled in configuration, but executed.")
 }

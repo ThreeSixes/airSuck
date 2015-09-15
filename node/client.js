@@ -42,7 +42,7 @@ function connect2Dump1090() {
 // When we get data...
 d1090.on('error', function(err) {
     // Puke error message out.
-    log("Dump1090 socket error:\n" + err);
+    log("Dump1090 socket " + err);
     
     // Destroy the connection since we don't want it anymore...
     d1090.destroy();
@@ -67,7 +67,7 @@ d1090.on('data', function(data) {
 
 // When the connection is closed...
 d1090.on('close', function() {
-    log('dump1090 connection to ' + config.client.dump1090Host + ':' + config.client.dump1090Port + ' closed');
+    log('Dump1090 connection to ' + config.client.dump1090Host + ':' + config.client.dump1090Port + ' closed');
 });
 
 // Make the initial attempt to connect, assuming we're enabled.

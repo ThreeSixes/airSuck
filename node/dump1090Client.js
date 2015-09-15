@@ -34,8 +34,8 @@ function handleMessage(message) {
 // Connect to our source dump1090 instance to get the "binary" frame data.
 function connect2Dump1090() {
     // Connect up, log connection success.
-    d1090.connect(config.client.dump1090Port, config.client.dump1090Host, function() {
-        log('Connected to ' + config.client.dump1090Host + ':' + config.client.dump1090Port);
+    d1090.connect(config.client1090.dump1090Port, config.client1090.dump1090Host, function() {
+        log('Connected to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port);
     });
 }
 
@@ -67,11 +67,11 @@ d1090.on('data', function(data) {
 
 // When the connection is closed...
 d1090.on('close', function() {
-    log('Dump1090 connection to ' + config.client.dump1090Host + ':' + config.client.dump1090Port + ' closed');
+    log('Dump1090 connection to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port + ' closed');
 });
 
 // Make the initial attempt to connect, assuming we're enabled.
-if (config.client.enabled) {
+if (config.client1090.enabled) {
     connect2Dump1090();
 } else {
     log("Dump1090 client not enabled in configuration, but executed.")

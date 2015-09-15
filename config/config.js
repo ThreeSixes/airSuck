@@ -15,10 +15,10 @@ exports.getConfig = function() {
             keepaliveInterval: (30 * 1000), // Set default interval to 30 sec
             redisHost: "<insert hostname here>", // Redis host with the state pub/sub queue.
             redisPort: 6379, // Redis TCP port
-            redisQueue: 'airStateFeed' // Name of the pub/sub queue.
-        }, client: { // Dump1090 client configuration.
+            redisQueue: "airStateFeed" // Name of the pub/sub queue.
+        }, client1090: { // Dump1090 client configuration.
             enabled: true, // Even if the process starts do we want the dump1090 client to run?
-            dump1090Host: '<insert hostname here>', // Hostname or IP running the dump1090 service.
+            dump1090Host: "<insert hostname here>", // Hostname or IP running the dump1090 service.
             dump1090Port: 30002, // "Binary" dump1090 data port number.
             connectDelay: (5 * 1000) // Global reconnect attempt delay (for the dump1090 process and the destination server)
         }

@@ -13,7 +13,13 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var redis = require('redis');
-var client = redis.createClient(config.redisPort, config.redisHost);
+var client = redis.createClient(config.server.redisPort, config.server.redisHost);
+
+// Log event.
+function log(eventText) {
+  // Just do a console.log().
+  console.log(new Date().toISOString().replace(/T/, ' ') + ' - ' + eventText);
+}
 
 // Serve index.html if a browser asks for it.
 app.get('/', function(req, res){
@@ -38,7 +44,7 @@ client.on("message", function (channel, message) {
 // When have a new socket.io connection...
 io.on('connection', function(socket){
   // Log a message to the console
-  console.log(new Date().toISOString().replace(/T/, ' ') + " - New client @ " + socket.request.connection.remoteAddress)
+  log("New client @ " + socket.request.connection.remoteAddress)
   
   // If they try to send us something give some generic error message.
   socket.on('message', function(msg){
@@ -47,9 +53,9 @@ io.on('connection', function(socket){
 });
 
 // Start the HTTP server up on our specified port.
-http.listen(config.webPort, function(){
+http.listen(config.server.webPort, function(){
   // Log That we're now listening.
-  console.log(new Date().toISOString().replace(/T/, ' ') + ' - stateNode.js listening on *:' + config.webPort);
+  log('stateNode.js listening on *:' + config.server.webPort);
   
   // Send a keepalive and schedule the next keepalive xmission.
   txKeepalive();
@@ -61,16 +67,15 @@ function txKeepalive() {
   dateStr = new Date().toISOString().replace(/T/, ' ');
   dateStr = dateStr.substring(0, dateStr.length - 5);
   
-  // Log keepalive transmission.
-  //console.log(new Date().toISOString().replace(/T/, ' ') + " - Sent keepalive")
-  
   // Send keepalive message.
   io.emit("message", "{\"keepalive\": \"" + dateStr + "\"}");
   
   // Schedule our keepalive in our specified interval.
-  setTimeout(txKeepalive, config.keepaliveInterval);
+  setTimeout(txKeepalive, config.server.keepaliveInterval);
 }
 
-// Subscribe to the state queue.
-client.subscribe(config.redisQueue);
-
+// If we're enabled start up.
+if (config.server.enabled) {
+  // Subscribe to the state queue.
+  client.subscribe(config.server.redisQueue);
+}

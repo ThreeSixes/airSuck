@@ -41,6 +41,17 @@ client.on("message", function (channel, message) {
   io.emit("message", message)
 });
 
+// When we have an error on the redis queue. 
+client.on("error", function (err) {
+  // Log the client error.
+  log("Redis client error detected: " + err);
+  
+  // Find a way to wait.
+  
+  // Try to subscribe to the queue again.
+  subscribe();
+});
+
 // When have a new socket.io connection...
 io.on('connection', function(socket){
   // Log a message to the console
@@ -74,10 +85,19 @@ function txKeepalive() {
   setTimeout(txKeepalive, config.server.keepaliveInterval);
 }
 
+// Subscribe to our state queue.
+function subscribe() {
+  // Connect to our pub/sub queue.
+  log('Subscribing to pub/sub queue.');
+  
+  // Subscribe to the state queue.
+  client.subscribe(config.server.redisQueue);
+}
+
 // If we're enabled start up.
 if (config.server.enabled) {
   // Subscribe to the state queue.
-  client.subscribe(config.server.redisQueue);
+  subscribe();
 } else {
-    log("node.js server not enabled in configuration, but executed.")
+  log("node.js server not enabled in configuration, but executed.")
 }

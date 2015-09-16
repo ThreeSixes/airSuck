@@ -43,7 +43,7 @@ function handleMessage(message) {
             if (dConnConnected) {
                 // Send the data to our connector instance. 
                 dConn.write(data + "\n");
-                log("Send frame: " + data);
+                //log("Send frame: " + data);
             }
         }
     }

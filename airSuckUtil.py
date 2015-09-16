@@ -213,3 +213,64 @@ class airSuckUtil:
                 aMeta = "External ARTCC"
             
         return aMeta
+
+    def getCategory(self, category):
+        """
+        Get description of aicraft categories, given an aicraft category string.
+        """
+        
+        # By default let's assume the category is invalid.
+        retVal = "Invalid"
+        
+        # If we have two chars in our string...
+        if len(category) == 2:
+            if category == "A0":
+                retVal = "Standard aicraft"
+            elif category == "A1":
+                retVal = "Light aicraft"
+            elif category == "A2":
+                retVal = "Medium aicraft"
+            elif category == "A3":
+                retVal = "Heavy aicraft"
+            elif category == "A4":
+                retVal = "High vortex aicraft"
+            elif category == "A5":
+                retVal = "Very heavy aicraft"
+            elif category == "A6":
+                retVal = "High perf/speed aircraft"
+            elif category == "A7":
+                retVal = "Rotorcraft"
+            elif category == "B0":
+                retVal = "Non-standard aircraft"
+            elif category == "B1":
+                retVal = "Glider/sailplane"
+            elif category == "B2":
+                retVal = "Lighter-than-air aircraft"
+            elif category == "B3":
+                retVal = "Parachute/skydiver"
+            elif category == "B4":
+                retVal = "Ultralight/hang glider"
+            elif category == "B5":
+                retVal = "Reserved"
+            elif category == "B6":
+                retVal = "UAV"
+            elif category == "B7":
+                retVal = "Spacecraft"
+            elif category == "C0":
+                retVal = "Surface vehicle"
+            elif category == "C1":
+                retVal = "Emergency vehicle"
+            elif category == "C2":
+                retVal = "Service vehicle"
+            elif category == "C3":
+                retVal = "Fixed/tehtered obstruction"
+            elif category == "C4":
+                retVal = "Cluster obstacle"
+            elif category == "C5":
+                retVal = "Line obstacle"
+            elif category == "C6":
+                retVal = "Reserved"
+            elif category == "C7":
+                retVal = "Reserved"
+        
+        return retVal

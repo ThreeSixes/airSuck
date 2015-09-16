@@ -183,7 +183,7 @@ class airSuckUtil:
                 aMeta = "Discrete VFR"
             
             elif (aInt >= 4447) and (aInt <= 4452):
-                aMeta = "Special aircraft ops state and federal LEO/Military"
+                aMeta = "State/federal LEO/Military spec ops"
             
             elif (aInt == 4440) and (aInt == 4441):
                 aMeta = "Ops above FL600 for Lockheed/NASA from Moffett field"

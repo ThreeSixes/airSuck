@@ -132,6 +132,7 @@ dConn.on('close', function() {
 
 // Make the initial attempt to connect, assuming we're enabled.
 if (config.client1090.enabled) {
+    log("Starting dump1090 client...")
     connect2Connector();
     connect2Dump1090();
 } else {

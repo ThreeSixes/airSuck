@@ -8,9 +8,10 @@
 var cfg = require('./config.js');
 var config = cfg.getConfig();
 
-// Main objects
+// Set up our needed libraries.
 var net = require('net');
 var d1090 = new net.Socket();
+//var io = require('socket.io')(http);
 
 // Log event.
 function log(eventText) {
@@ -26,7 +27,14 @@ function handleMessage(message) {
         
         // If we have non-empty data...
         if (message[i] != "") {
-            log("Frame " + message[i]);
+            // Handle our data frame.
+            data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': message[i]}
+            
+            // Convert the data object to a JSON string.
+            data = JSON.stringify(data)
+            
+            // Log the frmae for debugging.
+            log("Frame " + data);
         }
     }
 }

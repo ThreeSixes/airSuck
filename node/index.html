@@ -478,8 +478,29 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           var vehNotNuked = true;
           var changed = false;
           
+          // Set empty debugging string...
+          debugStr = "";
+          
+          // If we have idInfo...
+          if ("idInfo" in vehData[veh]) {
+            // Add idInfo if we have it.
+            debugStr = vehData[veh].idInfo;
+          }
+          
+          // If we have a squawk...
+          if ("aSquawk" in vehData[veh]) {
+            // Add the mode A sqawk code.
+            debugStr = debugStr + " (" + vehData[veh].aSquawk + ")";
+          }
+          
+          // Add ICAO address.
+          debugStr = debugStr + " [" + vehData[veh].addr.toUpperCase() + "]";
+          
           // Check to see if we haven't heard from them in our age time.
           if (vehDelta >= vehAge) {
+            
+            // Update debug window
+            debugBox.value = "Goodbye " + debugStr;
             
             // Close an open info window, nuke the marker for the expred vehicle, and nuke the vehicle's object.
             vehData[veh].info.close();
@@ -491,6 +512,9 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
             
           } else if ((vehDelta >= vehHalflife) && (vehData[veh].active == true)) {
             
+            // Update debug window
+            debugBox.value = "Half life reached for " + debugStr;
+            
             // Deactivate vehicle and change the icon for it.
             vehData[veh].active = false;
             vehData[veh].marker.setIcon(iconFactory(veh));
@@ -498,6 +522,9 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           } else {
             // If it's marked as inactive the reactivate it.
             if ((vehDelta < vehHalflife) && (vehData[veh].active == false)) {
+              
+              // Update debug window
+              debugBox.value = "Reviving " + debugStr;
               
               // Activate vehicle and change the icon for it.
               vehData[veh].active = true;
@@ -612,6 +639,27 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           
           // Set the content box.
           vehData[vehName].info.setContent(infoFactory(vehName));
+          
+          // Set empty debugging string...
+          debugStr = "";
+          
+          // If we have idInfo...
+          if ("idInfo" in vehData[vehName]) {
+            // Add idInfo if we have it.
+            debugStr = vehData[vehName].idInfo + " ";
+          }
+          
+          // If we have a squawk...
+          if ("aSquawk" in vehData[vehName]) {
+            // Add the mode A sqawk code.
+            debugStr = debugStr + "(" + vehData[vehName].aSquawk + ") ";
+          }
+          
+          // Add ICAO address.
+          debugStr = debugStr + "[" + vehData[vehName].addr.toUpperCase() + "] ";
+          
+          // Update debug window
+          debugBox.value = "Hello " + debugStr;
         }
         
         // If we have latitude and by extension longitude data...

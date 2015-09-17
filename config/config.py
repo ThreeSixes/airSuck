@@ -3,7 +3,7 @@ config.py by ThreeSixes (https://github.com/ThreeSixes)
 
 This project is licensed under GPLv3. See COPYING for dtails.
 
-This is the configuation file for the airSuck daemons and global client options for queues, except stateNode.js.
+This is the configuation file for the airSuck daemons and global client options for queues, except files under the node folder.
 
 This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
 """

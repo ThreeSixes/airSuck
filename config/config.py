@@ -14,10 +14,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 
 # Most setups can use a single Redis and MongoDB host. Set these here. If you need separate host names, just remove the variables from the config below.
 genRedisHost = "<insert hostname here>" # This machine hosts all the redis instances used by all connetors and servers.
-genRedisPort = 6379
+genRedisPort = 6379 # Redis server port
 
-genMongoHost = "<insert hostname here>" # This machien hosts all the mongoDB instances used by all connectors and servers.
-genMongoPort = 27017
+genMongoHost = "<insert hostname here>" # This machine hosts all the mongoDB instances used by all connectors and servers.
+genMongoPort = 27017 # MongoDB server port
 
 ########################################
 # Connector and state engine settings. #
@@ -25,6 +25,7 @@ genMongoPort = 27017
 
 # Dump1090Connector settings
 d1090ConnSettings = {
+    enabled: True, # Do we want to run the dump1090 connector? True = yes, False = no
     connListenHost: "0.0.0.0", # Listen on this address for incoming connections. Default is all addresses: "0.0.0.0"
     connListenPort: 8091, # Dump 1900 connect incoming port.
     dedupeTTLSec: 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
@@ -34,6 +35,7 @@ d1090ConnSettings = {
 
 # SSR State engine settings
 ssrStateEngine = {
+    enabled: True, # Do we want to run the state engine? True = yes, False = no
     expireTime: 300, # Expire vehicles that we haven't seen in this number of seconds. Default is 300 sec (5 min)
     cprExpireSec: 20 # This specifies how old CPR data can be before we reject it as too old to be valid in sec. Default is 20.
 };

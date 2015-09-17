@@ -97,6 +97,7 @@ function subscribe() {
 // If we're enabled start up.
 if (config.server.enabled) {
   // Subscribe to the state queue.
+  log('Starting stateNode...');
   subscribe();
 } else {
   log("node.js server not enabled in configuration, but executed.")

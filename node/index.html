@@ -484,17 +484,17 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           // If we have idInfo...
           if ("idInfo" in vehData[veh]) {
             // Add idInfo if we have it.
-            debugStr = vehData[veh].idInfo;
+            debugStr = vehData[veh].idInfo + " ";
           }
           
           // If we have a squawk...
           if ("aSquawk" in vehData[veh]) {
             // Add the mode A sqawk code.
-            debugStr = debugStr + " (" + vehData[veh].aSquawk + ")";
+            debugStr = debugStr + "(" + vehData[veh].aSquawk + ") ";
           }
           
           // Add ICAO address.
-          debugStr = debugStr + " [" + vehData[veh].addr.toUpperCase() + "]";
+          debugStr = debugStr + "[" + vehData[veh].addr.toUpperCase() + "]";
           
           // Check to see if we haven't heard from them in our age time.
           if (vehDelta >= vehAge) {

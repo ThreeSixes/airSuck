@@ -25,7 +25,7 @@ function connectUp() {
     
     // Create a new socket.
     var d1090 = new net.Socket();
-    var dConn = new net.Socekt();
+    var dConn = new net.Socket();
 
     // Connect up, log connection success.
     dConn.connect(config.client1090.connPort, config.client1090.connHost, function() {

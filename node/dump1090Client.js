@@ -10,9 +10,13 @@ var config = cfg.getConfig();
 
 // Set up our needed libraries.
 var net = require('net');
+var d1090 = new net.Socket();
+var dConn = new net.Socket();
 
 // Vars
 var dConnConnected = false;
+var dConnReconnect = false;
+var d1090Reconnect = false;
 
 // Log event.
 function log(eventText) {
@@ -22,8 +26,16 @@ function log(eventText) {
 
 // Connect to our source dump1090 instance to get the "binary" frame data.
 function connect2Dump1090() {
-    // Create a new socket.
-    var d1090 = new net.Socket();
+    
+    // If it was our intention to reconnect then create a new socket.
+    if (d1090Reconnect) {
+        // Clear reconnect flag
+        d1090Reconnect = false;
+        
+        // Create a new socket.
+        d1090 = new net.Socket();
+    }
+    
     
     // Connect up, log connection success.
     d1090.connect(config.client1090.dump1090Port, config.client1090.dump1090Host, function() {
@@ -39,6 +51,8 @@ function connect2Dump1090() {
         d1090.destroy();
         
         // Find a way to wait for n amount of time.
+        
+        d1090Reconnect = true;
         
         // Attempt reconnect.
         connect2Dump1090();
@@ -82,6 +96,8 @@ function connect2Dump1090() {
         
         d1090.destroy();
         
+        d1090Reconnect = true;
+        
         // Attempt reconnect.
         connect2Dump1090();
     });
@@ -89,8 +105,14 @@ function connect2Dump1090() {
     
 // Connect to our destination dump1090 connector instance to send JSON data.
 function connect2Connector() {
-    // Create a new socket.
-    var dConn = new net.Socket();
+    // If it was our intention to reconnect then create a new socket.
+    if (dConnReconnect) {
+        // Clear reconnect flag.
+        dConnReconnect = false;
+        
+        // Create a new socket.
+        dConn = new net.Socket();
+    }
     
     // Connect up, log connection success.
     dConn.connect(config.client1090.connPort, config.client1090.connHost, function() {
@@ -107,6 +129,8 @@ function connect2Connector() {
         
         dConnConnected = false;
         
+        dConnReconnect = true;
+        
         // Find a way to wait for n amount of time.
         
         // Attempt reconnect.
@@ -122,6 +146,8 @@ function connect2Connector() {
     dConn.on('close', function() {
         log('Dump1090 connector connection to ' + config.client1090.connHost + ':' + config.client1090.connPort + ' closed');
         dConnConnected = false;
+        
+        dConnReconnect = true;
         
         dConn.destroy();
         

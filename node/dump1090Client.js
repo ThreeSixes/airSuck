@@ -47,10 +47,10 @@ function connect2Dump1090() {
     // When we get data...
     d1090.on('data', function(messages) {
         // Object -> String
-        messages = data.toString();
+        messages = messages.toString();
         
         // String -> Array
-        messages = data.split("\n");
+        messages = messages.split("\n");
         
         // Loop through messages we got at the same time.
         for(i = 0; i < messages.length; ++i) {

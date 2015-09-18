@@ -56,8 +56,44 @@ function connect2Dump1090() {
     d1090.connect(config.client1090.dump1090Port, config.client1090.dump1090Host, function() {
         log('Connected to dump1090 instance at ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port);
     });
+    
+    // When we get data...
+    d1090.on('error', function(err) {
+        // Puke error message out.
+        log("Dump1090 socket " + err);
+        
+        // Destroy the connection since we don't want it anymore...
+        d1090.destroy();
+        
+        // Find a way to wait for n amount of time.
+        
+        // Attempt reconnect.
+        connect2Dump1090();
+    });
+    
+    // When we get data...
+    d1090.on('data', function(data) {
+        // Object -> String
+        data = data.toString();
+        
+        // String -> Array
+        data = data.split("\n");
+        
+        // Do something useful with the message.
+        handleMessage(data)
+    });
+    
+    // When the connection is closed...
+    d1090.on('close', function() {
+        log('Dump1090 connection to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port + ' closed');
+        
+        d1090.destroy();
+        
+        // Attempt reconnect.
+        connect2Dump1090();
+    });
 }
-
+    
 // Connect to our destination dump1090 connector instance to send JSON data.
 function connect2Connector() {
     // Create a new socket.
@@ -68,74 +104,38 @@ function connect2Connector() {
         log('Connected to dump1090 connector at ' + config.client1090.connHost + ':' + config.client1090.connPort);
         dConnConnected = true;
     });
+    
+    // When we get data...
+    dConn.on('error', function(err) {
+        // Puke error message out.
+        log("Dump1090 connector socket " + err);
+        
+        dConn.destroy();
+        
+        dConnConnected = false;
+        
+        // Find a way to wait for n amount of time.
+        
+        // Attempt reconnect.
+        connect2Connector();
+    });
+
+    // When we get data from the connector...
+    dConn.on('data', function(data) {
+        // Do nothing.
+    });
+    
+    // When the connection is closed...
+    dConn.on('close', function() {
+        log('Dump1090 connector connection to ' + config.client1090.connHost + ':' + config.client1090.connPort + ' closed');
+        dConnConnected = false;
+        
+        dConn.destroy();
+        
+        // Attempt reconnect
+        connect2Connector();
+    });
 }
-
-// When we get data...
-d1090.on('error', function(err) {
-    // Puke error message out.
-    log("Dump1090 socket " + err);
-    
-    // Destroy the connection since we don't want it anymore...
-    d1090.destroy();
-    
-    // Find a way to wait for n amount of time.
-    
-    // Attempt reconnect.
-    connect2Dump1090();
-});
-
-// When we get data...
-d1090.on('data', function(data) {
-    // Object -> String
-    data = data.toString();
-    
-    // String -> Array
-    data = data.split("\n");
-    
-    // Do something useful with the message.
-    handleMessage(data)
-});
-
-// When the connection is closed...
-d1090.on('close', function() {
-    log('Dump1090 connection to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port + ' closed');
-    
-    d1090.destroy();
-    
-    // Attempt reconnect.
-    connect2Dump1090();
-});
-
-// When we get data...
-dConn.on('error', function(err) {
-    // Puke error message out.
-    log("Dump1090 connector socket " + err);
-    
-    dConn.destroy();
-    
-    dConnConnected = false;
-    
-    // Find a way to wait for n amount of time.
-    
-    // Attempt reconnect.
-    connect2Connector();
-});
-
-// When we get data from the connector...
-dConn.on('data', function(data) {
-    // Do nothing.
-});
-
-// When the connection is closed...
-dConn.on('close', function() {
-    log('Dump1090 connector connection to ' + config.client1090.connHost + ':' + config.client1090.connPort + ' closed');
-    dConnConnected = false;
-    
-    dConn.destroy();
-    
-    // Attempt reconnect
-    connect2Connector();
-});
 
 // Make the initial attempt to connect, assuming we're enabled.
 if (config.client1090.enabled) {

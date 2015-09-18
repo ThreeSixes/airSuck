@@ -20,33 +20,6 @@ function log(eventText) {
     console.log(new Date().toISOString().replace(/T/, ' ') + ' - ' + eventText);
 }
 
-// Process message arrays.
-function handleMessage(message) {
-    
-    // Loop through messages we got at the same time.
-    for(i = 0; i < message.length; ++i) {
-        
-        // If we have non-empty data...
-        if (message[i] != "") {
-            // Handle our data frame.
-            data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': message[i]}
-            
-            // Convert the data object to a JSON string.
-            data = JSON.stringify(data)
-            
-            // Log the frmae for debugging.
-            //log("Load frame: " + data);
-            
-            // If we're connected to the connector server...
-            if (dConnConnected) {
-                // Send the data to our connector instance. 
-                dConn.write(data + "\n");
-                //log("Send frame: " + data);
-            }
-        }
-    }
-}
-
 // Connect to our source dump1090 instance to get the "binary" frame data.
 function connect2Dump1090() {
     // Create a new socket.
@@ -72,15 +45,35 @@ function connect2Dump1090() {
     });
     
     // When we get data...
-    d1090.on('data', function(data) {
+    d1090.on('data', function(messages) {
         // Object -> String
-        data = data.toString();
+        messages = data.toString();
         
         // String -> Array
-        data = data.split("\n");
+        messages = data.split("\n");
         
-        // Do something useful with the message.
-        handleMessage(data)
+        // Loop through messages we got at the same time.
+        for(i = 0; i < messages.length; ++i) {
+            
+            // If we have non-empty data...
+            if (messages[i] != "") {
+                // Handle our data frame.
+                data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': message[i]}
+                
+                // Convert the data object to a JSON string.
+                data = JSON.stringify(data)
+                
+                // Log the frmae for debugging.
+                //log("Load frame: " + data);
+                
+                // If we're connected to the connector server...
+                if (dConnConnected) {
+                    // Send the data to our connector instance. 
+                    dConn.write(data + "\n");
+                    //log("Send frame: " + data);
+                }
+            }
+        }
     });
     
     // When the connection is closed...

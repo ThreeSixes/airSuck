@@ -10,13 +10,9 @@ var config = cfg.getConfig();
 
 // Set up our needed libraries.
 var net = require('net');
-var d1090 = new net.Socket();
-var dConn = new net.Socket();
 
 // Vars
 var dConnConnected = false;
-var dConnReconnect = false;
-var d1090Reconnect = false;
 
 // Log event.
 function log(eventText) {
@@ -25,95 +21,12 @@ function log(eventText) {
 }
 
 // Connect to our source dump1090 instance to get the "binary" frame data.
-function connect2Dump1090() {
+function connectUp() {
     
-    // If it was our intention to reconnect then create a new socket.
-    if (d1090Reconnect) {
-        // Clear reconnect flag
-        d1090Reconnect = false;
-        
-        // Create a new socket.
-        d1090 = new net.Socket();
-    }
-    
-    
-    // Connect up, log connection success.
-    d1090.connect(config.client1090.dump1090Port, config.client1090.dump1090Host, function() {
-        log('Connected to dump1090 instance at ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port);
-    });
-    
-    // When we get data...
-    d1090.on('error', function(err) {
-        // Puke error message out.
-        log("Dump1090 socket " + err);
-        
-        // Destroy the connection since we don't want it anymore...
-        d1090.destroy();
-        
-        // Find a way to wait for n amount of time.
-        
-        d1090Reconnect = true;
-        
-        // Attempt reconnect.
-        connect2Dump1090();
-    });
-    
-    // When we get data...
-    d1090.on('data', function(messages) {
-        // Object -> String
-        messages = messages.toString();
-        
-        // String -> Array
-        messages = messages.split("\n");
-        
-        // Loop through messages we got at the same time.
-        for(i = 0; i < messages.length; ++i) {
-            
-            // If we have non-empty data...
-            if (messages[i] != "") {
-                // Handle our data frame.
-                data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': messages[i]}
-                
-                // Convert the data object to a JSON string.
-                data = JSON.stringify(data)
-                
-                // Log the frmae for debugging.
-                //log("Load frame: " + data);
-                
-                // If we're connected to the connector server...
-                if (dConnConnected) {
-                    // Send the data to our connector instance. 
-                    dConn.write(data + "\n");
-                    //log("Send frame: " + data);
-                }
-            }
-        }
-    });
-    
-    // When the connection is closed...
-    d1090.on('close', function() {
-        log('Dump1090 connection to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port + ' closed');
-        
-        d1090.destroy();
-        
-        d1090Reconnect = true;
-        
-        // Attempt reconnect.
-        connect2Dump1090();
-    });
-}
-    
-// Connect to our destination dump1090 connector instance to send JSON data.
-function connect2Connector() {
-    // If it was our intention to reconnect then create a new socket.
-    if (dConnReconnect) {
-        // Clear reconnect flag.
-        dConnReconnect = false;
-        
-        // Create a new socket.
-        dConn = new net.Socket();
-    }
-    
+    // Create a new socket.
+    d1090 = new net.Socket();
+    dConn = new net.Socekt();
+
     // Connect up, log connection success.
     dConn.connect(config.client1090.connPort, config.client1090.connHost, function() {
         log('Connected to dump1090 connector at ' + config.client1090.connHost + ':' + config.client1090.connPort);
@@ -128,8 +41,6 @@ function connect2Connector() {
         dConn.destroy();
         
         dConnConnected = false;
-        
-        dConnReconnect = true;
         
         // Find a way to wait for n amount of time.
         
@@ -152,15 +63,80 @@ function connect2Connector() {
         dConn.destroy();
         
         // Attempt reconnect
-        connect2Connector();
-    });
+        connectUp();
+    });    
+
+    
+    // If we connect to our dump1090Connector instance successfully then we will connect to the local dump1090 instance.
+    if (dConnConnected) {
+        
+        // Connect up, log connection success.
+        d1090.connect(config.client1090.dump1090Port, config.client1090.dump1090Host, function() {
+            log('Connected to dump1090 instance at ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port);
+        });
+        
+        // When we get data...
+        d1090.on('error', function(err) {
+            // Puke error message out.
+            log("Dump1090 socket " + err);
+            
+            // Destroy the connection since we don't want it anymore...
+            d1090.destroy();
+            
+            // Find a way to wait for n amount of time.
+            
+            // Attempt reconnect.
+            connectUp();
+        });
+        
+        // When we get data...
+        d1090.on('data', function(messages) {
+            // Object -> String
+            messages = messages.toString();
+            
+            // String -> Array
+            messages = messages.split("\n");
+            
+            // Loop through messages we got at the same time.
+            for(i = 0; i < messages.length; ++i) {
+                
+                // If we have non-empty data...
+                if (messages[i] != "") {
+                    // Handle our data frame.
+                    data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': messages[i]}
+                    
+                    // Convert the data object to a JSON string.
+                    data = JSON.stringify(data)
+                    
+                    // Log the frmae for debugging.
+                    //log("Load frame: " + data);
+                    
+                    // If we're connected to the connector server...
+                    if (dConnConnected) {
+                        // Send the data to our connector instance. 
+                        dConn.write(data + "\n");
+                        //log("Send frame: " + data);
+                    }
+                }
+            }
+        });
+        
+        // When the connection is closed...
+        d1090.on('close', function() {
+            log('Dump1090 connection to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port + ' closed');
+            
+            d1090.destroy();
+            
+            // Attempt reconnect.
+            connectUp();
+        });
+    }
 }
 
 // Make the initial attempt to connect, assuming we're enabled.
 if (config.client1090.enabled) {
     log("Starting dump1090 client...")
-    connect2Connector();
-    connect2Dump1090();
+    connectUp();
 } else {
     log("Dump1090 client not enabled in configuration, but executed.")
 }

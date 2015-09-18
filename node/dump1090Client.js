@@ -10,8 +10,6 @@ var config = cfg.getConfig();
 
 // Set up our needed libraries.
 var net = require('net');
-var d1090 = new net.Socket();
-var dConn = new net.Socket();
 
 // Vars
 var dConnConnected = false;
@@ -51,6 +49,9 @@ function handleMessage(message) {
 
 // Connect to our source dump1090 instance to get the "binary" frame data.
 function connect2Dump1090() {
+    // Create a new socket.
+    var d1090 = new net.Socket();
+    
     // Connect up, log connection success.
     d1090.connect(config.client1090.dump1090Port, config.client1090.dump1090Host, function() {
         log('Connected to dump1090 instance at ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port);
@@ -59,6 +60,9 @@ function connect2Dump1090() {
 
 // Connect to our destination dump1090 connector instance to send JSON data.
 function connect2Connector() {
+    // Create a new socket.
+    var dConn = new net.Socket();
+    
     // Connect up, log connection success.
     dConn.connect(config.client1090.connPort, config.client1090.connHost, function() {
         log('Connected to dump1090 connector at ' + config.client1090.connHost + ':' + config.client1090.connPort);

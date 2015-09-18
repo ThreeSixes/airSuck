@@ -96,6 +96,8 @@ d1090.on('data', function(data) {
 d1090.on('close', function() {
     log('Dump1090 connection to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port + ' closed');
     
+    d1090.destroy();
+    
     // Attempt reconnect.
     connect2Dump1090();
 });
@@ -125,10 +127,11 @@ dConn.on('close', function() {
     log('Dump1090 connector connection to ' + config.client1090.connHost + ':' + config.client1090.connPort + ' closed');
     dConnConnected = false;
     
+    dConn.destroy();
+    
     // Attempt reconnect
     connect2Connector();
 });
-
 
 // Make the initial attempt to connect, assuming we're enabled.
 if (config.client1090.enabled) {

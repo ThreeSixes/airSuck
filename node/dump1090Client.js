@@ -58,7 +58,7 @@ function connect2Dump1090() {
             // If we have non-empty data...
             if (messages[i] != "") {
                 // Handle our data frame.
-                data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': message[i]}
+                data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': messages[i]}
                 
                 // Convert the data object to a JSON string.
                 data = JSON.stringify(data)

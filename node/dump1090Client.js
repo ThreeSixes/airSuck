@@ -76,8 +76,7 @@ d1090.on('error', function(err) {
     
     // Find a way to wait for n amount of time.
     
-    // Attempt reconnect.
-    connect2Dump1090();
+    process.exit(-1);
 });
 
 // When we get data...
@@ -96,8 +95,7 @@ d1090.on('data', function(data) {
 d1090.on('close', function() {
     log('Dump1090 connection to ' + config.client1090.dump1090Host + ':' + config.client1090.dump1090Port + ' closed');
     
-    // Attempt reconnect.
-    connect2Dump1090();
+    process.exit(-1);
 });
 
 // When we get data...
@@ -109,10 +107,7 @@ dConn.on('error', function(err) {
     
     dConnConnected = false;
     
-    // Find a way to wait for n amount of time.
-    
-    // Attempt reconnect.
-    connect2Connector();
+    process.exit(-1);
 });
 
 // When we get data from the connector...
@@ -125,8 +120,7 @@ dConn.on('close', function() {
     log('Dump1090 connector connection to ' + config.client1090.connHost + ':' + config.client1090.connPort + ' closed');
     dConnConnected = false;
     
-    // Attempt reconnect
-    connect2Connector();
+    process.exit(-1);
 });
 
 

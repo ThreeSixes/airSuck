@@ -186,6 +186,16 @@ class aisParse:
         
         return ckSum
     
+    def __computeTurn(self, turnRt):
+        """
+        __computeTurn(self, turnRt)
+        
+        Compute rate of turn. Return value yet to be determined.
+        """
+        
+        retVal = ""
+        
+        return retVal
     
     def aisParse(self, sentence):
         """
@@ -260,15 +270,66 @@ class aisParse:
         except:
             print("Failed to process standard AIS fields.")
         
+        # From http://catb.org/gpsd/AIVDM.html
         if (retVal['sentenceType'] == "AIVDM") or (retVal['sentenceType'] == "AIVDO"):
+            
             # Create a binary version of the payload data for parsing.
             payloadBin = bytearray(sentenceParts[5])
             
-            # Get the payload type.
-            payloadType = self.__vector2Bin(payloadBin[0])
-            
-            # Get the payload type data.
-            retVal.update({'payloadType': payloadType})
+            if retVal['fragmentNumber'] == 1:
+                # Get the payload type.
+                payloadType = self.__vector2Bin(payloadBin[0])
+                
+                # Get the payload type data.
+                retVal.update({'payloadType': payloadType})
+                
+                # If we have a position type A report
+                if (payloadType) >= 1 and (payloadType <= 3):
+                    
+                    # Get the repeat indicator.
+                    repeatInidicator = self.__vector2Bin(payloadBin[1]) >> 6
+                    
+                    # Get the payload type data.
+                    retVal.update({'repeatIndicator': repeatInidicator})
+                    
+                    # Get the vessel's MMSI.
+                    mmsi = ((self.__vector2Bin(payloadBin[1]) & 0x0f) << 26) | ((self.__vector2Bin(payloadBin[2]) & 0x3f) << 20) | ((self.__vector2Bin(payloadBin[3]) & 0x3f) << 14) | ((self.__vector2Bin(payloadBin[4]) & 0x3f) << 8) | ((self.__vector2Bin(payloadBin[5]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[6]) & 0xc0) >> 4)
+                    
+                    # Set the MMSI.
+                    retVal.update({'mmsi': mmsi})
+                    
+                    # Get navigation status
+                    navStat = self.__vector2Bin(payloadBin[6]) & 0x0f
+                    
+                    # Set that navigation status
+                    retVal.update({'navStat': navStat})
+                    
+                    # Get rate of turn
+                    turnRt = ((self.__vector2Bin(payloadBin[7]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[8]) & 0xc0) >> 4)
+                    
+                    # Set rate of turn
+                    retVal.update({'turnRt': turnRt})
+                    
+                    # Speed over ground
+                    gndSpd = ((self.__vector2Bin(payloadBin[8]) & 0x0f) << 6) | (self.__vector2Bin(payloadBin[9]) & 0x3f)
+                    
+                    # Unsigned int with LSB = 0.1
+                    gndSpd = gndSpd / 10.0
+                    
+                    # Set velocity and velocity type
+                    retVal.update({'velo': gndSpd, 'veloType': 'gnd'})
+                    
+                    # Position accuracy flag
+                    posAcc = self.__vector2Bin(payloadBin[10]) & 0x20
+                    
+                    # Get position accuracy flag.
+                    if posAcc > 0:
+                        posAcc = True
+                    else:
+                        posAcc = False
+                    
+                    # Set position accuracy flag
+                    retVal.update({'posAcc': posAcc})
         
         else:
             print("Unsupported sentence")

@@ -264,7 +264,7 @@ class aisParse:
         """
         
         # Get the vessel's MMSI.
-        mmsi = ((self.__vector2Bin(frame[1]) & 0x0f) << 26) | ((self.__vector2Bin(frame[2]) & 0x3f) << 20) | ((self.__vector2Bin(frame[3]) & 0x3f) << 14) | ((self.__vector2Bin(frame[4]) & 0x3f) << 8) | ((self.__vector2Bin(frame[5]) & 0x3f) << 2) | ((self.__vector2Bin(frame[6]) & 0xc0) >> 4)
+        mmsi = ((self.__vector2Bin(frame[1]) & 0x0f) << 26) | ((self.__vector2Bin(frame[2]) & 0x3f) << 20) | ((self.__vector2Bin(frame[3]) & 0x3f) << 14) | ((self.__vector2Bin(frame[4]) & 0x3f) << 8) | ((self.__vector2Bin(frame[5]) & 0x3f) << 2) | ((self.__vector2Bin(frame[6]) & 0x30) >> 4)
         
         # Set the MMSI.
         return {'mmsi': mmsi}
@@ -567,6 +567,7 @@ class aisParse:
                     if type(cmpLatLon) == dict:
                         # Set position and position metadata
                         retVal.update(cmpLatLon)
+                        retVal.update({'locationMeta': 'AIS'})
                     
                     # Get the EPFD
                     epfd = (self.__vector2Bin(payloadBin[17]) & 0x0f)

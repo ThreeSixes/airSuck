@@ -15,6 +15,11 @@ This script creates two fake planes that fly in a pattern for testing purposes n
 # Imports. #
 ############
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import redis
 import time
 import json
@@ -263,13 +268,6 @@ planes = {
 # Configuration #
 #################
 
-# Which queue do we subscribe to?
-targetHost = "brick"
-destPubSub = "airStateFeed"
-
-# How long should it take to expire planes in seconds.
-expireTime = 300
-
 # How long to wait in order to play the next point.
 stepDelay = 2
 
@@ -315,10 +313,10 @@ if __name__ == "__main__":
     print("Fake plane generator starting...")
     
     # Set up Redis queues.
-    r = redis.Redis(host=targetHost)
+    r = redis.Redis(host=config.statePub['host'], port=config.statePub['port'])
     
     # Start up our ADS-B parser
-    client = SubListener(r, destPubSub, planes)
+    client = SubListener(r, config.statePub['qName'], planes)
     client.daemon = True
     # .. and go.
     client.start()

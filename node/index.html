@@ -127,12 +127,12 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
       // Google Maps path icons
       
       // Shapes for vehicles
-      dirShip = "m 0,0 -20,40 40,0 -20,-40"
-      dirShipScl = 0.2
+      dirShip = "m 0,0 -20,50 40,0 -20,-50"
+      dirShipScl = 0.16
       ndShip = "m 0,0 -20,20 20,20 20,-20 -20,-20"
       ndShipScl = 0.21
-      dirAircraft = "m 0,0 -20,40 20,-10 20,10 z"
-      dirAircraftScl = 0.19
+      dirAircraft = "m 0,0 -20,50 20,-20 20,20 -20,-50"
+      dirAircraftScl = 0.16
       ndAircraft = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"
       ndAircraftScl = 0.22
       
@@ -342,8 +342,8 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         if ('heading' in vehData[vehName]) {
           // Create our icon for a vehicle with heading data.
           newIcon = new google.maps.Marker({
-            path: dirShip,
-            scale: dirShipScl,
+            path: dirAircraft,
+            scale: dirAircraftScl,
             strokeWeight: 1.5,
             strokeColor: vehColor,
             rotation: vehData[vehName].heading
@@ -352,7 +352,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
           // Create our icon for a vehicle without heading data.
           newIcon = new google.maps.Marker({
             path: ndAircraft,
-            scale: 0.21,
+            scale: ndAircraftScl,
             strokeWeight: 1.5,
             strokeColor: vehColor
           });

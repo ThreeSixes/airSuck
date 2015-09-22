@@ -274,3 +274,42 @@ class airSuckUtil:
                 retVal = "Reserved"
         
         return retVal
+
+    def getAISNavStat(self, navStat):
+        """
+        getAISNavStat(natvStat)
+        
+        Accepts a 4-bit number representing navigation status.
+        
+        Returns a string describing the navigation status.
+        """
+        
+        # Set the default status to be invalid.
+        retVal = "Invalid"
+        
+        # If we have a good code...
+        if (navStat >= 0) or (navStat <= 15):
+            
+            # The 15 "defined" navigational status values.
+            statArray = ["Underway using engine",
+                "Anchored",
+                "Not under command",
+                "Restricted manoeuverability",
+                "Constrained by draught",
+                "Moored",
+                "Aground",
+                "Fishing",
+                "Underway sailing",
+                "Reserved (HSC)",
+                "Reserved (WIG)",
+                "Reserved",
+                "Reserved",
+                "Reserved",
+                "AIS-SART (lifeboat)",
+                "Not defined"]
+            
+            # Set the retun value to the given status.
+            retVal = statArray[navStat]
+        
+        return retVal
+        

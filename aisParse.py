@@ -333,6 +333,25 @@ class aisParse:
         
         return retVal
     
+    def __getCRC(self, frameStr):
+        """
+        __getCRC(frameStr)
+        
+        Compute an 8-bit CRC value given a string.
+        
+        Returns an 8-bit integer CRC.
+        """
+        retVal = 0
+        
+        # Nuke the ! in the string and remove the CRC data from the end.
+        frameStr = frameStr.replace("!", "")
+        frameStr = frameStr[:-3]
+        
+        for i in range(0, len(frameStr)):
+            retVal = retVal ^ ord(frameStr[i])
+        
+        return retVal
+    
     def aisParse(self, sentence):
         """
         aisParse(sentence)
@@ -347,6 +366,19 @@ class aisParse:
         
         # Break the sentence apart.
         sentenceParts = self.__getFields(sentence)
+        
+        try:
+            # Get checksum values.
+            retVal.update({'frameSum': int(ord(binascii.unhexlify(sentence[-2:])))})
+            retVal.update({'cmpSum': self.__getCRC(sentence)})
+        except:
+            print("Unable to acquire checksum")
+            raise ValueError
+        
+        if retVal['frameSum'] != retVal['cmpSum']:
+            # Print error and throw an exception
+            print("Invalid CRC checksum")
+            raise IOError
         
         # Get the sentence type
         if '!' in sentenceParts[0]:
@@ -383,7 +415,7 @@ class aisParse:
             retVal.update({'payload': sentenceParts[5]})
             
             # Get the last two fields by splitting field 6 by an *.
-            endParts = sentenceParts[6]
+            endParts = sentenceParts[len(sentenceParts) - 1]
             
             # Get the stray bits and checksum.
             endFields = endParts.split('*')
@@ -392,22 +424,22 @@ class aisParse:
             if len(endFields) != 2:
                 raise ValueError
             
-            # Number of padding bits included in the sentence
-            retVal.update({'padBits': int(endFields[0])})
-            
             # We should have exactly two characters as the length of the 
             if len(endFields[1]) == 2:
                 # Number of padding bits included in the sentence
-                retVal.update({'frameSum': int(ord(binascii.unhexlify(endFields[1])))})
+                retVal.update({'padBits': int(endFields[0])})
             else:
-                print("Punt at frame sum length.")
+                print("Punt at end field sum length.")
                 raise ValueError
         
         except:
             print("Failed to process standard AIS fields.")
         
-        # Category A psotion.
-        if (retVal['sentenceType'] == "AIVDM") or (retVal['sentenceType'] == "AIVDO"):
+        # See if we have AIVDM or AIVDO frames with a valid CRC checksum 
+        if ((retVal['frameSum'] == retVal['cmpSum']) and (retVal['sentenceType'] == "AIVDM") or (retVal['sentenceType'] == "AIVDO")):
+            
+            # Get the CRC of a given frame.
+            self.__getCRC(sentence)
             
             # Create a binary version of the payload data for parsing.
             payloadBin = bytearray(sentenceParts[5])

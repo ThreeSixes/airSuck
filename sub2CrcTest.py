@@ -12,6 +12,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Imports. #
 ############
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import redis
 import time
 import json
@@ -23,10 +28,6 @@ from ssrParse import ssrParse
 #################
 # Configuration #
 #################
-
-# Which queue do we subscribe to?
-targetSub = "airFeed"
-targetHost = "brick"
 
 # Set up the SSR parser
 ssrEngine = ssrParse()
@@ -109,10 +110,10 @@ if __name__ == "__main__":
     print("ADSB subscription queue data parsing test engine starting...")
     
     # Set up Redis queues.
-    r = redis.Redis(host=targetHost)
+    r = redis.Redis(host=config.connPub['host'], port=config.connPub['port'])
     
     # Start up our ADS-B parser
-    client = SubListener(r, [targetSub])
+    client = SubListener(r, [config.connPub['qName']])
     client.daemon = True
     # .. and go.
     client.start()

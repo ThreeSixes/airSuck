@@ -352,6 +352,17 @@ class aisParse:
         
         return retVal
     
+    def getCRC(self, frameStr):
+        """
+        getCRC(frameStr)
+        
+        Get the 8 bit CRC value given an AIS frame.
+        
+        Returns the integer as a string.
+        """
+        
+        return self.__getCRC(frameStr)
+    
     def aisParse(self, sentence):
         """
         aisParse(sentence)
@@ -366,19 +377,6 @@ class aisParse:
         
         # Break the sentence apart.
         sentenceParts = self.__getFields(sentence)
-        
-        try:
-            # Get checksum values.
-            retVal.update({'frameSum': int(ord(binascii.unhexlify(sentence[-2:])))})
-            retVal.update({'cmpSum': self.__getCRC(sentence)})
-        except:
-            print("Unable to acquire checksum")
-            raise ValueError
-        
-        if retVal['frameSum'] != retVal['cmpSum']:
-            # Print error and throw an exception
-            print("Invalid CRC checksum")
-            raise IOError
         
         # Get the sentence type
         if '!' in sentenceParts[0]:
@@ -424,7 +422,7 @@ class aisParse:
             if len(endFields) != 2:
                 raise ValueError
             
-            # We should have exactly two characters as the length of the 
+            # We should have exactly two characters as the length of the end array.
             if len(endFields[1]) == 2:
                 # Number of padding bits included in the sentence
                 retVal.update({'padBits': int(endFields[0])})
@@ -436,10 +434,7 @@ class aisParse:
             print("Failed to process standard AIS fields.")
         
         # See if we have AIVDM or AIVDO frames with a valid CRC checksum 
-        if ((retVal['frameSum'] == retVal['cmpSum']) and (retVal['sentenceType'] == "AIVDM") or (retVal['sentenceType'] == "AIVDO")):
-            
-            # Get the CRC of a given frame.
-            self.__getCRC(sentence)
+        if (retVal['sentenceType'] == "AIVDM") or (retVal['sentenceType'] == "AIVDO"):
             
             # Create a binary version of the payload data for parsing.
             payloadBin = bytearray(sentenceParts[5])

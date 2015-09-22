@@ -333,9 +333,9 @@ class aisParse:
         
         return retVal
     
-    def __getCRC(self, frameStr):
+    def getCRC(self, frameStr):
         """
-        __getCRC(frameStr)
+        getCRC(frameStr)
         
         Compute an 8-bit CRC value given a string.
         
@@ -351,17 +351,6 @@ class aisParse:
             retVal = retVal ^ ord(frameStr[i])
         
         return retVal
-    
-    def getCRC(self, frameStr):
-        """
-        getCRC(frameStr)
-        
-        Get the 8 bit CRC value given an AIS frame.
-        
-        Returns the integer as a string.
-        """
-        
-        return self.__getCRC(frameStr)
     
     def aisParse(self, sentence):
         """

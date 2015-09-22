@@ -8,6 +8,11 @@ This project is licensed under GPLv3. See COPYING for dtails.
 This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
 """
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import sys
 import redis
 import pymongo
@@ -20,14 +25,16 @@ from pprint import pprint
 targetQ = "airReliable"
 
 # Redis instance for queueing.
-rQ = redis.StrictRedis()
+rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
 
 #Delay this many seconds if the queue is empty to prevent
 #stupid amounts of CPU utilization.
-checkDelay = 0.1
+checkDelay = config.connMongo['checkDelay']
 
 #MongoDB config
-mDB = pymongo.MongoClient().airSuck
+connMongo = pymongo.MongoClient(config.connMongo['host'], config.connMongo['port'])
+mDB = connMongo[config.connMongo['dbName']]
+mDBColl = mDB[config.connMongo['coll']]
 
 # Convert datetime objects expressed as a string back to datetime
 def toDatetime(strDateTime):
@@ -42,26 +49,30 @@ def dejsonify(msg):
 
 # Insert records into specified mongo instance
 def serializeADSB(entry):
-        mDB.airSSR.insert(entry)
+        mDBColl.insert(entry)
 
-# Infinite fucking loop.
-print("Dumping SSR data from queue to MongoDB.")
-while(True) :
-        try:
-                # Pull oldest entry from the queue.
-                dQd = rQ.rpop(targetQ)
-                
-                # If we have no data sleep for our configured delay to save CPU.
-                if(dQd == None):
-                    time.sleep(checkDelay)
-                else:
-                        # We have data so we should break it out of JSON formatting.
-                        xDqd = dejsonify(dQd)
-                        xDqd['dts'] = toDatetime(xDqd['dts'])
-                        serializeADSB(xDqd)
-                
-        except KeyboardInterrupt:
-            quit()
-        except:
-            print("Failed to pull from the Redis queue. Sleeping " + str(checkDelay) + " sec")
-            pprint(sys.exc_info())
+# If this mongo engine is enabled...
+if config.connMongo['enabled'] == True:
+    # Infinite fucking loop.
+    print("Dumping SSR data from queue to MongoDB.")
+    while(True) :
+            try:
+                    # Pull oldest entry from the queue.
+                    dQd = rQ.rpop(config.connRel['qName'])
+                    
+                    # If we have no data sleep for our configured delay to save CPU.
+                    if(dQd == None):
+                        time.sleep(checkDelay)
+                    else:
+                            # We have data so we should break it out of JSON formatting.
+                            xDqd = dejsonify(dQd)
+                            xDqd['dts'] = toDatetime(xDqd['dts'])
+                            serializeADSB(xDqd)
+                    
+            except KeyboardInterrupt:
+                quit()
+            except:
+                print("Failed to pull from the Redis queue. Sleeping " + str(checkDelay) + " sec")
+                pprint(sys.exc_info())
+else:
+    print("The connector mongoDB engine is not enabled in the configuration.")

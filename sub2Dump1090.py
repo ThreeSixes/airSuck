@@ -12,6 +12,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Imports. #
 ############
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import sys
 import redis
 import time
@@ -25,9 +30,6 @@ from pprint import pprint
 # Configuration #
 #################
 
-# Which queue do we subscribe to?
-targetSub = "airFeed"
-targetHost = "127.0.0.1"
 
 # Submit data to a dump1090 instance via TCP 30001
 dump1090Dst = {
@@ -119,8 +121,8 @@ class SubListener(threading.Thread):
 if __name__ == "__main__":
     
     # Start up redis, create our threaded client, and start it.
-    r = redis.Redis(host=targetHost)
-    client = SubListener(r, [targetSub])
+    r = redis.Redis(host=config.connPub['host'], port=config.connPub['port'])
+    client = SubListener(r, [config.connPub['qName']])
     client.daemon = True
     client.start()
     

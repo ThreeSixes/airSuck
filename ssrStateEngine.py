@@ -12,6 +12,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Imports. #
 ############
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import redis
 import time
 import json
@@ -23,22 +28,12 @@ from airSuckUtil import airSuckUtil
 from pprint import pprint
 
 
-#################
-# Configuration #
-#################
-
-# Which queue do we subscribe to?
-targetHost = "brick"
-targetSub = "airFeed"
-destReliable = "airState"
-destPubSub = "airStateFeed"
-
-# How long should it take to expire planes in seconds.
-expireTime = 300
+##################
+# Global objects #
+##################
 
 # CPR stuff.
 cprProc = cprMath()
-cprExpireSec = 20
 
 ##############################
 # Classes for handling data. #
@@ -48,14 +43,19 @@ class SubListener(threading.Thread):
     """
     Listen to the SSR channel for new incoming data.
     """
-    def __init__(self, r, channels, destReliable, destPubSub):
+    def __init__(self, channels):
         threading.Thread.__init__(self)
-        self.destReliable = destReliable
-        self.destPubSub = destPubSub
-        self.redis = r
-        self.pubsub = self.redis.pubsub()
-        self.pubsub.subscribe(channels)
         self.asu = airSuckUtil()
+        
+        # Redis queues and entities
+        self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
+        self.__sPsQ = redis.StrictRedis(host=config.statePub['host'], port=config.statePub['port'])
+        self.__sRQ = redis.StrictRedis(host=config.stateRel['host'], port=config.stateRel['port'])
+        self.__redHash = redis.StrictRedis(host=config.ssrStateEngine['hashHost'], port=config.ssrStateEngine['hashPort'])
+        
+        # Subscribe the the connector pub/sub queue.
+        self.__psObj = self.__psQ.pubsub() 
+        self.__psObj.subscribe(channels)
     
     def updateState(self, objName, cacheData):
         """
@@ -68,28 +68,31 @@ class SubListener(threading.Thread):
         
         try:
             # Create properly-formatted name for the state hash table we're creating.
-            fullName = str('state:' + objName)
+            fullName = str('ssrState-' + objName)
             
             # Delete the original timestamp.
             thisTime = cacheData.pop('dts', None)
             
             # Set the first seen data.
-            self.redis.hsetnx(fullName, 'firstSeen', thisTime)
+            self.__redHash.hsetnx(fullName, 'firstSeen', thisTime)
             
             # Update or create cached data, if we have more than just a name
             if type(cacheData) == dict:
                 
                 # Set each specified value.
                 for thisKey in cacheData:
-                    self.redis.hset(fullName, thisKey, cacheData[thisKey])
+                    self.__redHash.hset(fullName, thisKey, cacheData[thisKey])
             
             # Set expiration on the hash entry.
-            self.redis.expire(fullName, expireTime)
+            self.__redHash.expire(fullName, config.ssrStateEngine['hashTTL'])
             
-            retVal = self.redis.hgetall(fullName)
+            # Get all the date from our hash.
+            retVal = self.__redHash.hgetall(fullName)
             
+            # Add the address.
             retVal.update({'addr': objName})
             
+            # Adjust datatypes to be correct since redis stores everything as a string.
             retVal = self.fixDataTypes(retVal)
         
         except Exception as e:
@@ -107,7 +110,7 @@ class SubListener(threading.Thread):
         """
         
         # Try to pull data...
-        dataPull = self.redis.hgetall('state:' + objName)
+        dataPull = self.__redHash.hgetall('ssrState-' + objName)
         
         # Make sure we have some sort of data.
         if type(dataPull) == dict:
@@ -304,15 +307,20 @@ class SubListener(threading.Thread):
         
         # Debug print instead of dumping data onto another queue.
         jsonData = json.dumps(statusData)
-        self.redis.publish(destPubSub, jsonData)
         
-        # We don't want to store mode a metadata in the DB, so just pull it off the dict.
-        if 'aSquawkMeta' in statusData:
-            statusData.pop('aSquawkMeta', None)
+        # Publish the data on the queue.
+        self.__sPsQ.publish(config.statePub['qName'], jsonData)
+        
+        # If we actually want to store the state data in MongoDB...
+        if config.stateMongo['enabled'] == True:
             
-        jsonData = json.dumps(statusData)
-        self.redis.rpush(destReliable, jsonData)
-        
+            # We don't want to store mode a metadata in the DB, so just pull it off the dict.
+            if 'aSquawkMeta' in statusData:
+                statusData.pop('aSquawkMeta', None)
+            
+            jsonData = json.dumps(statusData)
+            self.__sRQ.rpush(config.stateRel['qName'], jsonData)
+            
         return
 
     def crcInt2Hex(self, crcInt):
@@ -488,7 +496,7 @@ class SubListener(threading.Thread):
                             if ('evenTs' in data) and ('oddTs' in data):
                                 
                                 # Get time delta.
-                                timeDelta = datetime.timedelta(seconds=cprExpireSec)
+                                timeDelta = datetime.timedelta(seconds=config.ssrStateEngine['cprExpireSec'])
                                 
                                 # Get the age of our even and odd data.
                                 evenAge = self.str2Datetime(data['lastSeen']) - self.str2Datetime(data['evenTs'])
@@ -569,17 +577,14 @@ class SubListener(threading.Thread):
                 #pprint(ssrWrapped)
     
     def run(self):
-        for work in self.pubsub.listen():
+        for work in self.__psObj.listen():
             self.worker(work)
 
 if __name__ == "__main__":
     print("SSR state engine starting...")
     
-    # Set up Redis queues.
-    r = redis.Redis(host=targetHost)
-    
     # Start up our ADS-B parser
-    client = SubListener(r, [targetSub], [destReliable], [destPubSub])
+    client = SubListener([config.connPub['qName']])
     client.daemon = True
     # .. and go.
     client.start()

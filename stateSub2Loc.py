@@ -12,6 +12,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Imports. #
 ############
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import redis
 import time
 import json
@@ -113,8 +118,8 @@ class SubListener(threading.Thread):
 
 if __name__ == "__main__":
     print("airSuck state queue viewer starting...")
-    r = redis.Redis(targetHost)
-    client = SubListener(r, [targetSub])
+    r = redis.Redis(host=config.statePub['host'], port=config.statePub['port'])
+    client = SubListener(r, [config.statePub['qName']])
     # We want the faote of our SubListener instance to be tied to the main thread process.
     client.daemon = True
     client.start()

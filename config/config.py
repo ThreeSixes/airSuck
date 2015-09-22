@@ -36,8 +36,10 @@ d1090ConnSettings = {
 # SSR State engine settings
 ssrStateEngine = {
     'enabled': True, # Do we want to run the state engine? True = yes, False = no
-    'expireTime': 300, # Expire vehicles that we haven't seen in this number of seconds. Default is 300 sec (5 min)
-    'cprExpireSec': 20 # This specifies how old CPR data can be before we reject it as too old to be valid in sec. Default is 20.
+    'hashTTL': 300, # Expire vehicles that we haven't seen in this number of seconds. Default is 300 sec (5 min)
+    'cprExpireSec': 20, # This specifies how old CPR data can be before we reject it as too old to be valid in sec. Default is 20.
+    'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
+    'hashPort': genRedisPort # The port for the above redis instance.
 };
 
 #########################################
@@ -50,7 +52,7 @@ connMongo = {
     'host': genMongoHost, # MongoDB server that holds connector data.
     'port': genMongoPort, # Port number for the mongoDB instance.
     'dbName': "airSuck", # Database name.
-    'coll': "airSSR", # Collection name for connector data.
+    'coll': "airConn", # Collection name for connector data.
     'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data.
 };
 

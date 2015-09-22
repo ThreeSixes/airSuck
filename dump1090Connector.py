@@ -12,6 +12,11 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Imports #
 ###########
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import redis
 import time
 import json
@@ -19,6 +24,7 @@ import datetime
 import threading
 import errno
 import binascii
+import hashlib
 import ssrParse
 from socket import socket
 from pprint import pprint
@@ -28,13 +34,6 @@ from pprint import pprint
 # Config #
 ##########
 
-#Target Redis queues
-redisQueues = {
-	"targetQ": "airReliable",	# Reliable queue for DB serialization
-	"targetPub": "airFeed",		# Pub/sub queue for other subscribers
-	"dedupeExp": 3			# Redis hash table entry expiry
-}
-
 #dump1090 sources
 dump1909Srcs = {
 	#"tallear": { "host": "127.0.0.1", "port": 40000, "reconnectDelay": 5}
@@ -43,7 +42,6 @@ dump1909Srcs = {
 	#, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
 	#"insurrection":  { "host": "127.0.0.1", "port": 30002, "reconnectDelay": 5}
 }
-
 
 alive = True
 
@@ -59,16 +57,19 @@ class dataSource(threading.Thread):
 	A generic class that represents a given dump1090 data source
 	"""
 	 
-	def __init__(self, rQ, myName, dump1090Src, rQInfo):
+	def __init__(self, myName, dump1090Src,):
 		print("Init thread for " + myName)
 		threading.Thread.__init__(self)
 		
-		# Extend properties to be class-wide. 
-		self.rQ = rQ
+		# Extend properties to be class-wide.
 		self.myName = myName
 		self.dump1090Src = dump1090Src
-		self.rQInfo = rQInfo
-		self.ssrParser = ssrParse.ssrParse()
+		self.__ssrParser = ssrParse.ssrParse()
+		
+		# Redis queues and entities
+		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
+		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
+		self.__dedeupe = redis.StrictRedis(host=config.d1090ConnSettings['dedupeHost'], port=config.d1090ConnSettings['dedupePort'])
 	
 	def run(self):
 		"""run
@@ -138,7 +139,7 @@ class dataSource(threading.Thread):
 						thisEntry.update({ 'mlatData': lineParts[0], 'data': lineParts[1] })
 						
 						# Add parsed data.
-						thisEntry.update(self.ssrParser.ssrParse(binData))
+						thisEntry.update(self.__ssrParser.ssrParse(binData))
 						
 					else:
 						# This gets fed to the deduplicator.
@@ -155,7 +156,7 @@ class dataSource(threading.Thread):
 						thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName })
 						
 						# Parse our data and add it to the stream.
-						thisEntry.update(self.ssrParser.ssrParse(binData))
+						thisEntry.update(self.__ssrParser.ssrParse(binData))
 						
 					# Queue up our data.
 					self.queueADSB(thisEntry, dedupeFlag)
@@ -167,7 +168,7 @@ class dataSource(threading.Thread):
 				# Dafuhq happened!?
 				print(myName + " went boom.")
 				pprint(e)
-			
+	
 	def formatSSRMsg(self, strMsg):
 		"""
 		stripDelims(strMsg)
@@ -238,13 +239,20 @@ class dataSource(threading.Thread):
 		"""
 		jsonMsg = self.jsonify(msg)
 		# See if we already have the key in the redis cache, or if we're supposed to dedupe this frame at all.
-		if ((self.rQ.exists(msg['data']) == False) or (dedupeFlag == False)):
+		
+		# Set up a hashed version of our data.
+		dHash = "ssr-" + hashlib.md5(msg['data']).hexdigest()
+		
+		if ((self.__dedeupe.exists(dHash) == False) or (dedupeFlag == False)):
 			# Set the key and insert lame value.
-			self.rQ.setex(msg['data'], self.rQInfo['dedupeExp'], "X")
+			self.__dedeupe.setex(dHash, config.d1090ConnSettings['dedupeTTLSec'], "X")
 			
-			# Drop the data on our reliable DB queue, and the non-persistent queue.
-			self.rQ.rpush(self.rQInfo['targetQ'], jsonMsg)
-			self.rQ.publish(self.rQInfo['targetPub'], jsonMsg)
+			# If we are configured to use the connector mongoDB forward the traffic to it.
+			if config.connMongo['enabled'] == True:
+				self.__rQ.rpush(config.connRel['qName'], jsonMsg)
+			
+			# Put data on the pub/sub queue.
+			self.__psQ.publish(config.connPub['qName'], jsonMsg)
 		
 		return
 		
@@ -266,7 +274,7 @@ r = redis.StrictRedis()
 # Spin up our client threads.
 for thisName, connData in dump1909Srcs.iteritems():
 	print("Spinning up thread for " + thisName)
-	client = dataSource(r, thisName, connData, redisQueues)
+	client = dataSource(thisName, connData)
 	client.daemon = True
 	client.start()
 	threadList.append(client)
@@ -277,4 +285,3 @@ while True: time.sleep(10)
 # Shut down
 for t in threadList:
 	t.join()
-

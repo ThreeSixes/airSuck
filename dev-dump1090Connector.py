@@ -12,6 +12,12 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Imports #
 ###########
 
+
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import socket
 import select
 import config
@@ -23,7 +29,6 @@ import threading
 import errno
 import binascii
 import ssrParse
-import config
 from pprint import pprint
 
 ########################

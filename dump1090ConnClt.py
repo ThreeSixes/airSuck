@@ -35,14 +35,7 @@ from pprint import pprint
 ##########
 
 #dump1090 sources
-dump1909Srcs = {
-	#"tallear": { "host": "127.0.0.1", "port": 40000, "reconnectDelay": 5}
-	#, "northwind":  { "host": "127.0.0.1", "port": 40001, "reconnectDelay": 5}
-	"tallear": { "host": "tallear", "port": 30002, "reconnectDelay": 5}
-	#, "northwind":  { "host": "northwind", "port": 30002, "reconnectDelay": 5}
-	#"insurrection":  { "host": "127.0.0.1", "port": 30002, "reconnectDelay": 5}
-}
-
+dump1909Srcs = config.d1090ConnSettings['connClientList']
 alive = True
 
 ####################

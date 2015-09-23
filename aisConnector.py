@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-dump1090Connector by ThreeSixes (https://github.com/ThreeSixes)
+aisConnector by ThreeSixes (https://github.com/ThreeSixes)
 
 This project is licensed under GPLv3. See COPYING for dtails.
 
@@ -69,7 +69,8 @@ class dataSource(threading.Thread):
 		# Redis queues and entities
 		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
 		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
-		self.__dedeupe = redis.StrictRedis(host=config.d1090ConnSettings['dedupeHost'], port=config.d1090ConnSettings['dedupePort'])
+	
+			self.__dedeupe = redis.StrictRedis(host=config.d1090ConnSettings['dedupeHost'], port=config.d1090ConnSettings['dedupePort'])
 	
 	def run(self):
 		"""run

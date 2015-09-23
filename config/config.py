@@ -26,8 +26,11 @@ genMongoPort = 27017 # MongoDB server port default is 217017
 # Dump1090Connector settings
 d1090ConnSettings = {
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
-    'connListenHost': "0.0.0.0", #/ Listen on this address for incoming connections. Default is all addresses: "0.0.0.0"
-    'connListenPort': 8091, # Dump 1900 connect incoming port.
+    'connListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
+    'connListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
+    'localConnect': { # Array of hosts to connect to when running client connector script.
+            "<server name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5} # This can contain additional dictionaries.
+        },
     'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
     'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.
     'dedupePort': genRedisPort # Redis port number for dedupe.

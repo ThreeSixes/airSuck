@@ -36,6 +36,17 @@ d1090ConnSettings = {
     'dedupePort': genRedisPort # Redis port number for dedupe.
 };
 
+# aisConnector settings
+aisConnSettings = {
+    'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
+    'connClientList': { # Array of hosts to connect to when running client connector script.
+        "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5} # This can contain additional dictionaries.
+    },
+    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
+    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.
+    'dedupePort': genRedisPort # Redis port number for dedupe.
+};
+
 # SSR State engine settings
 ssrStateEngine = {
     'enabled': True, # Do we want to run the state engine? True = yes, False = no

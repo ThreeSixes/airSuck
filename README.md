@@ -5,13 +5,16 @@ Future support will include ACARS data handling, and AIS as well.
 File list:
 
 "Daemons":
-  - dump1090Connector.py - Handles connections to one or more dump1090 instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
+  - dump1090ConnClt.py - Handles connections to one or more dump1090 instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
+  - dump1090ConnSrv.py - Recieves JSON data from dump1090 client connector instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
   - mongoDump.py - Stores incoming raw data from sources in a database for storage and reprocessing if necessary.
   - ssrStateEngine.py - Handles processing of stateful ADS-B data to build aircraft location data, call signs, etc. This process dumps aircraft state updates on a pub/sub queue for handling by other processes, and on a reliable queue for storage in MongoDB.
   - stateMongoDump.py - Stores state data in MongoDB for later processing.
   - node/stateNode.js - Node.js server for passing state JSON to a browser or other service. Requires Node.js and the following Node.js packages: redis, express, socket.io
+  - node/dump1090Client.js - dump1090 node.js submitter for connecting to dump1090Srv.py.
 
 Libraries:
+  - aisParse.py - Supports decoding of AIS sentences.
   - ssrParse.py - Supports decoding of binary ADS-B data into relevant fields.
   - cprMath.py - Supports handling of Compact Position Reporting data.
   - airSuckUtil.py - Collection of tools for unit conversion, algorithms and functions for geographic data processing.
@@ -28,13 +31,16 @@ Test files:
   - sub2CrCTest.py - Checks CRC sums and performs XOR operations on frames. This was developed for testing.
   - ssrParseTest.py - Tests decoding of one or more manually entered frames by the ssrParse class. This was developed for testing.
   - cprMathTest.py - Class for testing Compact Position Reporting (CPR) algorithm. This was developed for testing.
+  - aisParseTest.py - Tests decoding of AIS sentences.
 
 Support config files:
-  - supervisor/airSuck-dump1090Connector.conf - Supversior config file to keep dump1090Connector.py running as a daemon. 
+  - supervisor/airSuck-dump1090ConnClt.conf - Supversior config file to keep dump1090ConnClt.py running as a daemon.
+  - supervisor/airSuck-dump1090ConnSrv.conf - Supversior config file to keep dump1090ConnSrv.py running as a daemon.
   - supervisor/airSuck-mongoDump.conf - Supervisor config file to keep mongoDump.py running as a daemon.
   - supervisor/airSuck-ssrStateEngine.conf - Supervisor config file to keep ssrStateEngine.py running as a daemon.
   - supervisor/airSuck-stateMongoDump.conf - Supervisor config file to keep stateMongoDump.py running as a daemon.
   - supervisor/airSuck-stateNode.conf - Supervisor config file to keep node/stateNode.js running as a daemon.
+  - supervisor/airSuck-dump1090Client.conf - Supervisor config file to keep the dump1090 client node.js script as a daemon.
   - The above files are all split out as individual config files to facilitate running some or all of these files on one or more servers. This makes it easier to split out roles in a multi-host environment.
 
 AirSuck Geospatial viewer web page:

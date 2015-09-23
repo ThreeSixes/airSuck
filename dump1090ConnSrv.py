@@ -29,6 +29,7 @@ import threading
 import errno
 import binascii
 import ssrParse
+import hashlib
 from pprint import pprint
 
 ########################
@@ -143,26 +144,26 @@ class d1090Connector():
 		
 		Accepts a JSON string and queues it in the Redis database, assuming a duplicate string hasn't been queued within the last n seconds specified in config.py, and we're not dealing with MLAT data. (dedupeFlag = False prevents dedupliation operations.)
 		"""
-		
-		# Create JSON message.
-		jsonMsg = self.__jsonify(msg)
-		
-		# Don't actually enqueue data. Just test.
-		print("Enqueue " + jsonMsg)
-		
+		jsonMsg = self.jsonify(msg)
 		# See if we already have the key in the redis cache, or if we're supposed to dedupe this frame at all.
-		#if ((self.__dedupe.exists(msg['data']) == False) or (dedupeFlag == False)):
-			# Set the key and insert lame value.
-			#self.__dedupe.setex(msg['data'], config.d1090ConnSettings['dedupeTTLSec'], "X")
-			
-			# If the system is configured to use mongoDB connector data...
-			#if config.connMongo['enabled']:
-				# Push the JSON data onto our reliable queue.
-			#	self.__rQ.rpush(config.connRel['qName'], jsonMsg)
-			
-			# Publish the data to our pub/sub queue.
-			#self.__psQ.publish(config.connPub['qName'], jsonMsg)
 		
+		print("Handle: " + jsonMsg)
+		
+		"""
+		# Set up a hashed version of our data.
+		dHash = "ssr-" + hashlib.md5(msg['data']).hexdigest()
+		
+		if ((self.__dedeupe.exists(dHash) == False) or (dedupeFlag == False)):
+			# Set the key and insert lame value.
+			self.__dedeupe.setex(dHash, config.d1090ConnSettings['dedupeTTLSec'], "X")
+			
+			# If we are configured to use the connector mongoDB forward the traffic to it.
+			if config.connMongo['enabled'] == True:
+				self.__rQ.rpush(config.connRel['qName'], jsonMsg)
+			
+			# Put data on the pub/sub queue.
+			self.__psQ.publish(config.connPub['qName'], jsonMsg)
+		"""
 		return
 
 

@@ -49,9 +49,10 @@ def dejsonify(msg):
 def serializeState(entry):
         mDBColl.insert(entry)
 
-# Infinite fucking loop.
-if config.connMongo['enabled'] == True:
+# If the mongo state dumper is enabled...
+if config.stateMongo['enabled'] == True:
 
+    # Infinite fucking loop.
     print("Dumping state data from queue to MongoDB.")
     while(True) :
             try:

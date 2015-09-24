@@ -44,7 +44,10 @@ aisConnSettings = {
     },
     'fragTTLSec': 1, # Time to live for frame fragments. This clears fragmented frames no recieved within n sec of each other.
     'fragHost': genRedisHost, # This host contains the objects used to assemble fragemented frames.
-    'fragPort': genRedisPort # Redis port number for hash object redis instance.
+    'fragPort': genRedisPort, # Redis port number for hash object redis instance.
+    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
+    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate AIS payloads.
+    'dedupePort': genRedisPort # Redis port number for dedupe.
 };
 
 # SSR State engine settings

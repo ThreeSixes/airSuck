@@ -39,7 +39,7 @@ from pprint import pprint
 alive = True
 
 # Should we enqueue data?
-enqueueOn = False
+enqueueOn = True
 
 
 ####################
@@ -68,6 +68,7 @@ class dataSource(threading.Thread):
 		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
 		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
 		self.__frag = redis.StrictRedis(host=config.aisConnSettings['fragHost'], port=config.aisConnSettings['fragPort'])
+		self.__dedupe = redis.StrictRedis(host=config.aisConnSettings['dedupeHost'], port=config.aisConnSettings['dedupePort'])
 	
 	# Strip metachars.
 	def metaStrip(self, subject):
@@ -131,13 +132,25 @@ class dataSource(threading.Thread):
 		
 		# Should we actually enqueue the data?
 		if self.enqueue:
-			# If we are configured to use the connector mongoDB forward the traffic to it.
-			if config.connMongo['enabled'] == True:
-				self.__rQ.rpush(config.connRel['qName'], jsonMsg)
+			# Set up a hashed version of our data.
+			dHash = "ais-" + hashlib.md5(enqueueMe['data']).hexdigest()
 			
-			# Put data on the pub/sub queue.
-			self.__psQ.publish(config.connPub['qName'], jsonMsg)
+			# If we dont' already have a frame like this one OR the frame is a fragment...
+			if (self.__dedupe.exists(dHash) == False) or (enqueueMe['isFrag'] == True):
+				
+				# Make sure we're not handling a fragment. Since some fragments can be short there's a good chance of collision.
+				if enqueueMe['isFrag'] == False:
+					# Set the key and insert lame value.
+					self.__dedupe.setex(dHash, config.aisConnSettings['dedupeTTLSec'], "X")
+				
+				# If we are configured to use the connector mongoDB forward the traffic to it.
+				if config.connMongo['enabled'] == True:
+					self.__rQ.rpush(config.connRel['qName'], jsonMsg)
+				
+				# Put data on the pub/sub queue.
+				self.__psQ.publish(config.connPub['qName'], jsonMsg)
 		else:
+			# Just dump the JSON data as a string.
 			print(jsonMsg)
 		
 		return
@@ -319,7 +332,7 @@ class dataSource(threading.Thread):
 			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
 			except:
 				# Dafuhq happened!?
-				print(self.myName + " went boom on " + thisLine)
+				print(self.myName + " went boom.")
 				tb = traceback.format_exc()
 				print(tb)
 			

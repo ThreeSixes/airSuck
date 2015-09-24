@@ -100,24 +100,11 @@ class aisParse:
         # Return the signed int.
         return signedNum
     
-    def __validateSentence(self, sentence):
+    def __getNMEAFields(self, sentence):
         """
-        __validateSentence(sentence)
+        __getNMEAFields(sentence)
         
-        Attempt to verify the provided AIS NMEA sentence is likely a valid sentnece for processing.
-        
-        Returns True or False.
-        """
-        # Set up return value, and assume we have a bad frame.
-        retVal = False
-        
-        return retVal
-    
-    def __getFields(self, sentence):
-        """
-        __getFields(sentence)
-        
-        Attempt to break the AIS sentence up into chunks delimited by commas.
+        Attempt to break the NMEA sentence up into chunks delimited by commas.
         
         Returns an array of fields.
         """
@@ -130,7 +117,7 @@ class aisParse:
             retVal = sentence.split(',')
         
         except:
-            print("Unable to split AIS sentence into fields.")
+            raise ValueError("Unable to split NMEA sentence into fields.")
         
         return retVal
     
@@ -148,18 +135,20 @@ class aisParse:
         #vector = ord(vector)
         
         # Make sure the data we're trying to handle is in range.
-        #if (vector >= 64) and (vector <= 87):
-        
-        # Attempt to get the ASCII value from the vector.
-        vector = vector - 48
-        
-        # If the final value is over 40 subtract another 8 from it to get the second block.
-        if vector > 40:
-            vector = vector - 8
-        
-        # Send a unicode char.
-        retVal = vector
-        
+        if (vector >= 48) and (vector <= 119):
+            
+            # Attempt to get the ASCII value from the vector.
+            vector = vector - 48
+            
+            # If the final value is over 40 subtract another 8 from it to get the second block.
+            if vector > 40:
+                vector = vector - 8
+            
+            # Send a unicode char.
+            retVal = vector
+        else:
+            # We have an invalid vector.
+            raise ValueError('Invalid byte vctor: ' + str(vector))
         return retVal
     
     def __decodeAIVDMO(self, field):
@@ -234,6 +223,9 @@ class aisParse:
         Returns a string.
         """
         
+        # Location types start as 1.
+        locType = locType - 1
+        
         locMetaStr = ["Class A",
             "Class A scheduled",
             "Class A interrogation response"]
@@ -292,6 +284,8 @@ class aisParse:
         Returns a string.
         """
         
+        retVal = ""
+        
         # EPFD descriptions
         epfdDesc = ["Undefined",
             "GPS",
@@ -303,8 +297,14 @@ class aisParse:
             "Surveyed",
             "Galileo"]
         
+        # If we have an EPFD in range...
+        if epfd <= 8:
+            retVal = epfdDesc[epfd]
+        else:
+            retVal = "Unknown"
+        
         # Return the string.
-        return epfdDesc[epfd]
+        return retVal
     
     def __getLocation(self, lat, lon):
         """
@@ -352,20 +352,32 @@ class aisParse:
         
         return retVal
     
-    def aisParse(self, sentence):
+    def getFrameCRC(self, frameStr):
         """
-        aisParse(sentence)
+        getFrameCRC(frameStr)
         
-        Parse AIS sentences.
+        Get the CRC bytes from a processed frame string.
         
-        This method returns a dictionary of all decode fields.
+        Returns and integer representing the frame's specified CRC value.
+        """
+        
+        # Return the last two ASCII-encoded hex bytes of the frame converted to an integer.
+        return ord(binascii.unhexlify(frameStr[-2:]))
+    
+    def nmeaDecapsulate(self, sentence):
+        """
+        aisDecapsulate(sentence)
+        
+        Decapsulate AIS data from incoming NMEA message.
+        
+        This method returns a dictionary of frame data and a payload.
         """
         
         # This dict will hold all the information we're able to decode from frames
         retVal = {}
         
         # Break the sentence apart.
-        sentenceParts = self.__getFields(sentence)
+        sentenceParts = self.__getNMEAFields(sentence)
         
         # Get the sentence type
         if '!' in sentenceParts[0]:
@@ -373,250 +385,254 @@ class aisParse:
         else:
             retVal.update({'sentenceType': sentenceParts[0]})
         
-        try:
-            # Get the fragment count
-            retVal.update({'fragmentCount': int(sentenceParts[1])})
-            
-            # Get the fragment number
-            retVal.update({'fragmentNumber': int(sentenceParts[2])})
-                
-            # Get the message ID number, and if we have a value update our data with it.
-            msgID = sentenceParts[3]
-            
-            if msgID != "":
-                retVal.update({'messageID': int(msgID)})
-            
-            # Figoure out the channel if it's 1 or 2.
-            channelStr = sentenceParts[4]
-            
-            # Convert 1 or 2 to A or B if they are specified that way.
-            if channelStr == "1":
-                channelStr = "A"
-            elif channelStr == "2":
-                channelStr = "B"
-            
-            # Get the message ID number
-            retVal.update({'channel': channelStr})
-            
-            # Get the payload
-            retVal.update({'payload': sentenceParts[5]})
-            
-            # Get the last two fields by splitting field 6 by an *.
-            endParts = sentenceParts[len(sentenceParts) - 1]
-            
-            # Get the stray bits and checksum.
-            endFields = endParts.split('*')
-            
-            # If we don't have exactly two fields something went wrong.
-            if len(endFields) != 2:
-                raise ValueError
-            
-            # We should have exactly two characters as the length of the end array.
-            if len(endFields[1]) == 2:
-                # Number of padding bits included in the sentence
-                retVal.update({'padBits': int(endFields[0])})
-            else:
-                print("Punt at end field sum length.")
-                raise ValueError
+        # Get the fragment count
+        retVal.update({'fragCount': int(sentenceParts[1])})
         
-        except:
-            print("Failed to process standard AIS fields.")
-        
-        # See if we have AIVDM or AIVDO frames with a valid CRC checksum 
-        if (retVal['sentenceType'] == "AIVDM") or (retVal['sentenceType'] == "AIVDO"):
+        # Get the fragment number
+        retVal.update({'fragNumber': int(sentenceParts[2])})
             
-            # Create a binary version of the payload data for parsing.
-            payloadBin = bytearray(sentenceParts[5])
-            
-            if retVal['fragmentNumber'] == 1:
-                # Get the payload type.
-                payloadType = self.__vector2Bin(payloadBin[0])
-                
-                # Get the payload type data.
-                retVal.update({'payloadType': payloadType})
-                
-                # If we have a position type A report
-                if (payloadType >= 1) and (payloadType <= 3):
-                    
-                    # Set the repeat indicator.
-                    retVal.update(self.__getRepeatIndicator(payloadBin))
-                    
-                    # Set the MMSI.
-                    retVal.update(self.__getMMSI(payloadBin))
-                    
-                    # Get navigation status
-                    navStat = self.__vector2Bin(payloadBin[6]) & 0x0f
-                    
-                    # If we have a non-default navigation status number...
-                    if navStat < 15:
-                        # Set that navigation status
-                        retVal.update({'navStat': navStat})
-                    
-                    # Get rate of turn
-                    turnRt = ((self.__vector2Bin(payloadBin[7]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[8]) & 0xc0) >> 4)
-                    
-                    # If the turn rate isn't 128 set it.
-                    if turnRt != 128:
-                        # Set rate of turn
-                        retVal.update({'turnRt': turnRt})
-                    
-                    #### TODO: CREATE METHOD TO HANDLE TURN RATE DATA #####
-                    
-                    # Speed over ground
-                    gndSpd = ((self.__vector2Bin(payloadBin[8]) & 0x0f) << 6) | (self.__vector2Bin(payloadBin[9]) & 0x3f)
-                    
-                    # Unsigned int with LSB = 0.1
-                    gndSpd = gndSpd / 10.0
-                    
-                    # Set velocity and velocity type
-                    retVal.update({'velo': gndSpd, 'veloType': 'gnd'})
-                    
-                    # Position accuracy flag
-                    posAcc = self.__vector2Bin(payloadBin[10]) & 0x20
-                    
-                    # Get position accuracy flag.
-                    if posAcc > 0:
-                        posAcc = True
-                    else:
-                        posAcc = False
-                    
-                    # Set position accuracy flag
-                    retVal.update({'posAcc': posAcc})
-                    
-                    # Get raw longitude and latitude.
-                    lon = ((self.__vector2Bin(payloadBin[10]) & 0x1f) << 23) | ((self.__vector2Bin(payloadBin[11]) & 0x3f) << 17) | ((self.__vector2Bin(payloadBin[12]) & 0x3f) << 11) | ((self.__vector2Bin(payloadBin[13]) & 0x3f) << 5) | ((self.__vector2Bin(payloadBin[14]) & 0x3e) >> 1)
-                    lat = ((self.__vector2Bin(payloadBin[14]) & 0x01) << 21) | ((self.__vector2Bin(payloadBin[15]) & 0x1f) << 20) | ((self.__vector2Bin(payloadBin[16]) & 0x3f) << 14) | ((self.__vector2Bin(payloadBin[17]) & 0x3f) << 8) | ((self.__vector2Bin(payloadBin[18]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[19]) & 0x30) >> 4)
-                    
-                    # Try to get the latitude and longitude given the data we have.
-                    cmpLatLon = self.__getLocation(lat, lon)
-                    
-                    # If we have a valid latitude and longitude.
-                    if type(cmpLatLon) == dict:
-                        # Set position and position metadata
-                        retVal.update(cmpLatLon)
-                        retVal.update({'locationMeta': self.__getLocMeta(payloadType)})
-                    
-                    # Get course over ground
-                    cog = ((self.__vector2Bin(payloadBin[19]) & 0x0f) << 8) | ((self.__vector2Bin(payloadBin[20]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[21]) & 0x30) >> 4)
-                    
-                    # If we have a valid course over ground...
-                    if cog != 3600:
-                        # Convert course over ground to be in tenths of a degree.
-                        cog = round(cog / 10.0, 1)
-                        
-                        # Course over the ground.
-                        retVal.update({'courseOverGnd': cog})
-                    
-                    # Get heading
-                    heading = ((self.__vector2Bin(payloadBin[21]) & 0x0f) << 5) | ((self.__vector2Bin(payloadBin[22]) & 0x3e) >> 1)
-                    
-                    # If we have a valid course over ground...
-                    if heading != 511:
-                        # Course over the ground.
-                        retVal.update({'heading': heading})
-                    
-                    # Get the timestamp.
-                    timestamp = ((self.__vector2Bin(payloadBin[22]) & 0x01) << 5) | ((self.__vector2Bin(payloadBin[23]) & 0x3e) >> 1)
-                    
-                    # Set the timestamp.
-                    retVal.update({'timestamp': timestamp})
-                    
-                    # Get the maneuver indicator / blue sign
-                    maneuver = ((self.__vector2Bin(payloadBin[23]) & 0x01) << 1) | ((self.__vector2Bin(payloadBin[24]) & 0x20) >> 5)
-                    
-                    # If we have a non-default value
-                    if maneuver > 0:
-                        # Set the maneuver indicator.
-                        retVal.update({'maneuverBlueSign': maneuver})
-                    
-                    # Get the spare bits
-                    spare = (self.__vector2Bin(payloadBin[23]) & 0x1c) >> 2
-                    
-                    # If we have a non-zero value in the spare bits...
-                    if spare > 0:
-                        # Set the spare bits
-                        retVal.update({'spare': spare})
-                    
-                    # Get the spare bits
-                    raim = (self.__vector2Bin(payloadBin[23]) & 0x02) >> 1
-                    
-                    # If we have a non-zero value in the spare bits...
-                    if raim > 0:
-                        raim = True
-                    else:
-                        raim = False
-                    
-                    # Set the spare bits
-                    retVal.update({'raim': raim})
-                    
-                    # Add radio status.
-                    retVal.update(self.__getRadioStatus('radioStatus', payloadBin))
-                
-                # Base station report
-                # From http://catb.org/gpsd/AIVDM.html
-                elif payloadType == 4:
-                    # Set the repeat indicator.
-                    retVal.update(self.__getRepeatIndicator(payloadBin))
-                    
-                    # Set the MMSI.
-                    retVal.update(self.__getMMSI(payloadBin))
-                    
-                    # Get the UTC year, month, day, hour, minute, and second.
-                    utcYear = ((self.__vector2Bin(payloadBin[6]) & 0x0f) << 10) | ((self.__vector2Bin(payloadBin[7]) & 0x3f) << 4) | ((self.__vector2Bin(payloadBin[8]) & 0x3c) >> 2)
-                    utcMonth = ((self.__vector2Bin(payloadBin[8]) & 0x03) << 2) | ((self.__vector2Bin(payloadBin[9]) & 0x30) >> 4)
-                    utcDay = ((self.__vector2Bin(payloadBin[9]) & 0x0f) << 1) | ((self.__vector2Bin(payloadBin[10]) & 0x20) >> 5)
-                    utcHour = (self.__vector2Bin(payloadBin[10]) & 0x1f)
-                    utcMinute = (self.__vector2Bin(payloadBin[11]) & 0x3f)
-                    utcSecond = (self.__vector2Bin(payloadBin[12]) & 0x3f)
-                    
-                    # Set the UTC time data.
-                    retVal.update({'utcYear': utcYear, 'utcMonth': utcMonth, 'utcDay': utcDay, 'utcHour': utcHour, 'utcMinute': utcMinute, 'utcSecond': utcSecond})
-                    
-                    # Get raw longitude and latitude.
-                    lon = ((self.__vector2Bin(payloadBin[13]) & 0x1f) << 23) | ((self.__vector2Bin(payloadBin[14]) & 0x3f) << 17) | ((self.__vector2Bin(payloadBin[15]) & 0x3f) << 11) | ((self.__vector2Bin(payloadBin[16]) & 0x3f) << 5) | ((self.__vector2Bin(payloadBin[17]) & 0x3e) >> 1)
-                    lat = ((self.__vector2Bin(payloadBin[17]) & 0x01) << 26) | ((self.__vector2Bin(payloadBin[18]) & 0x1f) << 20) | ((self.__vector2Bin(payloadBin[19]) & 0x3f) << 14) | ((self.__vector2Bin(payloadBin[20]) & 0x3f) << 8) | ((self.__vector2Bin(payloadBin[21]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[22]) & 0x30) >> 4)
-                    
-                    # Try to get the latitude and longitude given the data we have.
-                    cmpLatLon = self.__getLocation(lat, lon)
-                    
-                    # If we have a valid latitude and longitude.
-                    if type(cmpLatLon) == dict:
-                        # Set position and position metadata
-                        retVal.update(cmpLatLon)
-                        retVal.update({'locationMeta': 'AIS'})
-                    
-                    # Get the EPFD
-                    epfd = (self.__vector2Bin(payloadBin[17]) & 0x0f)
-                    
-                    # If we have something that's defined...
-                    if epfd > 0:
-                        # Set the EPFD data.
-                        retVal.update({'epfd': epfd, 'epfdMeta': self.__getEPFDMeta(epfd)})
-                    
-                    # Get spare bits
-                    spare = ((self.__vector2Bin(payloadBin[23]) & 0x0f) << 4) | ((self.__vector2Bin(payloadBin[24]) & 0x3c) >> 2)
-                    
-                    # Set spare bits
-                    if spare > 0:
-                        retVal.update({'spare': spare})
-                    
-                    # Get the spare bits
-                    raim = (self.__vector2Bin(payloadBin[24]) & 0x02) >> 1
-                    
-                    # If we have a non-zero value in the spare bits...
-                    if raim > 0:
-                        raim = True
-                    else:
-                        raim = False
-                    
-                    # Set the spare bits
-                    retVal.update({'raim': raim})
-                    
-                    # Add radio status.
-                    retVal.update(self.__getRadioStatus('radioStatus', payloadBin))
+        # Get the message ID number, and if we have a value update our data with it.
+        msgID = sentenceParts[3]
         
+        if msgID != "":
+            retVal.update({'messageID': int(msgID)})
+        
+        # Figoure out the channel if it's 1 or 2.
+        channelStr = sentenceParts[4]
+        
+        # Convert 1 or 2 to A or B if they are specified that way.
+        if channelStr == "1":
+            channelStr = "A"
+        elif channelStr == "2":
+            channelStr = "B"
+        
+        # Get the message ID number
+        retVal.update({'channel': channelStr})
+        
+        # Get the payload string.
+        retVal.update({'payload': sentenceParts[5]})
+        
+        # Get the last two fields by splitting field 6 by an *.
+        endParts = sentenceParts[len(sentenceParts) - 1]
+        
+        # Get the stray bits and checksum.
+        endFields = endParts.split('*')
+        
+        # If we don't have exactly two fields something went wrong.
+        if len(endFields) != 2:
+            raise ValueError
+        
+        # We should have exactly two characters as the length of the end array.
+        if len(endFields[1]) == 2:
+            # Number of padding bits included in the sentence
+            retVal.update({'padBits': int(endFields[0])})
         else:
-            print("Unsupported sentence")
+            raise ValueError("Invalid CRC field length.")
+        
+        return retVal
+    
+    def aisParse(self, nmeaData):
+        """
+        aisParse(nmeaData)
+        
+        Parse AIS sentences given AIVDM and AIVDO frames. This method accepts one argument: a decapsulated AIS frame as a dict.
+        
+        This method returns a dictionary of all decode fields.
+        """
+        
+        # See if we have AIVDM or AIVDO frames. 
+        if (nmeaData['sentenceType'] == "AIVDM") or (nmeaData['sentenceType'] == "AIVDO"):
+           
+            # Create a binary version of the payload data for parsing.
+            payloadBin = bytearray(nmeaData['payload'])
+            
+            # Get the payload type.
+            payloadType = self.__vector2Bin(payloadBin[0])
+            
+            # Get the payload type data.
+            nmeaData.update({'payloadType': payloadType})
+            
+            # If we have a position type A report
+            if (payloadType >= 1) and (payloadType <= 3):
+                
+                # Set the repeat indicator.
+                nmeaData.update(self.__getRepeatIndicator(payloadBin))
+                
+                # Set the MMSI.
+                nmeaData.update(self.__getMMSI(payloadBin))
+                
+                # Get navigation status
+                navStat = self.__vector2Bin(payloadBin[6]) & 0x0f
+                
+                # If we have a non-default navigation status number...
+                if navStat < 15:
+                    # Set that navigation status
+                    nmeaData.update({'navStat': navStat})
+                    
+                # Get rate of turn
+                turnRt = ((self.__vector2Bin(payloadBin[7]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[8]) & 0xc0) >> 4)
+                
+                # If the turn rate isn't 128 set it.
+                if turnRt != 128:
+                    # Set rate of turn
+                    nmeaData.update({'turnRt': turnRt})
+                    
+                #### TODO: CREATE METHOD TO HANDLE TURN RATE DATA #####
+                
+                # Speed over ground
+                gndSpd = ((self.__vector2Bin(payloadBin[8]) & 0x0f) << 6) | (self.__vector2Bin(payloadBin[9]) & 0x3f)
+                
+                # Unsigned int with LSB = 0.1
+                gndSpd = gndSpd / 10.0
+                
+                # Set velocity and velocity type
+                nmeaData.update({'velo': gndSpd, 'veloType': 'gnd'})
+                
+                # Position accuracy flag
+                posAcc = self.__vector2Bin(payloadBin[10]) & 0x20
+                
+                # Get position accuracy flag.
+                if posAcc > 0:
+                    posAcc = True
+                else:
+                    posAcc = False
+                
+                # Set position accuracy flag
+                nmeaData.update({'posAcc': posAcc})
+                
+                # Get raw longitude and latitude.
+                lon = ((self.__vector2Bin(payloadBin[10]) & 0x1f) << 23) | ((self.__vector2Bin(payloadBin[11]) & 0x3f) << 17) | ((self.__vector2Bin(payloadBin[12]) & 0x3f) << 11) | ((self.__vector2Bin(payloadBin[13]) & 0x3f) << 5) | ((self.__vector2Bin(payloadBin[14]) & 0x3e) >> 1)
+                lat = ((self.__vector2Bin(payloadBin[14]) & 0x01) << 21) | ((self.__vector2Bin(payloadBin[15]) & 0x1f) << 20) | ((self.__vector2Bin(payloadBin[16]) & 0x3f) << 14) | ((self.__vector2Bin(payloadBin[17]) & 0x3f) << 8) | ((self.__vector2Bin(payloadBin[18]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[19]) & 0x30) >> 4)
+                
+                # Try to get the latitude and longitude given the data we have.
+                cmpLatLon = self.__getLocation(lat, lon)
+                
+                # If we have a valid latitude and longitude.
+                if type(cmpLatLon) == dict:
+                    # Set position and position metadata
+                    nmeaData.update(cmpLatLon)
+                    nmeaData.update({'locationMeta': self.__getLocMeta(payloadType)})
+                
+                # Get course over ground
+                cog = ((self.__vector2Bin(payloadBin[19]) & 0x0f) << 8) | ((self.__vector2Bin(payloadBin[20]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[21]) & 0x30) >> 4)
+                
+                # If we have a valid course over ground...
+                if cog != 3600:
+                    # Convert course over ground to be in tenths of a degree.
+                    cog = round(cog / 10.0, 1)
+                    
+                    # Course over the ground.
+                    nmeaData.update({'courseOverGnd': cog})
+                
+                # Get heading
+                heading = ((self.__vector2Bin(payloadBin[21]) & 0x0f) << 5) | ((self.__vector2Bin(payloadBin[22]) & 0x3e) >> 1)
+                
+                # If we have a valid course over ground...
+                if heading != 511:
+                    # Course over the ground.
+                    nmeaData.update({'heading': heading})
+                
+                # Get the timestamp.
+                timestamp = ((self.__vector2Bin(payloadBin[22]) & 0x01) << 5) | ((self.__vector2Bin(payloadBin[23]) & 0x3e) >> 1)
+                
+                # Set the timestamp.
+                nmeaData.update({'timestamp': timestamp})
+                
+                # Get the maneuver indicator / blue sign
+                maneuver = ((self.__vector2Bin(payloadBin[23]) & 0x01) << 1) | ((self.__vector2Bin(payloadBin[24]) & 0x20) >> 5)
+                
+                # If we have a non-default value
+                if maneuver > 0:
+                    # Set the maneuver indicator.
+                    nmeaData.update({'maneuverBlueSign': maneuver})
+                
+                # Get the spare bits
+                spare = (self.__vector2Bin(payloadBin[23]) & 0x1c) >> 2
+                
+                # If we have a non-zero value in the spare bits...
+                if spare > 0:
+                    # Set the spare bits
+                    nmeaData.update({'spare': spare})
+                
+                # Get the spare bits
+                raim = (self.__vector2Bin(payloadBin[23]) & 0x02) >> 1
+                
+                # If we have a non-zero value in the spare bits...
+                if raim > 0:
+                    raim = True
+                else:
+                    raim = False
+                
+                # Set the spare bits
+                nmeaData.update({'raim': raim})
+                
+                # Add radio status.
+                nmeaData.update(self.__getRadioStatus('radioStatus', payloadBin))
+            
+            # Base station report
+            # From http://catb.org/gpsd/AIVDM.html
+            elif payloadType == 4:
+                # Set the repeat indicator.
+                nmeaData.update(self.__getRepeatIndicator(payloadBin))
+                
+                # Set the MMSI.
+                nmeaData.update(self.__getMMSI(payloadBin))
+                
+                # Get the UTC year, month, day, hour, minute, and second.
+                utcYear = ((self.__vector2Bin(payloadBin[6]) & 0x0f) << 10) | ((self.__vector2Bin(payloadBin[7]) & 0x3f) << 4) | ((self.__vector2Bin(payloadBin[8]) & 0x3c) >> 2)
+                utcMonth = ((self.__vector2Bin(payloadBin[8]) & 0x03) << 2) | ((self.__vector2Bin(payloadBin[9]) & 0x30) >> 4)
+                utcDay = ((self.__vector2Bin(payloadBin[9]) & 0x0f) << 1) | ((self.__vector2Bin(payloadBin[10]) & 0x20) >> 5)
+                utcHour = (self.__vector2Bin(payloadBin[10]) & 0x1f)
+                utcMinute = (self.__vector2Bin(payloadBin[11]) & 0x3f)
+                utcSecond = (self.__vector2Bin(payloadBin[12]) & 0x3f)
+                
+                # Set the UTC time data.
+                nmeaData.update({'utcYear': utcYear, 'utcMonth': utcMonth, 'utcDay': utcDay, 'utcHour': utcHour, 'utcMinute': utcMinute, 'utcSecond': utcSecond})
+                
+                # Get raw longitude and latitude.
+                lon = ((self.__vector2Bin(payloadBin[13]) & 0x1f) << 23) | ((self.__vector2Bin(payloadBin[14]) & 0x3f) << 17) | ((self.__vector2Bin(payloadBin[15]) & 0x3f) << 11) | ((self.__vector2Bin(payloadBin[16]) & 0x3f) << 5) | ((self.__vector2Bin(payloadBin[17]) & 0x3e) >> 1)
+                lat = ((self.__vector2Bin(payloadBin[17]) & 0x01) << 26) | ((self.__vector2Bin(payloadBin[18]) & 0x1f) << 20) | ((self.__vector2Bin(payloadBin[19]) & 0x3f) << 14) | ((self.__vector2Bin(payloadBin[20]) & 0x3f) << 8) | ((self.__vector2Bin(payloadBin[21]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[22]) & 0x30) >> 4)
+                
+                # Try to get the latitude and longitude given the data we have.
+                cmpLatLon = self.__getLocation(lat, lon)
+                
+                # If we have a valid latitude and longitude.
+                if type(cmpLatLon) == dict:
+                    # Set position and position metadata
+                    nmeaData.update(cmpLatLon)
+                    nmeaData.update({'locationMeta': 'AIS'})
+                
+                # Get the EPFD
+                epfd = self.__vector2Bin(payloadBin[22]) & 0x0f
+                
+                # If we have something that's defined...
+                if epfd > 0:
+                    # Set the EPFD data.
+                    nmeaData.update({'epfd': epfd, 'epfdMeta': self.__getEPFDMeta(epfd)})
+                
+                # Get spare bits
+                spare = ((self.__vector2Bin(payloadBin[23]) & 0x0f) << 4) | ((self.__vector2Bin(payloadBin[24]) & 0x3c) >> 2)
+                
+                # Set spare bits
+                if spare > 0:
+                    nmeaData.update({'spare': spare})
+                
+                # Get the spare bits
+                raim = (self.__vector2Bin(payloadBin[24]) & 0x02) >> 1
+                
+                # If we have a non-zero value in the spare bits...
+                if raim > 0:
+                    raim = True
+                else:
+                    raim = False
+                
+                # Set the spare bits
+                nmeaData.update({'raim': raim})
+                
+                # Add radio status.
+                nmeaData.update(self.__getRadioStatus('radioStatus', payloadBin))
+        else:
+            nmeaData.update({'sentenceType': 'unsupported'})
         
         # Return our data.
-        return retVal
+        return nmeaData

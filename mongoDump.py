@@ -54,7 +54,7 @@ def serializeADSB(entry):
 # If this mongo engine is enabled...
 if config.connMongo['enabled'] == True:
     # Infinite fucking loop.
-    print("Dumping SSR data from queue to MongoDB.")
+    print("Dumping connector data from queue to MongoDB.")
     while(True) :
             try:
                     # Pull oldest entry from the queue.

@@ -403,7 +403,7 @@ function infoFactory(vehName) {
     retVal += "</table>";
   }
   
-  // ADS-B/SSR
+  // AIS
   else if (vehData[vehName].type == "airAIS") {
     // Build a ship identity string.
     var idStr = "";
@@ -411,7 +411,7 @@ function infoFactory(vehName) {
     var headingStr = "--";
     var courseOverGndStr = "--";
     var vertStatStr = "--";
-    var navStat = "--";
+    var navStatStr = "--";
     
     // We should always have an ICAO address.
     idStr += "[" + vehData[vehName].addr.toString() + "]";

@@ -357,11 +357,14 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         // If we have heading data for the vehicle
         if (('heading' in vehData[vehName]) | ('courseOverGnd' in vehData[vehName])) {
           
+          // If we have a heading, that's great.
+          if ('heading' in vehData[vehName]) {
+            vehRotation = vehData[vehName].heading;
+          }
+          
           // Pick course over ground above heading if possible.
           if ('courseOverGnd' in vehData[vehName]) {
             vehRotation = vehData[vehName].courseOverGnd;
-          } else if ('heading' in vehData[vehName]) {
-            vehRotation = vehData[vehName].heading;
           }
           
           // Create our icon for a vehicle with heading data.

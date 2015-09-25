@@ -281,6 +281,7 @@ class SubListener(threading.Thread):
 
 if __name__ == "__main__":
     # If we're enabled in config...
+    
     if config.aisStateEngine['enabled'] == True:
         print("AIS state engine starting...")
         

@@ -356,10 +356,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         
         // If we have heading data for the vehicle
         if (('heading' in vehData[vehName]) || ('courseOverGnd' in vehData[vehName])) {
-          if ('heading' in vehData[vehName]) {
-            vehRotation = vehData[vehName].heading
-          } else if ('courseOverGnd' in vehData[vehName]) {
+          if ('courseOverGnd' in vehData[vehName]) {
             vehRotation = vehData[vehName].courseOverGnd
+          } else if ('heading' in vehData[vehName]) {
+            vehRotation = vehData[vehName].heading
           }
           vehData[vehName].heading
           

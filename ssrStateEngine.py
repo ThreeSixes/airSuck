@@ -57,13 +57,19 @@ class SubListener(threading.Thread):
         self.__psObj = self.__psQ.pubsub() 
         self.__psObj.subscribe(channels)
         
-        # Type fixes.
+        # Things we want to just forward to the state engine.
+        # incoming name -> state engine name
+        self.__desiredData = {
+            
+        }
+        
+        # Conversion table for type fixing. field -> type
         self.__subject2Type = {
             'supersonic': bool,
             'emergency': bool,
-            'heading': float,
             'lat': float,
             'lon': float,
+            'heading': float,
             'velo': float,
             'alt': int,
             'evenLat': int,
@@ -80,21 +86,10 @@ class SubListener(threading.Thread):
             'fs': int
         }
         
-        # Things that should be rounded.
+        # Float rounding table for type fixer.
         self.__subject2Round = {
             'heading': 1,
-            'velo': 1,
-        }
-        
-        # Things we want to just forward to the state engine.
-        # incoming name -> state engine name
-        self.__desiredData = {
-            'aSquawk': 'aSquawk',                        
-            'vertStat': 'vertStat',
-            'src': 'lastSrc',
-            'dts': 'dts',                  
-            'heading': 'heading',
-            'type': 'type'
+            'velo': 1
         }
     
     def updateState(self, objName, cacheData):
@@ -226,13 +221,14 @@ class SubListener(threading.Thread):
             except Exception as e:
                 pprint(e)
         
-        # Round floats as needed.
-        try:
-            for thisField, places in self.__subject2Round.iteritems():
-                if thisField in retVal:
-                    retVal[thisField] = round(retVal[thisField], places)
-        except Exception as e:
-            pprint(e)
+        # For each subject we want, try to convert.
+        for subject in self.__subject2Round:
+            try:
+                # Round numbers.
+                if subject in retVal:
+                    retVal[subject] = round(retVal[subject], self.__subject2Round[subject])
+            except Exception as e:
+                pprint(e)
         
         return retVal
 
@@ -287,15 +283,10 @@ class SubListener(threading.Thread):
                 # Set up our data structure
                 data = {}
                 
-                # Add desired fields to our data dict.
-                try:
-                    for thisField, newName in self.__desiredData.iteritems():
-                        if thisField in ssrWrapped:
-                            data.update({newName: ssrWrapped[thisField]})
-                except Exception as e:
-                    pprint(e)
-                
                 ssrWrapped = self.fixDataTypes(ssrWrapped)
+                
+                # Add the type specifier to our data.
+                data.update({'type': ssrWrapped['type']})
                 
                 # Do we hvae mode s?
                 if ssrWrapped['mode'] == "s":
@@ -305,6 +296,32 @@ class SubListener(threading.Thread):
                     
                     # Set our good CRC flag to false by default.
                     crcGood = False
+                    
+                    # Do we have a matching CRC value?
+                    if ssrWrapped['frameCrc'] == ssrWrapped['cmpCrc']:
+                        # See if we have a DF type that doesn't XOR the transmitter's ICAO address with the CRC.
+                        if ssrWrapped['df'] in (17, 18, 19):
+                            # Make sure we actually have an AA.
+                            if 'icaoAAHx' in ssrWrapped:
+                                crcGood = True
+                                
+                                # Try to pull existing data!
+                                data.update(self.pullState(ssrWrapped['icaoAAHx']))
+                        
+                    else:
+                        # See if we have a DF type that XORs the transmitter's ICAO address with the CRC.
+                        if ssrWrapped['df'] in (0, 4, 5, 20, 21):
+                            # XOR the computed and frame CRC values to get a potential ICAO AA
+                            potAA = self.crcInt2Hex(ssrWrapped['frameCrc'] ^ ssrWrapped['cmpCrc'])
+                            
+                            # See if we're aware of the potential valid AA.
+                            data.update(self.pullState(potAA))
+                            
+                            # If we have info on the AA, load it.
+                            if len(data) > 0:
+                                # Make sure we assign the icaoAAHx value, and indicate we have a good CRC value.
+                                ssrWrapped.update({'icaoAAHx': potAA})
+                                crcGood = True
                     
                     # Account for DF types that we aren't sure about CRC data that could contain good stuff.
                     if ssrWrapped['df'] in (11, 16):
@@ -326,16 +343,160 @@ class SubListener(threading.Thread):
                     # If we have an aircraft address specified and a good CRC...
                     if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
                         
+                        # Mode A squawk code if we have one!
+                        if 'aSquawk' in ssrWrapped:
+                            data.update({"aSquawk": ssrWrapped['aSquawk']})
+                        
+                        # Vertical status data
+                        if 'vertStat' in ssrWrapped:
+                            data.update({"vertStat": ssrWrapped['vertStat']})
+                        
                         # Check for emergency conditions.
                         data.update(self.getEmergencyInfo(ssrWrapped))
                         
+                        # Set the last sensor we got a frame from
+                        data.update({"lastSrc": ssrWrapped['src']})
+                        
+                        # Set our datetime stamp for this data.
+                        data.update({"dts": ssrWrapped['dts']})
+                        
                         # Set our lastSeen time stamp for this data.
                         data.update({"lastSeen": ssrWrapped['dts']})
+                        
+                        # Aircraft heading
+                        if 'heading' in ssrWrapped:
+                            data.update({"heading": ssrWrapped['heading']})
+                        
+                        # Altitude
+                        if 'alt' in ssrWrapped:
+                            data.update({"alt": ssrWrapped['alt']})
+                        
+                        # Vertical rate data
+                        if 'vertRate' in ssrWrapped:
+                            data.update({"vertRate": ssrWrapped['vertRate']})
+                        
+                        # Flight status data
+                        if 'fs' in ssrWrapped:
+                            data.update({"fs": ssrWrapped['fs']})
+                            
+                        # Velocity data
+                        
+                        # For airborne aircraft
+                        if ((ssrWrapped['df'] == 17) or (ssrWrapped['df'] == 18)) and (ssrWrapped['fmt'] == 19):
+                            if 'gndspeed' in ssrWrapped:
+                                data.update({"velo": ssrWrapped['gndspeed'], "veloType": "gnd", "veloMeta": "ADS-B"})
+                            if 'airspeed' in ssrWrapped:
+                                data.update({"velo": ssrWrapped['airspeed'], "veloType": "air", "airspeedRef": ssrWrapped['airspeedRef'], "veloMeta": "ADS-B"})
+                        
+                        # Deal with vehicles on the ground here...
+                        
+                        
+                        # Supersonic?
+                        if 'supersonic' in ssrWrapped:
+                            data.update({"supersonic": ssrWrapped['supersonic']})
+                        
+                        # Surveillance status
+                        if 'ss' in ssrWrapped:
+                            data.update({"survStat": ssrWrapped['ss']})
+                        
+                        # UTC flag
+                        if 'utc' in ssrWrapped:
+                            data.update({"utc": ssrWrapped['utc']})
+                        
+                        # Decode location data.
+                        if 'evenOdd' in ssrWrapped:
+                            
+                            # Update data with even and odd raw values.
+                            if ssrWrapped['evenOdd'] == 0:
+                                # Set even data.
+                                data.update({"evenLat": ssrWrapped['rawLat'], "evenLon": ssrWrapped['rawLon'], "evenTs": ssrWrapped['dts'], "lastFmt": ssrWrapped['evenOdd']})
+                            else:
+                                # Set odd data.
+                                data.update({"oddLat": ssrWrapped['rawLat'], "oddLon": ssrWrapped['rawLon'], "oddTs": ssrWrapped['dts'], "lastFmt": ssrWrapped['evenOdd']})
+                            
+                            # If we have even and odd lat/lon data
+                            if ('evenTs' in data) and ('oddTs' in data):
+                                
+                                # Get time delta.
+                                timeDelta = datetime.timedelta(seconds=config.ssrStateEngine['cprExpireSec'])
+                                
+                                # Get the age of our even and odd data.
+                                evenAge = self.str2Datetime(data['lastSeen']) - self.str2Datetime(data['evenTs'])
+                                oddAge = self.str2Datetime(data['lastSeen']) - self.str2Datetime(data['oddTs'])
+                                
+                                # See if our lat/lon timestamps are within n seconds of each other.
+                                if (evenAge < timeDelta) and (oddAge < timeDelta):
+                                    
+                                    # Pull even and odd data.
+                                    evenData = [data['evenLat'], data['evenLon']]
+                                    oddData = [data['oddLat'], data['oddLon']]
+                                    
+                                    fmt = ssrWrapped['evenOdd']
+                                    
+                                    # Decode location
+                                    try:
+                                        # Original version:
+                                        locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
+                                        
+                                        # Location data
+                                        if type(locData) == list:
+                                            
+                                            # Since we have location data.
+                                            if ('lat' in data) and ('lon' in data):
+                                                
+                                                # See if the we have moved...
+                                                if (data['lat'] != locData[0]) and (data['lon'] != locData[1]):
+                                                    
+                                                    # Derived heading flag
+                                                    derivedHeading = False;
+                                                    
+                                                    # See if we already have a derived heading
+                                                    if 'headingMeta' in data:
+                                                        
+                                                        # If we already have a GPS derived heading, set our flag.
+                                                        if data['headingMeta'] == "GPSDerived":
+                                                            derivedHeading = True;
+                                                    
+                                                    # If we don't have a heading compute or we've already derived one compute it again assuimng we didn't just get a new one from ADS-B.
+                                                    if (not ('heading' in data) or derivedHeading) and not ('heading' in ssrWrapped):
+                                                        
+                                                        # Get the bearing based on the location we have.
+                                                        newHeading = self.asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
+                                                        # Add the heading to the traffic data
+                                                        data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
+                                            
+                                            # Set location data.
+                                            data.update({"lat": locData[0], "lon": locData[1], "locationMeta": "CPRGlobal"})
+                                    
+                                    except Exception as e:
+                                        pprint(e)
                         
                         # Enqueue processed state data.
                         self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
                         
                         # Figure out how to clear the emergency flag if we no longer have an emergency.
+                
+                elif (ssrWrapped['mode'] == "ac") and ('emergency' in ssrWrapped):
+                    
+                    # Scan for emergency flag.
+                    if 'emergency' in ssrWrapped:
+                        data.update({"emergency": ssrWrapped['emergency']})
+                    
+                    # Mode A squawk code if we have one!
+                    if 'aSquawk' in ssrWrapped:
+                        data.update({"aSquawk": ssrWrapped['aSquawk']})
+                    
+                    # Set our lastSeen time stamp for this data.
+                    data.update({"lastSeen": ssrWrapped['dts']})
+                    
+                    # Check for emergency conditions.
+                    data.update(self.getEmergencyInfo(ssrWrapped))
+                    
+                    # Enqueue processed state data.
+                    self.enqueueData(self.updateState('A-' + ssrWrapped['aSquawk'], data))
+                
+                # Get the hex data as a string
+                #pprint(ssrWrapped)
     
     def run(self):
         for work in self.__psObj.listen():

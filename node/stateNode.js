@@ -26,6 +26,16 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
+// Serve our javascript.
+app.get('/main.js', function(req, res){
+  res.sendFile(__dirname + '/main.js');
+});
+
+// Serve our CSS.
+app.get('/main.css', function(req, res){
+  res.sendFile(__dirname + '/main.css');
+});
+
 // Serve a version of jQuery.
 app.get('/jquery-2.1.4.min.js', function(req, res){
   res.sendFile(__dirname + '/jquery-2.1.4.min.js');

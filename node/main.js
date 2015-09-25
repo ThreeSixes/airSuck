@@ -450,8 +450,9 @@ function infoFactory(vehName) {
     retVal = "<table class=\"infoTable\">";
     retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">NavStat</td><td class=\"tblCell\">" + navStatStr + "</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\"></td><td class=\"tblCell\"></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
+    retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td>";
     
     // If we have some sort of emergency...
     if ('emergency' in vehData[vehName]) {

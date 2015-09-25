@@ -59,6 +59,14 @@ ssrStateEngine = {
     'hashPort': genRedisPort # The port for the above redis instance.
 };
 
+# AIS State engine settings
+aisStateEngine = {
+    'enabled': True, # Do we want to run the state engine? True = yes, False = no
+    'hashTTL': 1200, # Expire vehicles that we haven't seen in this number of seconds. Default is 1200 sec (20 min)
+    'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
+    'hashPort': genRedisPort # The port for the above redis instance.
+};
+
 #########################################
 # Settings for MongoDB storage engines. #
 #########################################

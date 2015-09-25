@@ -429,21 +429,9 @@ class SubListener(threading.Thread):
                         # Set our lastSeen time stamp for this data.
                         data.update({"lastSeen": ssrWrapped['dts']})
                         
-                        # Scan for emergency flag.
-                        if 'emergency' in ssrWrapped:
-                            data.update({"emergency": ssrWrapped['emergency']})
-                        
-                        # ID data
-                        if 'idInfo' in ssrWrapped:
-                            data.update({"idInfo": ssrWrapped['idInfo']})
-                        
-                        # Aircraft category
-                        if 'category' in ssrWrapped:
-                            data.update({"category": ssrWrapped['category']})
-                        
                         # Aircraft heading
                         if 'heading' in ssrWrapped:
-                            data.update({"heading": ssrWrapped['heading'], "headingMeta": "ADS-B"})
+                            data.update({"heading": ssrWrapped['heading']})
                         
                         # Altitude
                         if 'alt' in ssrWrapped:

@@ -291,10 +291,11 @@ class airSuckUtil:
         if (navStat >= 0) or (navStat <= 15):
             
             # The 15 "defined" navigational status values.
-            statArray = ["Underway using engine",
+            statArray = [
+                "Underway using engine",
                 "Anchored",
                 "Not under command",
-                "Restricted manoeuverability",
+                "Restricted maneuverability",
                 "Constrained by draught",
                 "Moored",
                 "Aground",

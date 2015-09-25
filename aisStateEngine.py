@@ -60,7 +60,7 @@ class SubListener(threading.Thread):
         # Things we want to just forward to the state engine.
         # incoming name -> state engine name
         self.__desiredData = {
-            'dts': 'lastSeen',
+            'dts': 'dts',
             'channel': 'lastChannel',
             'courseOverGnd': 'courseOverGnd',
             'dataOrigin': 'dataOrigin',
@@ -73,7 +73,7 @@ class SubListener(threading.Thread):
             'posAcc': 'posAcc',
             'raim': 'raim',
             'sentenceType': 'sentenceType',
-            'src': 'src',
+            'src': 'lastSrc',
             'turnRt': 'turnRt',
             'type': 'type',
             'velo': 'velo',
@@ -217,7 +217,6 @@ class SubListener(threading.Thread):
             except Exception as e:
                 pprint(e)
         
-        
         return retVal
 
     def enqueueData(self, statusData):
@@ -272,9 +271,12 @@ class SubListener(threading.Thread):
                     if thisField in aisWrapped:
                         data.update({newName: aisWrapped[thisField]})
                 
+                # Set lastSeen
+                data.update({'lastSeen': data['dts']})
+                
                 # Enqueue processed state data.
                 self.enqueueData(self.updateState(aisWrapped['mmsi'], data))
-                
+    
     def run(self):
         for work in self.__psObj.listen():
             self.worker(work)

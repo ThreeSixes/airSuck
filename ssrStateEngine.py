@@ -364,6 +364,14 @@ class SubListener(threading.Thread):
                         if 'vertStat' in ssrWrapped:
                             data.update({"vertStat": ssrWrapped['vertStat']})
                         
+                        # Category if we have one!
+                        if 'category' in ssrWrapped:
+                            data.update({"category": ssrWrapped['category']})
+                        
+                        # idIfno if we have it!
+                        if 'idInfo' in ssrWrapped:
+                            data.update({"idInfo": ssrWrapped['idInfo']})
+                        
                         # Check for emergency conditions.
                         data.update(self.getEmergencyInfo(ssrWrapped))
                         

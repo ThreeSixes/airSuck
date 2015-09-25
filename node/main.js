@@ -426,14 +426,19 @@ function infoFactory(vehName) {
       headingStr = vehData[vehName].heading;
     }
     
-    // If we have heading data...
+    // If we have course over ground data...
     if ("courseOverGnd" in vehData[vehName]) {
       cogStr = vehData[vehName].courseOverGnd;
     }
     
-    // If we have heading data...
+    // If we have navigation status data...
     if ("navStat" in vehData[vehName]) {
       navStatStr = vehData[vehName].navStat;
+    }
+    
+    // If we have navigation stuatus metadata...
+    if ("navStatMeta" in vehData[vehName]) {
+      navStatStr = vehData[vehName].navStatMeta + " (" + navStatStr + ")";
     }
     
     // If we have position data...
@@ -635,6 +640,7 @@ function handleMessage(msg){
       if (vehData[this.vehName].info.shown) {
         // Close it.
         vehData[this.vehName].info.close();
+        vehData[this.vehName].info.setContent("");
         vehData[this.vehName].info.shown = false;
       } else {
         // Set data in case we don't have it, open it, and flag it as open.

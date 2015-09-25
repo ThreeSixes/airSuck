@@ -588,8 +588,11 @@ function handleMessage(msg){
     // Update the properties for the aircraft.
     $.extend(true, vehData[vehName], msgJSON, {lastUpdate: new Date().getTime()});
     
-    // Set the content box.
-    vehData[vehName].info.setContent(infoFactory(vehName));
+    // If the info window is open, update it.
+    if (vehData[vehName].info.shown == true) {
+      // Set the content box.
+      vehData[vehName].info.setContent(infoFactory(vehName));
+    }
   } else {
     // Add a new vehicle.
     vehData[vehName] = {
@@ -634,9 +637,11 @@ function handleMessage(msg){
         vehData[this.vehName].info.close();
         vehData[this.vehName].info.shown = false;
       } else {
-        // Else, open it.
+        // Set data in case we don't have it, open it, and flag it as open.
+        vehData[this.vehName].info.setContent(infoFactory(this.vehName));
         vehData[this.vehName].info.open(map, vehData[this.vehName].marker);
         vehData[this.vehName].info.shown = true;
+        
       }
     });
     
@@ -652,9 +657,6 @@ function handleMessage(msg){
     
     // Run a second extend operation to set the marker and info window
     $.extend(true, vehData[vehName], {marker: aMarker, info: infowindow});
-    
-    // Set the content box.
-    vehData[vehName].info.setContent(infoFactory(vehName));
     
     // Set empty debugging string...
     debugStr = "";

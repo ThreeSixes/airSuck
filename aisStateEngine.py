@@ -80,6 +80,13 @@ class SubListener(threading.Thread):
             'veloType': 'veloType'
         }
         
+        # Data we don't to end up in the monogoDB
+        self.__noMongo = [
+            'navStatMeta',
+            'locationMeta',
+            'epfdMeta'
+        ]
+        
         # Conversion table for type fixing. field -> type
         self.__subject2Type = {
             'courseOverGnd': float,
@@ -226,12 +233,6 @@ class SubListener(threading.Thread):
         Put status data on a queue for processing
         """
         
-        # Things that shouldn't be stored in the mongoDB go in this list.
-        poplist = [
-            'locationMeta',
-            'epfdMeta'
-        ]
-        
         # Debug print instead of dumping data onto another queue.
         jsonData = json.dumps(statusData)
         
@@ -242,7 +243,7 @@ class SubListener(threading.Thread):
         if config.stateMongo['enabled'] == True:
             
             # Remove things we don't want stored in the mongoDB.
-            for popThing in poplist:
+            for popThing in self.__noMongo:
                 if popThing in statusData:
                     statusData.pop(popThing, None)
             
@@ -273,6 +274,10 @@ class SubListener(threading.Thread):
                 
                 # Set lastSeen
                 data.update({'lastSeen': data['dts']})
+                
+                # If we have navigation status data display it.
+                if 'navStat' in data:
+                    data.update({'navStatMeta': self.asu.getAISNavStat(data['navStat'])})
                 
                 # Enqueue processed state data.
                 self.enqueueData(self.updateState(aisWrapped['mmsi'], data))

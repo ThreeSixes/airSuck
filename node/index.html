@@ -355,7 +355,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         }
         
         // If we have heading data for the vehicle
-        if (('heading' in vehData[vehName]) | ('courseOverGnd' in vehData[vehName])) {
+        if (('heading' in vehData[vehName]) || ('courseOverGnd' in vehData[vehName])) {
           
           // If we have a heading, that's great.
           if ('heading' in vehData[vehName]) {

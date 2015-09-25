@@ -355,13 +355,14 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
         }
         
         // If we have heading data for the vehicle
-        if (('heading' in vehData[vehName]) || ('courseOverGnd' in vehData[vehName])) {
+        if (('heading' in vehData[vehName]) | ('courseOverGnd' in vehData[vehName])) {
+          
+          // Pick course over ground above heading if possible.
           if ('courseOverGnd' in vehData[vehName]) {
-            vehRotation = vehData[vehName].courseOverGnd
+            vehRotation = vehData[vehName].courseOverGnd;
           } else if ('heading' in vehData[vehName]) {
-            vehRotation = vehData[vehName].heading
+            vehRotation = vehData[vehName].heading;
           }
-          vehData[vehName].heading
           
           // Create our icon for a vehicle with heading data.
           newIcon = new google.maps.Marker({

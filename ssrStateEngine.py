@@ -378,7 +378,7 @@ class SubListener(threading.Thread):
                         
                         # Aircraft heading
                         if 'heading' in ssrWrapped:
-                            data.update({"heading": ssrWrapped['heading']})
+                            data.update({"heading": ssrWrapped['heading'], "headingMeta": "ADS-B"})
                         
                         # Altitude
                         if 'alt' in ssrWrapped:

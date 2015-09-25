@@ -312,4 +312,4 @@ class airSuckUtil:
             retVal = statArray[navStat]
         
         return retVal
-        
+

@@ -229,8 +229,8 @@ class SubListener(threading.Thread):
         # Round floats as needed.
         try:
             for thisField, places in self.__subject2Round.iteritems():
-                if thisField in aisWrapped:
-                    data[thisField] = round(data[thisField], places)
+                if thisField in retVal:
+                    retVal[thisField] = round(retVal[thisField], places)
         except Exception as e:
             pprint(e)
         

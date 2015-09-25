@@ -23,6 +23,7 @@ import json
 import threading
 import binascii
 import datetime
+import traceback
 from cprMath import cprMath
 from airSuckUtil import airSuckUtil
 from pprint import pprint
@@ -57,16 +58,8 @@ class SubListener(threading.Thread):
         self.__psObj = self.__psQ.pubsub() 
         self.__psObj.subscribe(channels)
         
-        # Things we want to just forward to the state engine.
-        # incoming name -> state engine name
-        self.__desiredData = {
-            
-        }
-        
         # Conversion table for type fixing. field -> type
         self.__subject2Type = {
-            'supersonic': bool,
-            'emergency': bool,
             'lat': float,
             'lon': float,
             'heading': float,
@@ -81,9 +74,9 @@ class SubListener(threading.Thread):
             'ss': int,
             'supersonic': int,
             'survStat': int,
-            'utc': int,
             'vertRate': int,
-            'fs': int
+            'fs': int,
+            'utcSync': int
         }
         
         # Float rounding table for type fixer.
@@ -212,23 +205,28 @@ class SubListener(threading.Thread):
         
         retVal = statusData
         
-        # For each subject we want, try to convert.
-        for subject in self.__subject2Type:
-            try:
+        try:
+            # Check for boolean-based data.
+            if 'supersonic' in retVal:
+                retVal['supersonic'] = self.str2Bool(retVal['supersonic'])
+            
+            if 'emergency' in retVal:
+                retVal['emergency'] = self.str2Bool(retVal['emergency'])
+                
+            # For each subject we want, try to convert.
+            for subject in self.__subject2Type:
                 # Run the conversion.
                 if subject in retVal:
                     retVal[subject] = self.__subject2Type[subject](retVal[subject])
-            except Exception as e:
-                pprint(e)
-        
-        # For each subject we want, try to convert.
-        for subject in self.__subject2Round:
-            try:
-                # Round numbers.
+            
+            # For each subject we want, try to convert.
+            for subject in self.__subject2Round:
                 if subject in retVal:
                     retVal[subject] = round(retVal[subject], self.__subject2Round[subject])
-            except Exception as e:
-                pprint(e)
+        except:
+            tb = traceback.format_exc()
+            print("Choked fixing data types.")
+            print(tb)
         
         return retVal
 
@@ -256,6 +254,21 @@ class SubListener(threading.Thread):
             self.__sRQ.rpush(config.stateRel['qName'], jsonData)
             
         return
+
+    def str2Bool(self, thisStr):
+        """
+        str2Bool(thisStr)
+        
+        Convert a string representing a boolean value to a boolean value. If the string is "True" or "true" this returns True. Else it returns False.
+        """
+        
+        retVal = False
+        
+        # Check for boolean-based data.
+        if (thisStr == "True") or (thisStr == "true"):
+            retVal = True
+        
+        return retVal
 
     def crcInt2Hex(self, crcInt):
         """

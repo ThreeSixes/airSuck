@@ -345,27 +345,31 @@ class dataSource(threading.Thread):
 
 # If I've been called for execution...
 if __name__ == "__main__":
-	# ... and go.
-	print("Dump1090 connector starting...")
-	
-	# Threading setup
-	threadLock = threading.Lock()
-	threadList = []
-	
-	# Create a shared redis instance
-	r = redis.StrictRedis()
-	
-	# Spin up our client threads.
-	for thisName, connData in config.aisConnSettings['connClientList'].iteritems():
-		print("Spinning up thread for " + thisName)
-		client = dataSource(thisName, connData, enqueueOn)
-		client.daemon = True
-		client.start()
-		threadList.append(client)
-	
-	# Fix bug that prevents keyboard interrupt from killing dump1090Connector.py
-	while True: time.sleep(10)
-	
-	# Shut down
-	for t in threadList:
-		t.join()
+	# If the AIS engine is enabled in config...
+	if config.aisConnSettings['enabled'] == True:
+		# ... and go.
+		print("AIS connector starting...")
+		
+		# Threading setup
+		threadLock = threading.Lock()
+		threadList = []
+		
+		# Create a shared redis instance
+		r = redis.StrictRedis()
+		
+		# Spin up our client threads.
+		for thisName, connData in config.aisConnSettings['connClientList'].iteritems():
+			print("Spinning up thread for " + thisName)
+			client = dataSource(thisName, connData, enqueueOn)
+			client.daemon = True
+			client.start()
+			threadList.append(client)
+		
+		# Fix bug that prevents keyboard interrupt from killing dump1090Connector.py
+		while True: time.sleep(10)
+		
+		# Shut down
+		for t in threadList:
+			t.join()
+	else:
+		print("AIS connector not enabled in config.")

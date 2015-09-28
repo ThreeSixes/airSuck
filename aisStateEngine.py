@@ -170,9 +170,8 @@ class SubListener(threading.Thread):
             # Update or create cached data, if we have more than just a name
             if type(cacheData) == dict:
                 
-                # Set each specified value.
-                for thisKey in cacheData:
-                    self.__redHash.hset(fullName, thisKey, cacheData[thisKey])
+                # Set all the remaining values in the cache.
+                self.__redHash.hmset(fullName, cacheData)
             
             # Set expiration on the hash entry.
             self.__redHash.expire(fullName, config.aisStateEngine['hashTTL'])

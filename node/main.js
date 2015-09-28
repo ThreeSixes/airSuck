@@ -415,6 +415,7 @@ function infoFactory(vehName) {
     var draughtStr = "--";
     var etaStr = "--";
     var shipTypeStr = "--";
+    var epfdMetaStr = "--";
     
     // If we have the vessel name...
     if ("vesselName" in vehData[vehName]) {
@@ -438,7 +439,9 @@ function infoFactory(vehName) {
     
     // If we have heading data...
     if ("heading" in vehData[vehName]) {
-      headingStr = vehData[vehName].heading;
+      if (vehData[vehName].heading != 511) {
+        headingStr = vehData[vehName].heading;
+      }
     }
     
     // If we have course over ground data...
@@ -458,9 +461,21 @@ function infoFactory(vehName) {
       }
     }
     
+    // If we have navigation status data...
+    if ("callsign" in vehData[vehName]) {
+      if (vehData[vehName].callsign != "") {
+        callsignStr = vehData[vehName].callsign;
+      }
+    }
+    
     // If we have draught data.
     if ("draught" in vehData[vehName]) {
       draughtStr = vehData[vehName].draught.toString() + " m"
+    }
+    
+    // If we have EPFD metadata...
+    if ("epfdMeta" in vehData[vehName]) {
+      epfdMetaStr = vehData[vehName].epfdMeta;
     }
     
     // If we have position data...
@@ -472,7 +487,8 @@ function infoFactory(vehName) {
     retVal = "<table class=\"infoTable\">";
     retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + "</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + " m</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">Callsign</td><td class=\"tblCell\">" + callsignStr + "</td><td class=\"tblHeader\">Position type</td><td class=\"tblCell\">" + epfdMetaStr + "</td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
     retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td></tr>";
     

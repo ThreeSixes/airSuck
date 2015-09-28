@@ -416,6 +416,7 @@ function infoFactory(vehName) {
     var etaStr = "--";
     var shipTypeStr = "--";
     var epfdMetaStr = "--";
+    var dimStr = "--";
     
     // If we have the vessel name...
     if ("vesselName" in vehData[vehName]) {
@@ -470,7 +471,7 @@ function infoFactory(vehName) {
     
     // If we have draught data.
     if ("draught" in vehData[vehName]) {
-      draughtStr = vehData[vehName].draught.toString() + " m"
+      draughtStr = vehData[vehName].draught.toString()
     }
     
     // If we have EPFD metadata...
@@ -483,11 +484,16 @@ function infoFactory(vehName) {
       posStr = vehData[vehName].lat + ", " + vehData[vehName].lon;
     }
     
+    // Figure out our dimensions.
+    if ("dimToBow" in vehData[vehName]) {
+      dimStr = (vehData[vehName].dimToBow + vehData[vehName].dimToStern).toString() + "x" + (vehData[vehName].dimToStarboard + vehData[vehName].dimToPort).toString();
+    }
+    
     // Build our table.
     retVal = "<table class=\"infoTable\">";
     retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + " m</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Size/Draught</td><td class=\"tblCell\">" + dimStr + "/" + draughtStr + " m</td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Callsign</td><td class=\"tblCell\">" + callsignStr + "</td><td class=\"tblHeader\">Position type</td><td class=\"tblCell\">" + epfdMetaStr + "</td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
     retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td></tr>";

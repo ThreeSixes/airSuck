@@ -423,6 +423,8 @@ class airSuckUtil:
             "Other Type, Reserved",
             "Other Type, Reserved",
             "Other Type"]
+        
+        return shipTypes[shipType]
     
     def getEPFDMeta(self, epfd):
         """

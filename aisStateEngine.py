@@ -77,7 +77,8 @@ class SubListener(threading.Thread):
             'turnRt': 'turnRt',
             'type': 'type',
             'velo': 'velo',
-            'veloType': 'veloType'
+            'veloType': 'veloType',
+            'epfd': 'epfd'
         }
         
         # Data we don't to end up in the monogoDB
@@ -278,6 +279,10 @@ class SubListener(threading.Thread):
                 # If we have navigation status data display it.
                 if 'navStat' in data:
                     data.update({'navStatMeta': self.asu.getAISNavStat(data['navStat'])})
+                
+                # If we have navigation status data display it.
+                if 'epfd' in data:
+                    data.update({'epfdMeta': self.asu.getEPFDMeta(data['epfd'])})
                 
                 # Enqueue processed state data.
                 self.enqueueData(self.updateState(aisWrapped['mmsi'], data))

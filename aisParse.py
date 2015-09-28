@@ -275,37 +275,6 @@ class aisParse:
         # Set radio status.
         return {desc: radioStatus}
     
-    def __getEPFDMeta(self, epfd):
-        """
-        __getPEFDMeta(epfd)
-        
-        Get EPFD metadata given an EPFD value.
-        
-        Returns a string.
-        """
-        
-        retVal = ""
-        
-        # EPFD descriptions
-        epfdDesc = ["Undefined",
-            "GPS",
-            "GLONASS",
-            "Combined GPS/GLONASS",
-            "Loran-C",
-            "Chayka",
-            "Integrated navigation system",
-            "Surveyed",
-            "Galileo"]
-        
-        # If we have an EPFD in range...
-        if epfd <= 8:
-            retVal = epfdDesc[epfd]
-        else:
-            retVal = "Unknown"
-        
-        # Return the string.
-        return retVal
-    
     def __getLocation(self, lat, lon):
         """
         __getLocation(lat, lon)
@@ -332,6 +301,51 @@ class aisParse:
             retVal = {'lat': lat, 'lon': lon}
         
         return retVal
+    
+    def __toSixer(self, srcBytes, indexStart, indexEnd):
+        """
+        __toSixer(data, indexStart, indexEnd)
+        
+        Given a bytearray containing bytes that have just been extracted from a bit vector return the 6-bit data starting with indexStart until indexEnd.
+        
+        Returns an int.
+        """
+        
+        # Set up our retun variable.
+        retVal = 0
+        
+        # Hold our current step and step count.
+        step = 0
+        stepCt = indexEnd - indexStart
+        
+        # Grab the bytes in our range...
+        for i in range(indexStart, indexEnd + 1):
+            # Shift and or the bit vector.
+            retVal = retVal | (self.__vector2Bin(srcBytes[i]) << (6 * (stepCt - step)))
+            step += 1
+        
+        # Return the int.
+        return retVal
+    
+    def __from6BitASCII(self, charInt, numChars):
+        """
+        __from6BItASCII(charInt, numChars)
+        
+        Covert 6-bit ASCII binary data as an int to an ASCII string.
+        Accepts binary number as an integer, the number of chars we expect, and returns a 6-bit char string.
+        """
+        
+        retVal = ""
+        
+        # Length of bytes we have to process
+        bitLen = numChars * 6
+        
+        # From bistromath's gr-air-modes code: https://github.com/bistromath/gr-air-modes/blob/master/python/parse.py
+        for i in range(0, numChars + 1):
+            retVal += self.__ascii6Table[charInt >> (bitLen - 6 * i) & 0x3F]
+        
+        return retVal
+    
     
     def getCRC(self, frameStr):
         """
@@ -570,7 +584,6 @@ class aisParse:
                 nmeaData.update(self.__getRadioStatus('radioStatus', payloadBin))
             
             # Base station report
-            # From http://catb.org/gpsd/AIVDM.html
             elif payloadType == 4:
                 # Set the repeat indicator.
                 nmeaData.update(self.__getRepeatIndicator(payloadBin))
@@ -608,7 +621,7 @@ class aisParse:
                 # If we have something that's defined...
                 if epfd > 0:
                     # Set the EPFD data.
-                    nmeaData.update({'epfd': epfd, 'epfdMeta': self.__getEPFDMeta(epfd)})
+                    nmeaData.update({'epfd': epfd})
                 
                 # Get spare bits
                 spare = ((self.__vector2Bin(payloadBin[23]) & 0x0f) << 4) | ((self.__vector2Bin(payloadBin[24]) & 0x3c) >> 2)
@@ -631,6 +644,112 @@ class aisParse:
                 
                 # Add radio status.
                 nmeaData.update(self.__getRadioStatus('radioStatus', payloadBin))
+            
+            # Static and voyage related data
+            elif payloadType == 5:
+                
+                # Set the repeat indicator.
+                nmeaData.update(self.__getRepeatIndicator(payloadBin))
+                
+                # Set the MMSI.
+                nmeaData.update(self.__getMMSI(payloadBin))
+                
+                # Get and set AIS version
+                aisVer = (self.__vector2Bin(payloadBin[6]) >> 2) & 0x03
+                nmeaData.update({'aisVer': aisVer})
+                
+                # Get IMO number
+                imo = (self.__toSixer(payloadBin, 6, 11) >> 2) & 0x01ffffff
+                nmeaData.update({'imo': imo})
+                
+                # Get, decode, set callsign.
+                callsignRaw = (self.__toSixer(payloadBin, 11, 18) >> 2) & 0x3ffffffffff
+                
+                # Decode callsign.
+                callSign = self.__from6BitASCII(callsignRaw, 7).replace('@','').rstrip()
+                
+                # If we have legit data set the callsign.
+                if callSign != "":
+                    nmeaData.update({'callsign': callSign})
+                
+                # Get vessel name.
+                vesselNameRaw = (self.__toSixer(payloadBin, 18, 38) >> 2) & 0xffffffffffffffffffffffffffffff
+                
+                # Decode vessel name.
+                vesselName = self.__from6BitASCII(vesselNameRaw, 20).replace('@','').rstrip()
+                
+                # Set vessel name if we have valid data
+                if vesselName != "":
+                    nmeaData.update({'vesselName': vesselName})
+                
+                # Get the ship's type
+                shipType = ((((self.__vector2Bin(payloadBin[38]) & 0x03) << 6) | self.__vector2Bin(payloadBin[39]) & 0x3f)) & 0xff
+                
+                # If we have a non-default value...
+                if shipType > 0:
+                    # Ship type
+                    nmeaData.update({'shipType': shipType})
+                
+                # Get ship dimensions...
+                dimToBow = ((((self.__vector2Bin(payloadBin[40]) & 0x03) << 3) | (self.__vector2Bin(payloadBin[41]) & 0x3f)) >> 3) & 0x01ff
+                dimToStern = ((((self.__vector2Bin(payloadBin[42]) & 0x03) << 6) | self.__vector2Bin(payloadBin[43]) & 0x3f)) & 0x01ff
+                dimToPort = self.__vector2Bin(payloadBin[44]) & 0x3f
+                dimToStarboard = self.__vector2Bin(payloadBin[45]) & 0x3f
+                
+                # Set ship dimensions...
+                nmeaData.update({'dimToBow': dimToBow, 'dimToStern': dimToStern, 'dimToPort': dimToPort, 'dimToStarboard': dimToStarboard})
+                
+                epfd = dimToStarboard = (self.__vector2Bin(payloadBin[46]) & 0x3f) >> 2
+                
+                # If we have something that's defined...
+                if epfd > 0:
+                    # Set the EPFD data.
+                    nmeaData.update({'epfd': epfd})
+                
+                # Get ETA info.
+                etaMonth = ((((self.__vector2Bin(payloadBin[45]) & 0x03) << 2) | self.__vector2Bin(payloadBin[46]) & 0x30) >> 4) & 0x0f
+                etaDay = ((((self.__vector2Bin(payloadBin[46]) & 0x0f) << 1) | self.__vector2Bin(payloadBin[47]) & 0x10) >> 5) & 0x1f
+                etaHour = (self.__vector2Bin(payloadBin[47]) & 0x1f) >> 1
+                etaMinute = self.__vector2Bin(payloadBin[48]) & 0x03
+                
+                
+                # Check to see if we have good ETA values, and set them if they're good.
+                if etaMonth > 0:
+                    nmeaData.update({'etaMonth': etaMonth})
+                
+                if etaDay > 0:
+                    nmeaData.update({'etaDay': etaDay})
+                
+                if etaHour < 24:
+                    nmeaData.update({'etaHour': etaHour})
+                
+                if etaMinute < 60:
+                    nmeaData.update({'etaMinute': etaMinute})
+                
+                # Get the ship's draught
+                draught = ((((self.__vector2Bin(payloadBin[49]) & 0x03) << 6) | self.__vector2Bin(payloadBin[50]) & 0x3f)) & 0xff
+                
+                # Draught is in 1/10m scale.
+                draught = draught * 0.1
+                
+                # Set the draught.
+                nmeaData.update({'draught': draught})
+                
+                # Get Destination.
+                destinationRaw = (self.__toSixer(payloadBin, 50, 70) >> 4) & 0xffffffffffffffffffffffffffffff
+                
+                # Decode vessel name.
+                destination = self.__from6BitASCII(destinationRaw, 20).replace('@','').rstrip()
+                
+                # Set vessel name if we have valid data
+                if destination != "":
+                    nmeaData.update({'destination': destination})
+                
+                # Get DTE
+                dte = (self.__vector2Bin(payloadBin[70]) & 0x08) >> 3
+                
+                # Set DTE
+                nmeaData.update({'dte': bool(dte)})
         else:
             nmeaData.update({'sentenceType': 'unsupported'})
         

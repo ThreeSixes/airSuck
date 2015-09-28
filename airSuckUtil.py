@@ -314,3 +314,143 @@ class airSuckUtil:
         
         return retVal
 
+    def getAISShipType(self, shipType):
+        """
+        getAISShipTYpe(shipType)
+        
+        Get the text description of a given AIS ship type. Accepts a single integer argoument.
+        Returns a string.
+        """
+        
+        # Ship types...
+        shipTypes = ["Not available (default)",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Reserved",
+            "Wing in ground (WIG), all ships of this type",
+            "Wing in ground (WIG), Hazardous cat A",
+            "Wing in ground (WIG), Hazardous cat B",
+            "Wing in ground (WIG), Hazardous cat C",
+            "Wing in ground (WIG), Hazardous cat D",
+            "Wing in ground (WIG), Reserved",
+            "Wing in ground (WIG), Reserved",
+            "Wing in ground (WIG), Reserved",
+            "Wing in ground (WIG), Reserved",
+            "Wing in ground (WIG), Reserved",
+            "Fishing",
+            "Towing",
+            "Towing: length exceeds 200m or breadth exceeds 25m",
+            "Dredging or underwater ops",
+            "Diving ops",
+            "Military ops",
+            "Sailing",
+            "Pleasure Craft",
+            "Reserved",
+            "Reserved",
+            "High speed craft (HSC), all ships of this type",
+            "High speed craft (HSC), Hazardous cat A",
+            "High speed craft (HSC), Hazardous cat B",
+            "High speed craft (HSC), Hazardous cat C",
+            "High speed craft (HSC), Hazardous cat D",
+            "High speed craft (HSC), Reserved",
+            "High speed craft (HSC), Reserved",
+            "High speed craft (HSC), Reserved",
+            "High speed craft (HSC), Reserved",
+            "High speed craft (HSC)",
+            "Pilot Vessel",
+            "Search and Rescue vessel",
+            "Tug",
+            "Port Tender",
+            "Anti-pollution equipment",
+            "Law Enforcement",
+            "Spare - Local Vessel",
+            "Spare - Local Vessel",
+            "Medical Transport",
+            "Noncombatant ship according to RR Resolution No. 18",
+            "Passenger, all ships of this type",
+            "Passenger, Hazardous cat A",
+            "Passenger, Hazardous cat B",
+            "Passenger, Hazardous cat C",
+            "Passenger, Hazardous cat D",
+            "Passenger, Reserved",
+            "Passenger, Reserved",
+            "Passenger, Reserved",
+            "Passenger, Reserved",
+            "Passenger",
+            "Cargo, all ships of this type",
+            "Cargo, Hazardous cat A",
+            "Cargo, Hazardous cat B",
+            "Cargo, Hazardous cat C",
+            "Cargo, Hazardous cat D",
+            "Cargo, Reserved",
+            "Cargo, Reserved",
+            "Cargo, Reserved",
+            "Cargo, Reserved",
+            "Cargo",
+            "Tanker, all ships of this type",
+            "Tanker, Hazardous cat A",
+            "Tanker, Hazardous cat B",
+            "Tanker, Hazardous cat C",
+            "Tanker, Hazardous cat D",
+            "Tanker, Reserved",
+            "Tanker, Reserved",
+            "Tanker, Reserved",
+            "Tanker, Reserved",
+            "Tanker",
+            "Other Type, all ships of this type",
+            "Other Type, Hazardous cat A",
+            "Other Type, Hazardous cat B",
+            "Other Type, Hazardous cat C",
+            "Other Type, Hazardous cat D",
+            "Other Type, Reserved",
+            "Other Type, Reserved",
+            "Other Type, Reserved",
+            "Other Type, Reserved",
+            "Other Type"]
+    
+    def getEPFDMeta(self, epfd):
+        """
+        getPEFDMeta(epfd)
+        
+        Get EPFD metadata given an EPFD value.
+        
+        Returns a string.
+        """
+        
+        retVal = ""
+        
+        # EPFD descriptions
+        epfdDesc = ["Undefined",
+            "GPS",
+            "GLONASS",
+            "Combined GPS/GLONASS",
+            "Loran-C",
+            "Chayka",
+            "Integrated navigation system",
+            "Surveyed",
+            "Galileo"]
+        
+        # If we have an EPFD in range...
+        if epfd <= 8:
+            retVal = epfdDesc[epfd]
+        else:
+            retVal = "Unknown"
+        
+        # Return the string.
+        return retVal

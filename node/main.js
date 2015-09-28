@@ -412,8 +412,21 @@ function infoFactory(vehName) {
     var courseOverGndStr = "--";
     var vertStatStr = "--";
     var navStatStr = "--";
+    var callsignStr = "--";
+    var draughtStr = "--";
+    var etaStr = "--";
     
-    // We should always have an ICAO address.
+    // If we have the vessel name...
+    if ("vesselName" in vehData[vehName]) {
+      idStr += vehData[vehName].vesselName + " ";
+    }
+    
+    // If we have the vessel name...
+    if ("imo" in vehData[vehName]) {
+      idStr += "(" + vehData[vehName].imo + ") ";
+    }
+    
+    // We should always have an MMSI address.
     idStr += "[" + vehData[vehName].addr.toString() + "]";
     
     // If we have velocity data...
@@ -453,6 +466,11 @@ function infoFactory(vehName) {
     retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\"></td><td class=\"tblCell\"></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
     retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td>";
+    
+    // If we have destination data...
+    if ('destination' in vehData[vehName]) {
+      retVal += "<td class=\"tblHeader\">Destination</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].destination + "</td></tr>";
+    }
     
     // If we have some sort of emergency...
     if ('emergency' in vehData[vehName]) {

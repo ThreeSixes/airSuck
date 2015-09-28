@@ -299,6 +299,10 @@ class SubListener(threading.Thread):
                 if 'epfd' in data:
                     data.update({'epfdMeta': self.asu.getEPFDMeta(data['epfd'])})
                 
+                # If we have navigation status data display it.
+                if 'shipType' in data:
+                    data.update({'shipTypeMeta': self.asu.getAISShipType(aisWrapped['shipType'])})
+                
                 # Enqueue processed state data.
                 self.enqueueData(self.updateState(aisWrapped['mmsi'], data))
     

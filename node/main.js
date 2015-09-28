@@ -410,11 +410,11 @@ function infoFactory(vehName) {
     var veloStr = "--";
     var headingStr = "--";
     var courseOverGndStr = "--";
-    var vertStatStr = "--";
     var navStatStr = "--";
     var callsignStr = "--";
     var draughtStr = "--";
     var etaStr = "--";
+    var shipTypeStr = "--";
     
     // If we have the vessel name...
     if ("vesselName" in vehData[vehName]) {
@@ -423,7 +423,9 @@ function infoFactory(vehName) {
     
     // If we have the vessel name...
     if ("imo" in vehData[vehName]) {
-      idStr += "(" + vehData[vehName].imo + ") ";
+      if (vehData[vehName] > 0) {
+        idStr += "(" + vehData[vehName].imo + ") ";
+      }
     }
     
     // We should always have an MMSI address.
@@ -446,12 +448,19 @@ function infoFactory(vehName) {
     
     // If we have navigation status data...
     if ("navStat" in vehData[vehName]) {
-      navStatStr = vehData[vehName].navStat;
+      if (vehData[vehName].navStat < 15) {
+        navStatStr = vehData[vehName].navStat;
+        
+        // If we have navigation stuatus metadata...
+        if ("navStatMeta" in vehData[vehName]) {
+          navStatStr = vehData[vehName].navStatMeta + " (" + navStatStr + ")";
+        }
+      }
     }
     
-    // If we have navigation stuatus metadata...
-    if ("navStatMeta" in vehData[vehName]) {
-      navStatStr = vehData[vehName].navStatMeta + " (" + navStatStr + ")";
+    // If we have draught data.
+    if ("draught" in vehData[vehName]) {
+      draughtStr = vehData[vehName].draught.toString() + " m"
     }
     
     // If we have position data...
@@ -463,13 +472,22 @@ function infoFactory(vehName) {
     retVal = "<table class=\"infoTable\">";
     retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\"></td><td class=\"tblCell\"></td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + "</td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
-    retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td>";
+    retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td></tr>";
+    
+    // If we have ship type data...
+    if ('shipTypeMeta' in vehData[vehName]) {
+      if (vehData[vehName].shipTypeMeta != "") {
+        retVal += "<td class=\"tblHeader\">Ship type</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].shipTypeMeta + "</td></tr>";
+      }
+    }
     
     // If we have destination data...
     if ('destination' in vehData[vehName]) {
-      retVal += "<td class=\"tblHeader\">Destination</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].destination + "</td></tr>";
+      if (vehData[vehName].destination != "") {
+        retVal += "<td class=\"tblHeader\">Destination</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].destination + "</td></tr>";
+      }
     }
     
     // If we have some sort of emergency...
@@ -698,7 +716,15 @@ function handleMessage(msg){
       debugStr = debugStr + "(" + vehData[vehName].aSquawk + ") ";
     }
     
-    // Add ICAO address.
+    // If we have an IMO...
+    if ("imo" in vehData[vehName]) {
+      // Add the IMO if it's nonzero
+      if (vehData[vehName].imo > 0) {
+        debugStr = debugStr + "(" + vehData[vehName].imo + ") ";
+      }
+    }
+    
+    // Add address.
     debugStr = debugStr + "[" + vehData[vehName].addr.toString().toUpperCase() + "] ";
     
     // Update debug window

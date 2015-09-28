@@ -100,7 +100,8 @@ class SubListener(threading.Thread):
         self.__noMongo = [
             'navStatMeta',
             'locationMeta',
-            'epfdMeta'
+            'epfdMeta',
+            'shipTypeMeta'
         ]
         
         # Conversion table for type fixing. field -> type
@@ -131,7 +132,18 @@ class SubListener(threading.Thread):
             'utcMonth': int,
             'utcSecond': int,
             'utcYear': int,
-            'posAcc': bool
+            'posAcc': bool,
+            'imo': 'imo',
+            'shipType': int,
+            'dimToBow': int,
+            'dimToStern': int,
+            'dimToPort': int,
+            'dimToStarboard': int,
+            'etaMonth': int,
+            'etaDay': int,
+            'etaHour': int,
+            'etaMinute': int,
+            'draught': float
         }
     
     def updateState(self, objName, cacheData):

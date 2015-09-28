@@ -86,7 +86,7 @@ class SubListener(threading.Thread):
             'shipType': 'shipType',
             'dimToBow': 'dimToBow',
             'dimToStern': 'dimToStern',
-            'dimToPort': 'dimpToPort',
+            'dimToPort': 'dimToPort',
             'dimToStarboard': 'dimToStarboard',
             'etaMonth': 'etaMonth',
             'etaDay': 'etaDay',

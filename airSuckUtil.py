@@ -441,10 +441,10 @@ class airSuckUtil:
         epfdDesc = ["Undefined",
             "GPS",
             "GLONASS",
-            "Combined GPS/GLONASS",
+            "GPS + GLONASS",
             "Loran-C",
             "Chayka",
-            "Integrated navigation system",
+            "Integrated nav system",
             "Surveyed",
             "Galileo"]
         

@@ -672,14 +672,15 @@ class aisParse:
                 nmeaData.update({'shipType': shipType})
                 
                 # Get ship dimensions...
-                dimToBow = ((((self.__vector2Bin(payloadBin[40]) & 0x03) << 3) | (self.__vector2Bin(payloadBin[41]) & 0x3f)) >> 3) & 0x01ff
-                dimToStern = ((((self.__vector2Bin(payloadBin[42]) & 0x03) << 6) | self.__vector2Bin(payloadBin[43]) & 0x3f)) & 0x01ff
-                dimToPort = self.__vector2Bin(payloadBin[44]) & 0x3f
-                dimToStarboard = self.__vector2Bin(payloadBin[45]) & 0x3f
+                dimToBow = ((self.__vector2Bin(payloadBin[40]) << 6) | self.__vector2Bin(payloadBin[41])) >> 3
+                dimToStern = ((self.__vector2Bin(payloadBin[41]) << 6) | self.__vector2Bin(payloadBin[42])) & 0x01ff
+                dimToPort = self.__vector2Bin(payloadBin[43]) & 0x3f
+                dimToStarboard = self.__vector2Bin(payloadBin[44]) & 0x3f
                 
                 # Set ship dimensions...
                 nmeaData.update({'dimToBow': dimToBow, 'dimToStern': dimToStern, 'dimToPort': dimToPort, 'dimToStarboard': dimToStarboard})
                 
+                # Get our EPFD bits
                 epfd = (self.__vector2Bin(payloadBin[45]) & 0x3f) >> 2
                 
                 # If we have something that's defined...
@@ -688,24 +689,14 @@ class aisParse:
                     nmeaData.update({'epfd': epfd})
                 
                 # Get ETA info.
-                etaMonth = ((((self.__vector2Bin(payloadBin[45]) & 0x03) << 2) | self.__vector2Bin(payloadBin[46]) & 0x30) >> 4) & 0x0f
-                etaDay = ((((self.__vector2Bin(payloadBin[46]) & 0x0f) << 1) | self.__vector2Bin(payloadBin[47]) & 0x10) >> 5) & 0x1f
-                etaHour = (self.__vector2Bin(payloadBin[47]) & 0x1f) >> 1
-                etaMinute = self.__vector2Bin(payloadBin[48]) & 0x03
+                etaMonth = (((self.__vector2Bin(payloadBin[45]) << 6) | self.__vector2Bin(payloadBin[46])) >> 4) & 0x0f
+                etaDay = (((self.__vector2Bin(payloadBin[46]) << 6) | self.__vector2Bin(payloadBin[47])) >> 2) & 0x1f
+                etaHour = self.__vector2Bin(payloadBin[47]) & 0x1f
+                etaMinute = self.__vector2Bin(payloadBin[48]) & 0x3f
                 
                 
-                # Check to see if we have good ETA values, and set them if they're good.
-                if etaMonth > 0:
-                    nmeaData.update({'etaMonth': etaMonth})
-                
-                if etaDay > 0:
-                    nmeaData.update({'etaDay': etaDay})
-                
-                if etaHour < 24:
-                    nmeaData.update({'etaHour': etaHour})
-                
-                if etaMinute < 60:
-                    nmeaData.update({'etaMinute': etaMinute})
+                # Set ETA data.
+                nmeaData.update({'etaMonth': etaMonth, 'etaDay': etaDay, 'etaHour': etaHour, 'etaMinute': etaMinute})
                 
                 # Get the ship's draught
                 draught = ((((self.__vector2Bin(payloadBin[49]) & 0x03) << 6) | self.__vector2Bin(payloadBin[50]) & 0x3f)) & 0xff

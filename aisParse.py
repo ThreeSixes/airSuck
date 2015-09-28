@@ -480,7 +480,7 @@ class aisParse:
                 
                 # Set that navigation status
                 nmeaData.update({'navStat': navStat})
-                    
+                
                 # Get rate of turn
                 turnRt = ((self.__vector2Bin(payloadBin[7]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[8]) & 0xc0) >> 4)
                 
@@ -711,7 +711,7 @@ class aisParse:
                 draught = ((((self.__vector2Bin(payloadBin[49]) & 0x03) << 6) | self.__vector2Bin(payloadBin[50]) & 0x3f)) & 0xff
                 
                 # Draught is in 1/10m scale.
-                draught = draught * 0.1
+                draught = round(draught * 0.1, 1)
                 
                 # Set the draught.
                 nmeaData.update({'draught': draught})

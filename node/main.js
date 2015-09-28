@@ -9,7 +9,7 @@ var ndShip = "m 0,0 -20,20 20,20 20,-20 -20,-20"
 var ndShipScl = 0.21
 var shipActive = "#0000ff"
 var shipInactive = "#000066"
-var shipAge = 3 * (60 * 1000);
+var shipAge = 5 * (60 * 1000);
 
 // Aircraft
 var dirAircraft = "m 0,0 -20,50 20,-20 20,20 -20,-50"

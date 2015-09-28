@@ -425,7 +425,7 @@ function infoFactory(vehName) {
     
     // If we have the vessel name...
     if ("imo" in vehData[vehName]) {
-      if (vehData[vehName] > 0) {
+      if (vehData[vehName].imo > 0) {
         idStr += "(" + vehData[vehName].imo + ") ";
       }
     }
@@ -485,15 +485,17 @@ function infoFactory(vehName) {
     }
     
     // Figure out our dimensions.
-    if ("dimToBow" in vehData[vehName]) {
-      dimStr = (vehData[vehName].dimToBow + vehData[vehName].dimToStern).toString() + "x" + (vehData[vehName].dimToStarboard + vehData[vehName].dimToPort).toString();
-    }
+    //if ("dimToBow" in vehData[vehName]) {
+    //  shipLen = parseInt(vehData[vehName].dimToBow) + parseInt(vehData[vehName].dimToStern)
+    //  shipWidth = parseInt(vehData[vehName].dimToStarboard) + parseInt(vehData[vehName].dimToPort)
+    //  dimStr = shipLen.toString() + "x" + shipWidth.toString();
+    //}
     
     // Build our table.
     retVal = "<table class=\"infoTable\">";
     retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Size/Draught</td><td class=\"tblCell\">" + dimStr + "/" + draughtStr + " m</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + " m</td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Callsign</td><td class=\"tblCell\">" + callsignStr + "</td><td class=\"tblHeader\">Position type</td><td class=\"tblCell\">" + epfdMetaStr + "</td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
     retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td></tr>";

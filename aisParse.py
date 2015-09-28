@@ -680,7 +680,7 @@ class aisParse:
                 # Set ship dimensions...
                 nmeaData.update({'dimToBow': dimToBow, 'dimToStern': dimToStern, 'dimToPort': dimToPort, 'dimToStarboard': dimToStarboard})
                 
-                epfd = dimToStarboard = (self.__vector2Bin(payloadBin[46]) & 0x3f) >> 2
+                epfd = (self.__vector2Bin(payloadBin[45]) & 0x3f) >> 2
                 
                 # If we have something that's defined...
                 if epfd > 0:

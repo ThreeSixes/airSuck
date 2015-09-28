@@ -417,6 +417,8 @@ function infoFactory(vehName) {
     var shipTypeStr = "--";
     var epfdMetaStr = "--";
     var dimStr = "--";
+    var turnRtStr = "--";
+    var posStr = "--";
     
     // If we have the vessel name...
     if ("vesselName" in vehData[vehName]) {
@@ -471,7 +473,11 @@ function infoFactory(vehName) {
     
     // If we have draught data.
     if ("draught" in vehData[vehName]) {
-      draughtStr = vehData[vehName].draught.toString()
+      // If we have good draught data...
+      if (vehData[vehName].draught > 0) {
+        // Set the draught string.
+        draughtStr = vehData[vehName].draught.toString()
+      }
     }
     
     // If we have EPFD metadata...
@@ -485,20 +491,38 @@ function infoFactory(vehName) {
     }
     
     // Figure out our dimensions.
-    //if ("dimToBow" in vehData[vehName]) {
-    //  shipLen = parseInt(vehData[vehName].dimToBow) + parseInt(vehData[vehName].dimToStern)
-    //  shipWidth = parseInt(vehData[vehName].dimToStarboard) + parseInt(vehData[vehName].dimToPort)
-    //  dimStr = shipLen.toString() + "x" + shipWidth.toString();
-    //}
+    if ("dimToBow" in vehData[vehName]) {
+      // 
+      dimBow = vehData[vehName].dimToBow;
+      dimStern = vehData[vehName].dimToStern;
+      dimPort = vehData[vehName].dimToPort;
+      dimStarboard = vehData[vehName].dimToStarboard;
+      
+      // See if we have good data for our dimensions.
+      if (dimBow > 0 && dimStern > 0 && dimPort > 0 && dimStarboard > 0) {
+        // Create our dimension string.
+        shipLen = dimBow + dimStern;
+        shipWidth = dimPort + dimStarboard;
+        dimStr = shipLen.toString() + "x" + shipWidth.toString();
+      }
+    }
     
     // Build our table.
     retVal = "<table class=\"infoTable\">";
     retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + " m</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">Callsign</td><td class=\"tblCell\">" + callsignStr + "</td><td class=\"tblHeader\">Position type</td><td class=\"tblCell\">" + epfdMetaStr + "</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
-    retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Position type</td><td class=\"tblCell\">" + epfdMetaStr + "</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">Callsign</td><td class=\"tblCell\">" + callsignStr + "</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + " m</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">Turn rate</td><td class=\"tblCell\">" + turnRtStr + " deg</td><td class=\"tblHeader\">Dimensions</td><td class=\"tblCell\">" + dimStr + " m</td></tr>";
+    
+    if (posStr != "--") {
+      retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
+    }
+    
+    
+    if (navStatStr != "--") {
+      retVal += "<td class=\"tblHeader\">NavStat</td><td colspan=3 class=\"tblCell\">" + navStatStr + "</td></tr>";
+    }
     
     // If we have ship type data...
     if ('shipTypeMeta' in vehData[vehName]) {
@@ -512,6 +536,11 @@ function infoFactory(vehName) {
       if (vehData[vehName].destination != "") {
         retVal += "<td class=\"tblHeader\">Destination</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].destination + "</td></tr>";
       }
+    }
+    
+    // If we have ETA data...
+    if (etaStr != "--") {
+      retVal += "<td class=\"tblHeader\">ETA</td><td colspan=3 class=\"tblCell\">" + etaStr + "</td></tr>";
     }
     
     // If we have some sort of emergency...

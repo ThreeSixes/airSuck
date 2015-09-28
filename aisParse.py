@@ -694,7 +694,6 @@ class aisParse:
                 etaHour = self.__vector2Bin(payloadBin[47]) & 0x1f
                 etaMinute = self.__vector2Bin(payloadBin[48]) & 0x3f
                 
-                
                 # Set ETA data.
                 nmeaData.update({'etaMonth': etaMonth, 'etaDay': etaDay, 'etaHour': etaHour, 'etaMinute': etaMinute})
                 

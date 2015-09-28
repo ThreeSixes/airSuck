@@ -478,18 +478,14 @@ class aisParse:
                 # Get navigation status
                 navStat = self.__vector2Bin(payloadBin[6]) & 0x0f
                 
-                # If we have a non-default navigation status number...
-                if navStat < 15:
-                    # Set that navigation status
-                    nmeaData.update({'navStat': navStat})
+                # Set that navigation status
+                nmeaData.update({'navStat': navStat})
                     
                 # Get rate of turn
                 turnRt = ((self.__vector2Bin(payloadBin[7]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[8]) & 0xc0) >> 4)
                 
-                # If the turn rate isn't 128 set it.
-                if turnRt != 128:
-                    # Set rate of turn
-                    nmeaData.update({'turnRt': turnRt})
+                # Set rate of turn
+                nmeaData.update({'turnRt': turnRt})
                     
                 #### TODO: CREATE METHOD TO HANDLE TURN RATE DATA #####
                 
@@ -530,21 +526,17 @@ class aisParse:
                 # Get course over ground
                 cog = ((self.__vector2Bin(payloadBin[19]) & 0x0f) << 8) | ((self.__vector2Bin(payloadBin[20]) & 0x3f) << 2) | ((self.__vector2Bin(payloadBin[21]) & 0x30) >> 4)
                 
-                # If we have a valid course over ground...
-                if cog != 3600:
-                    # Convert course over ground to be in tenths of a degree.
-                    cog = round(cog / 10.0, 1)
+                # Convert course over ground to be in tenths of a degree.
+                cog = round(cog / 10.0, 1)
                     
-                    # Course over the ground.
-                    nmeaData.update({'courseOverGnd': cog})
+                # Course over the ground.
+                nmeaData.update({'courseOverGnd': cog})
                 
                 # Get heading
                 heading = ((self.__vector2Bin(payloadBin[21]) & 0x0f) << 5) | ((self.__vector2Bin(payloadBin[22]) & 0x3e) >> 1)
                 
-                # If we have a valid course over ground...
-                if heading != 511:
-                    # Course over the ground.
-                    nmeaData.update({'heading': heading})
+                # Set heading.
+                nmeaData.update({'heading': heading})
                 
                 # Get the timestamp.
                 timestamp = ((self.__vector2Bin(payloadBin[22]) & 0x01) << 5) | ((self.__vector2Bin(payloadBin[23]) & 0x3e) >> 1)
@@ -555,18 +547,14 @@ class aisParse:
                 # Get the maneuver indicator / blue sign
                 maneuver = ((self.__vector2Bin(payloadBin[23]) & 0x01) << 1) | ((self.__vector2Bin(payloadBin[24]) & 0x20) >> 5)
                 
-                # If we have a non-default value
-                if maneuver > 0:
-                    # Set the maneuver indicator.
-                    nmeaData.update({'maneuverBlueSign': maneuver})
+                # Set the maneuver indicator.
+                nmeaData.update({'maneuverBlueSign': maneuver})
                 
                 # Get the spare bits
                 spare = (self.__vector2Bin(payloadBin[23]) & 0x1c) >> 2
                 
-                # If we have a non-zero value in the spare bits...
-                if spare > 0:
-                    # Set the spare bits
-                    nmeaData.update({'spare': spare})
+                # Set the spare bits
+                nmeaData.update({'spare': spare})
                 
                 # Get the spare bits
                 raim = (self.__vector2Bin(payloadBin[23]) & 0x02) >> 1
@@ -618,17 +606,14 @@ class aisParse:
                 # Get the EPFD
                 epfd = self.__vector2Bin(payloadBin[22]) & 0x0f
                 
-                # If we have something that's defined...
-                if epfd > 0:
-                    # Set the EPFD data.
-                    nmeaData.update({'epfd': epfd})
+                # Set the EPFD data.
+                nmeaData.update({'epfd': epfd})
                 
                 # Get spare bits
                 spare = ((self.__vector2Bin(payloadBin[23]) & 0x0f) << 4) | ((self.__vector2Bin(payloadBin[24]) & 0x3c) >> 2)
                 
                 # Set spare bits
-                if spare > 0:
-                    nmeaData.update({'spare': spare})
+                nmeaData.update({'spare': spare})
                 
                 # Get the spare bits
                 raim = (self.__vector2Bin(payloadBin[24]) & 0x02) >> 1
@@ -668,9 +653,8 @@ class aisParse:
                 # Decode callsign.
                 callSign = self.__from6BitASCII(callsignRaw, 7).replace('@','').rstrip()
                 
-                # If we have legit data set the callsign.
-                if callSign != "":
-                    nmeaData.update({'callsign': callSign})
+                # Set the callsign.
+                nmeaData.update({'callsign': callSign})
                 
                 # Get vessel name.
                 vesselNameRaw = (self.__toSixer(payloadBin, 18, 38) >> 2) & 0xffffffffffffffffffffffffffffff
@@ -678,17 +662,14 @@ class aisParse:
                 # Decode vessel name.
                 vesselName = self.__from6BitASCII(vesselNameRaw, 20).replace('@','').rstrip()
                 
-                # Set vessel name if we have valid data
-                if vesselName != "":
-                    nmeaData.update({'vesselName': vesselName})
+                # Set vessel name.
+                nmeaData.update({'vesselName': vesselName})
                 
                 # Get the ship's type
                 shipType = ((((self.__vector2Bin(payloadBin[38]) & 0x03) << 6) | self.__vector2Bin(payloadBin[39]) & 0x3f)) & 0xff
                 
-                # If we have a non-default value...
-                if shipType > 0:
-                    # Ship type
-                    nmeaData.update({'shipType': shipType})
+                # Set ship type.
+                nmeaData.update({'shipType': shipType})
                 
                 # Get ship dimensions...
                 dimToBow = ((((self.__vector2Bin(payloadBin[40]) & 0x03) << 3) | (self.__vector2Bin(payloadBin[41]) & 0x3f)) >> 3) & 0x01ff
@@ -742,8 +723,7 @@ class aisParse:
                 destination = self.__from6BitASCII(destinationRaw, 20).replace('@','').rstrip()
                 
                 # Set vessel name if we have valid data
-                if destination != "":
-                    nmeaData.update({'destination': destination})
+                nmeaData.update({'destination': destination})
                 
                 # Get DTE
                 dte = (self.__vector2Bin(payloadBin[70]) & 0x08) >> 3

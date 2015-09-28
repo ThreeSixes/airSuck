@@ -78,7 +78,22 @@ class SubListener(threading.Thread):
             'type': 'type',
             'velo': 'velo',
             'veloType': 'veloType',
-            'epfd': 'epfd'
+            'epfd': 'epfd',
+            'aisVer': 'aisVer',
+            'imo': 'imo',
+            'callsign': 'callsign',
+            'vesselName': 'vesselName',
+            'shipType': 'shipType',
+            'dimToBow': 'dimToBow',
+            'dimToStern': 'dimToStern',
+            'dimToPort': 'dimpToPort',
+            'dimToStarboard': 'dimToStarboard',
+            'etaMonth': 'etaMonth',
+            'etaDay': 'etaDay',
+            'etaHour': 'etaHour',
+            'etaMinute': 'etaMinute',
+            'draught': 'draught',
+            'destination': 'destination'
         }
         
         # Data we don't to end up in the monogoDB

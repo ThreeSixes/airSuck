@@ -25,10 +25,10 @@ import threading
 import errno
 import binascii
 import hashlib
-import aisParse
 import traceback
 from socket import socket
 from pprint import pprint
+from libAirSuck import aisParse
 
 
 ##########
@@ -62,7 +62,7 @@ class dataSource(threading.Thread):
 		self.myName = myName
 		self.AISSrc = AISSrc
 		self.enqueue = enqueue
-		self.__aisParser = aisParse.aisParse()
+		self.__aisParser = aisParse()
 		
 		# Redis queues and entities
 		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])

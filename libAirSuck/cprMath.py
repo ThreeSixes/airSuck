@@ -120,7 +120,7 @@ class cprMath():
         #This checks to see if the latitudes of the reports straddle a transition boundary
         #If so, you can't get a globally-resolvable location.
         if self.__nl(rLatEven) != self.__nl(rLatOdd):
-            raise CPRBoundaryStraddleError
+            raise ValueError("CPR boundary straddle error.")
         
         if mostRecent == 0:
             rLat = rLatEven

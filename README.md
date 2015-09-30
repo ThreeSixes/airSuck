@@ -1,6 +1,20 @@
-AirSuck is an ADS-B/SSR processing and storage project that uses the dump1090 project to tune into and provide binary SSR data. It is designed to be used in a distributed fashion with support for multiple dump1090 instances as data sources, input data deduplication, MLAT pass-though, and employs REDIS for queueing and deduplication of data, as well as MongoDB for data storage. It should be possible to use some of the libraries classes such as ssrParse.py and cprMath.py with other Python projects, and connectors for multiple data inputs and outputs can be developed to expand supported data source applications and destination applications. This application is designed to be modular and to support operation across multiple hosts.
+AirSuck is an ADS-B/SSR and AIS processing, storage, and display application with Google Maps integration.
 
-Future support will include ACARS data handling, and AIS as well.
+Features:
+ - GPLv3 license.
+ - Uses dump1090 binary output to proces SSR frames.
+ - Uses a generic AIS TCP port to get AIS data frames.
+ - Supports multiple data sources simultaneously with input data deduplication to prevent data overlap for causing problems.
+ - dump1090 MLAT passthrough supported, but not yet implemented.
+ - Optionally stores data in MongoDB.
+ - Can easily be used in a distributed architecture for scalability.
+ - Real-time data display with Google Maps integration uisng Node.JS
+ - The architecture is designed to easily integrate with other software projects using Redis queues or MongoDB queries.
+ - The libAirSuck package can be used in part or entirely by other python projects to process telemetry data.
+   - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, and cprMath.py.
+
+Future support for ACARS data and using the FAA downloadable aircraft database to provide additional aircraft data are planned in future releases. 
+
 
 File list:
 
@@ -14,10 +28,11 @@ File list:
   - node/dump1090Client.js - dump1090 node.js submitter for connecting to dump1090Srv.py.
 
 Libraries:
-  - aisParse.py - Supports decoding of AIS sentences.
-  - ssrParse.py - Supports decoding of binary ADS-B data into relevant fields.
-  - cprMath.py - Supports handling of Compact Position Reporting data.
-  - airSuckUtil.py - Collection of tools for unit conversion, algorithms and functions for geographic data processing.
+  - libAirSuck/ - Package folder for libAirSuck which includes parsers, etc.
+  - libAirSuck/aisParse.py - Supports decoding of AIS sentences.
+  - libAirSuck/ssrParse.py - Supports decoding of binary ADS-B data into relevant fields.
+  - libAirSuck/cprMath.py - Supports handling of Compact Position Reporting data.
+  - libAirSuck/airSuckUtil.py - Collection of tools for unit conversion, algorithms and functions for geographic data processing.
 
 Clients:
   - sub2Dump1090.py - Feeds aggregated SSR data on the pub/sub queue from dump1090Connector.py and other sources back into dump1090 instances for testing purposes.
@@ -46,3 +61,11 @@ Support config files:
 AirSuck Geospatial viewer web page:
   - node/index.html - Main page served when you're connected to the stateNode service with a browser. This page displays data about vehicles being received by airSuck on Google Maps.
   - node/jquery-2.1.4.min.js - jQuery javascript library served locally. (See https://jquery.com)
+  
+Documentation:
+  - docs/airSuck data dictionary.ods - Data dictionary for JSON data passed between components of airSuck.
+
+
+Acknowledgements:
+  - This project uses code from Bistromath's gr-modes project (https://github.com/bistromath/gr-air-modes), and from MalcomRobb's dump1090 (https://github.com/MalcolmRobb/dump1090).
+  - Matthew Lambert for a lot of work on the Google Maps integration.

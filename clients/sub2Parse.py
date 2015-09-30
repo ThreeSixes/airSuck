@@ -15,21 +15,23 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 import sys
 sys.path.append("..")
 
+try:
+	import config
+except:
+	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
 import redis
 import time
 import json
 import threading
 import binascii
 from pprint import pprint
-from ssrParse import ssrParse
+from libAirSuck import ssrParse
+
 
 #################
 # Configuration #
 #################
-
-# Which queue do we subscribe to?
-targetSub = "airFeed"
-targetHost = "brick"
 
 # Set up the SSR parser
 ssrEngine = ssrParse()
@@ -59,39 +61,38 @@ class SubListener(threading.Thread):
         
         # Make sure we got good data from json.loads
         if (type(ssrWrapped) == dict):
-            
-            # Set up dict to hold our reprocessed data.
-            ssrParsed = {}
-            
-            # Get relevant data added by sources, etc.
-            ssrParsed.update({"src": ssrWrapped['src']})
-            ssrParsed.update({"dts": ssrWrapped['dts']})
-            ssrParsed.update({"type": ssrWrapped['type']})
-            ssrParsed.update({"dataOrigin": ssrWrapped['dataOrigin']})
-            ssrParsed.update({"data": ssrWrapped['data']})
-            
-            # Get the hex data as a string
-            strMsg = ssrWrapped['data']
-            
-            # Convert the ASCII hex data to a byte array.
-            binData = bytearray(binascii.unhexlify(strMsg))
-            
-            # Parse the SSR data as a dict.
-            parsed = ssrEngine.ssrParse(binData)
-            
-            # Add the processed fields to our existing info.
-            ssrParsed.update(parsed)
-            
-            # Now sort the data by key alphabetically for easy viewing.
-            sorted(ssrParsed)
-            
-            # Flatten the data so it's more easily searched.
-            jsonData = json.dumps(ssrParsed)
-            
-            # Dump the data
-            print(jsonData)
-        
-        
+            if ssrWrapped['type'] == "airSSR":
+                # Set up dict to hold our reprocessed data.
+                ssrParsed = {}
+                
+                # Get relevant data added by sources, etc.
+                ssrParsed.update({"src": ssrWrapped['src']})
+                ssrParsed.update({"dts": ssrWrapped['dts']})
+                ssrParsed.update({"type": ssrWrapped['type']})
+                ssrParsed.update({"dataOrigin": ssrWrapped['dataOrigin']})
+                ssrParsed.update({"data": ssrWrapped['data']})
+                
+                # Get the hex data as a string
+                strMsg = ssrWrapped['data']
+                
+                # Convert the ASCII hex data to a byte array.
+                binData = bytearray(binascii.unhexlify(strMsg))
+                
+                # Parse the SSR data as a dict.
+                parsed = ssrEngine.ssrParse(binData)
+                
+                # Add the processed fields to our existing info.
+                ssrParsed.update(parsed)
+                
+                # Now sort the data by key alphabetically for easy viewing.
+                sorted(ssrParsed)
+                
+                # Flatten the data so it's more easily searched.
+                jsonData = json.dumps(ssrParsed)
+                
+                # Dump the data
+                print(jsonData)
+    
     def run(self):
         for work in self.pubsub.listen():
             self.worker(work)
@@ -100,10 +101,10 @@ if __name__ == "__main__":
     print("ADSB subscription queue data parsing test engine starting...")
     
     # Set up Redis queues.
-    r = redis.Redis(host=targetHost)
+    r = redis.Redis(host=config.connPub['host'], port=config.connPub['port'])
     
     # Start up our ADS-B parser
-    client = SubListener(r, [targetSub])
+    client = SubListener(r, [config.connPub['qName']])
     client.daemon = True
     # .. and go.
     client.start()

@@ -52,14 +52,14 @@ class SubListener(threading.Thread):
 		
 		# Make sure we got good data from json.loads
 		if (type(stateWrapped) == dict):
-			locStr = ""
+			locStr = "SSR -> "
 			
 			if stateWrapped['type'] == "airSSR":
 				
 				if 'lat' in stateWrapped:
 					# If we have ID data for the flight put it in.
 					if 'idInfo' in stateWrapped:
-						locStr = stateWrapped['idInfo'] + " "
+						locStr =  locStr + stateWrapped['idInfo'] + " "
 					
 					# If we know the aircraft's squawk code add it, too.
 					if 'aSquawk' in stateWrapped:

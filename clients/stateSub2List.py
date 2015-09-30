@@ -52,64 +52,66 @@ class SubListener(threading.Thread):
         
         # Make sure we got good data from json.loads
         if (type(stateWrapped) == dict):
-            locStr = ""
-            
-            # If we have ID data for the flight put it in.
-            if 'idInfo' in stateWrapped:
-                locStr = stateWrapped['idInfo'] + " "
-            
-            # If we know the aircraft's squawk code add it, too.
-            if 'aSquawk' in stateWrapped:
-                locStr = locStr + "(" + stateWrapped['aSquawk'] + ") " 
-                
-            # Add ICAO AA address.
-            locStr = locStr + "[" + stateWrapped['addr'] + "]: "
-            
-            if 'lat' in stateWrapped:
-                # Add coordinates.
-                locStr = locStr + str(stateWrapped['lat']) + ", " + str(stateWrapped['lon'])
-                
-            # If we know the altitude put it in, too.
-            if 'alt' in stateWrapped:
-                locStr = locStr + " @ " + str(stateWrapped['alt']) + " ft"
-                
-            # If we know the vertical rate put it in as well.
-            if 'vertRate' in stateWrapped:
-                signExtra = ""
-                
-                # Determine sign.
-                if stateWrapped['vertRate'] > 0:
-                    signExtra = "+"
-                    
-                # Add sign and unit to string.
-                locStr = locStr + " (" + signExtra + str(stateWrapped['vertRate']) + " ft/min)"
-                
-            if 'velo' in stateWrapped:
-                
-                if 'supersonic' in stateWrapped:
-                    if stateWrapped['supersonic'] == True:
-                        ssExtra = "**"
-                    else:
-                        ssExtra = ""
-                
-                locStr = locStr + ", " + ssExtra + str(stateWrapped['velo']) + " kt (" + stateWrapped['veloType'] + ")"
-                
-            # Put in the heading if we know it.
-            if 'heading' in stateWrapped:
-                locStr = locStr + ", " + str(stateWrapped['heading']) + " deg"
-                
-            # Add aircraft category if we know it.
-            if 'category' in stateWrapped:
-                locStr = locStr + ", cat " + stateWrapped['category']
-            
-            if 'fs' in stateWrapped:
-                locStr = locStr + " [" + str(stateWrapped['fs']) + "]"
-            
-            # Add vertical status if we know it (air/ground)
-            if 'vertStat' in stateWrapped:
-                locStr = locStr + " (" + stateWrapped['vertStat'] + ")"
-            
-            print(locStr)
+	    if stateWrapped['type'] == "airSSR":
+	    
+		locStr = "SSR -> "
+		
+		# If we have ID data for the flight put it in.
+		if 'idInfo' in stateWrapped:
+		    locStr = locStr + stateWrapped['idInfo'] + " "
+		
+		# If we know the aircraft's squawk code add it, too.
+		if 'aSquawk' in stateWrapped:
+		    locStr = locStr + "(" + stateWrapped['aSquawk'] + ") " 
+		    
+		# Add ICAO AA address.
+		locStr = locStr + "[" + stateWrapped['addr'] + "]: "
+		
+		if 'lat' in stateWrapped:
+		    # Add coordinates.
+		    locStr = locStr + str(stateWrapped['lat']) + ", " + str(stateWrapped['lon'])
+		    
+		# If we know the altitude put it in, too.
+		if 'alt' in stateWrapped:
+		    locStr = locStr + " @ " + str(stateWrapped['alt']) + " ft"
+		    
+		# If we know the vertical rate put it in as well.
+		if 'vertRate' in stateWrapped:
+		    signExtra = ""
+		    
+		    # Determine sign.
+		    if stateWrapped['vertRate'] > 0:
+			signExtra = "+"
+			
+		    # Add sign and unit to string.
+		    locStr = locStr + " (" + signExtra + str(stateWrapped['vertRate']) + " ft/min)"
+		    
+		if 'velo' in stateWrapped:
+		    
+		    if 'supersonic' in stateWrapped:
+			if stateWrapped['supersonic'] == True:
+			    ssExtra = "**"
+			else:
+			    ssExtra = ""
+		    
+		    locStr = locStr + ", " + ssExtra + str(stateWrapped['velo']) + " kt (" + stateWrapped['veloType'] + ")"
+		    
+		# Put in the heading if we know it.
+		if 'heading' in stateWrapped:
+		    locStr = locStr + ", " + str(stateWrapped['heading']) + " deg"
+		    
+		# Add aircraft category if we know it.
+		if 'category' in stateWrapped:
+		    locStr = locStr + ", cat " + stateWrapped['category']
+		
+		if 'fs' in stateWrapped:
+		    locStr = locStr + " [" + str(stateWrapped['fs']) + "]"
+		
+		# Add vertical status if we know it (air/ground)
+		if 'vertStat' in stateWrapped:
+		    locStr = locStr + " (" + stateWrapped['vertStat'] + ")"
+		
+		print(locStr)
         
         
     def run(self):

@@ -690,7 +690,7 @@ class aisParse:
                 
                 # Get ETA info.
                 etaMonth = (((self.__vector2Bin(payloadBin[45]) << 6) | self.__vector2Bin(payloadBin[46])) >> 4) & 0x0f
-                etaDay = (((self.__vector2Bin(payloadBin[46]) << 6) | self.__vector2Bin(payloadBin[47])) >> 2) & 0x1f
+                etaDay = (((self.__vector2Bin(payloadBin[46]) << 6) | self.__vector2Bin(payloadBin[47])) >> 5) & 0x1f
                 etaHour = self.__vector2Bin(payloadBin[47]) & 0x1f
                 etaMinute = self.__vector2Bin(payloadBin[48]) & 0x3f
                 

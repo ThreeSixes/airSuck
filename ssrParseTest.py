@@ -1,5 +1,5 @@
 # Test decoding of SSR frames. Test subjects go in the someFrames array.
-from ssrParse import ssrParse
+from libAirSuck import ssrParse
 from pprint import pprint
 import binascii
 

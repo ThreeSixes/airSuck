@@ -25,7 +25,7 @@ import time
 import json
 import threading
 import datetime
-from airSuckUtil import airSuckUtil
+from libAirSuck import airSuckUtil
 from pprint import pprint
 
 planes = {

@@ -30,6 +30,7 @@ import errno
 import binascii
 import ssrParse
 import hashlib
+from libAirSuck import ssrParse
 from pprint import pprint
 
 ########################
@@ -61,7 +62,7 @@ class d1090Connector():
 		self.__dedupe = redis.StrictRedis(host=config.d1090ConnSettings['dedupeHost'], port=config.d1090ConnSettings['dedupePort'])
 		
 		# Create our SSR parser.
-		self.__ssrParser = ssrParse.ssrParse()
+		self.__ssrParser = ssrParse()
 	
 	def __log(self, logEvt):
 		"""

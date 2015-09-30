@@ -25,10 +25,9 @@ import threading
 import errno
 import binascii
 import hashlib
-import ssrParse
 from socket import socket
 from pprint import pprint
-
+from libAirSuck import ssrParse
 
 ##########
 # Config #
@@ -57,7 +56,7 @@ class dataSource(threading.Thread):
 		# Extend properties to be class-wide.
 		self.myName = myName
 		self.dump1090Src = dump1090Src
-		self.__ssrParser = ssrParse.ssrParse()
+		self.__ssrParser = ssrParse()
 		
 		# Redis queues and entities
 		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])

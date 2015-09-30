@@ -23,17 +23,13 @@ import json
 import threading
 import binascii
 import datetime
-from cprMath import cprMath
-from airSuckUtil import airSuckUtil
+from libAirSuck import airSuckUtil
 from pprint import pprint
 
 
 ##################
 # Global objects #
 ##################
-
-# CPR stuff.
-cprProc = cprMath()
 
 ##############################
 # Classes for handling data. #

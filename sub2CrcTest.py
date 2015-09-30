@@ -23,7 +23,7 @@ import json
 import threading
 import binascii
 from pprint import pprint
-from ssrParse import ssrParse
+from libAirSuck import ssrParse
 
 #################
 # Configuration #
@@ -68,39 +68,44 @@ class SubListener(threading.Thread):
         # Make sure we got good data from json.loads
         if (type(ssrWrapped) == dict):
             
-            # Get the hex data as a string
-            strMsg = ssrWrapped['data']
-            
-            # Convert the ASCII hex data to a byte array.
-            binData = bytearray(binascii.unhexlify(strMsg))
-            
-            # Parse the SSR data as a dict.
-            parsed = ssrEngine.ssrParse(binData)
-            
-            # Add the processed fields to our existing info.
-            ssrWrapped.update(parsed)
-            
-            # Make sure we have the necessary CRC data.
-            if ('frameCrc' in ssrWrapped) and ('cmpCrc' in ssrWrapped):
+            # If we have SSR data from dump1090...
+            if ssrWrapped['type'] == "airSSR":
                 
-                # Get the CRC values as hex strings for easy user viewing.
-                rxCrc = self.crcInt2Hex(ssrWrapped['frameCrc'])
-                cmpCrc = self.crcInt2Hex(ssrWrapped['cmpCrc'])
-                
-                # XOR the CRC values together to get a "remainder".
-                xorInt = ssrWrapped['frameCrc'] ^ ssrWrapped['cmpCrc']
-                
-                # Convert our "remainder" to hex.
-                xorCrc = self.crcInt2Hex(xorInt)
-                
-                # And dump a message about how we're doing.
-                print("===== DF " + str(ssrWrapped['df']))
-                print("RX'd CRC:  " + rxCrc)
-                print("CMP'd CRC: " + cmpCrc)
-                print("XOR CRCs:  " + xorCrc)
-                if ssrWrapped['frameCrc'] == ssrWrapped['cmpCrc']:
-                    print("** CRC OK **")
-                print("")
+                # And if the data actually came from dump1090...
+                if ssrWrapped['dataOrigin'] == "dump1090":
+                    # Get the hex data as a string
+                    strMsg = ssrWrapped['data']
+                    
+                    # Convert the ASCII hex data to a byte array.
+                    binData = bytearray(binascii.unhexlify(strMsg))
+                    
+                    # Parse the SSR data as a dict.
+                    parsed = ssrEngine.ssrParse(binData)
+                    
+                    # Add the processed fields to our existing info.
+                    ssrWrapped.update(parsed)
+                    
+                    # Make sure we have the necessary CRC data.
+                    if ('frameCrc' in ssrWrapped) and ('cmpCrc' in ssrWrapped):
+                        
+                        # Get the CRC values as hex strings for easy user viewing.
+                        rxCrc = self.crcInt2Hex(ssrWrapped['frameCrc'])
+                        cmpCrc = self.crcInt2Hex(ssrWrapped['cmpCrc'])
+                        
+                        # XOR the CRC values together to get a "remainder".
+                        xorInt = ssrWrapped['frameCrc'] ^ ssrWrapped['cmpCrc']
+                        
+                        # Convert our "remainder" to hex.
+                        xorCrc = self.crcInt2Hex(xorInt)
+                        
+                        # And dump a message about how we're doing.
+                        print("===== DF " + str(ssrWrapped['df']))
+                        print("RX'd CRC:  " + rxCrc)
+                        print("CMP'd CRC: " + cmpCrc)
+                        print("XOR CRCs:  " + xorCrc)
+                        if ssrWrapped['frameCrc'] == ssrWrapped['cmpCrc']:
+                            print("** CRC OK **")
+                        print("")
     
     def run(self):
         for work in self.pubsub.listen():

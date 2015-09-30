@@ -65,23 +65,28 @@ class SubListener(threading.Thread):
         # Make sure we pared the JSON correctly.
         if (type(ssrWrapped) == dict):
             
-            # Define start of data char
-            dataHdr = "*"
-            
-            # Set the data body.
-            dataBody = ssrWrapped['data']
-            
-            # Do we have MLAT data coming in?
-            if 'mlatData' in ssrWrapped:
+            # If we have SSR data from dump1090...
+            if ssrWrapped['type'] == "airSSR":
                 
-                # Set the header to an MLAT header
-                dataHdr = "@"
-                
-                # Prepend the MLAT data on the data body.
-                dataBody = ssrWrapped['mlatData'] + dataBody
-            
-            # Send the data over to the target dump1090
-            dSock.sendall((dataHdr + dataBody + ";\n"))
+                # And if the data actually came from dump1090...
+                if ssrWrapped['dataOrigin'] == "dump1090":
+                    # Define start of data char
+                    dataHdr = "*"
+                    
+                    # Set the data body.
+                    dataBody = ssrWrapped['data']
+                    
+                    # Do we have MLAT data coming in?
+                    if 'mlatData' in ssrWrapped:
+                        
+                        # Set the header to an MLAT header
+                        dataHdr = "@"
+                        
+                        # Prepend the MLAT data on the data body.
+                        dataBody = ssrWrapped['mlatData'] + dataBody
+                    
+                    # Send the data over to the target dump1090
+                    dSock.sendall((dataHdr + dataBody + ";\n"))
 
     def run(self):
         """

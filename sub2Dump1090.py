@@ -70,6 +70,7 @@ class SubListener(threading.Thread):
                 
                 # And if the data actually came from dump1090...
                 if ssrWrapped['dataOrigin'] == "dump1090":
+                    
                     # Define start of data char
                     dataHdr = "*"
                     

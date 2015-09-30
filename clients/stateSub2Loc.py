@@ -30,9 +30,6 @@ from pprint import pprint
 # Configuration #
 #################
 
-# Which queue do we subscribe to?
-targetSub = "airStateFeed"
-targetHost = 'brick'
 
 ##############################
 # Classes for handling data. #

@@ -24,8 +24,8 @@ import threading
 import binascii
 import datetime
 import traceback
-from cprMath import cprMath
-from airSuckUtil import airSuckUtil
+from libAirsSuck import cprMath
+from libAirsSuck import airSuckUtil
 from pprint import pprint
 
 

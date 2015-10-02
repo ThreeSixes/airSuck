@@ -25,6 +25,7 @@ import threading
 import errno
 import binascii
 import hashlib
+import traceback
 from socket import socket
 from pprint import pprint
 from libAirSuck import ssrParse
@@ -49,7 +50,7 @@ class dataSource(threading.Thread):
 	A generic class that represents a given dump1090 data source
 	"""
 	 
-	def __init__(self, myName, dump1090Src,):
+	def __init__(self, myName, dump1090Src):
 		print("Init thread for " + myName)
 		threading.Thread.__init__(self)
 		
@@ -58,10 +59,45 @@ class dataSource(threading.Thread):
 		self.dump1090Src = dump1090Src
 		self.__ssrParser = ssrParse()
 		
+		# This keeps track of the number of seconds since our last connection.
+		self.__lastEntry = 0
+		
 		# Redis queues and entities
 		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
 		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
 		self.__dedeupe = redis.StrictRedis(host=config.d1090ConnSettings['dedupeHost'], port=config.d1090ConnSettings['dedupePort'])
+	
+	# Make sure we have data. If we don't throw an exception.
+	def watchdog(self):
+		"""
+		watchdog()
+		
+		Check this thread to see if it has not recieved data in the given thread timeout.
+		"""
+		
+		try:
+			# Check to see if our last entry was inside the timeout window.
+			if self.__lastEntry >= self.dump1090Src['threadTimeout']:
+				# Stop the watchdog.
+				self.__myWatchdog.cancel()
+				
+				# Puke if we have been running for too long without data.
+				raise IOError(self.myName + ": No data recieved in " + str(self.dump1090Src['threadTimeout']) + " sec. Restarting connection.")
+			else:
+				# Restart our watchdog.
+				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+				self.__myWatchdog.start()
+		except Exception as e:
+			# Stop the watchdog to avoid spawning more than one.
+			self.__myWatchdog.cancel()
+			
+			# Dump the exception and restart.
+			tb = traceback.format_exc()
+			print(tb)
+			self.run()
+		
+		# Increment our last entry.
+		self.__lastEntry += 1
 	
 	def run(self):
 		"""run
@@ -100,6 +136,11 @@ class dataSource(threading.Thread):
 			
 			# Try to read a lone from our established socket.
 			try:
+				# The watchdog should be run every second.
+				self.__lastEntry = 0
+				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+				self.__myWatchdog.start()
+				
 				# Get lines of data from dump1090
 				for thisLine in self.readLines(dump1090Sock):
 					
@@ -154,12 +195,16 @@ class dataSource(threading.Thread):
 					self.queueADSB(thisEntry, dedupeFlag)
 				
 				dump1090Sock.close()
-					
+				
 			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
-			except Exception as e:
+			except:
+				# Stop the watchdog to avoid spawning more than one.
+				self.__myWatchdog.cancel()
+				
 				# Dafuhq happened!?
-				print(myName + " went boom.")
-				pprint(e)
+				print(self.myName + " went boom.")
+				tb = traceback.format_exc()
+				print(tb)
 	
 	def formatSSRMsg(self, strMsg):
 		"""
@@ -246,8 +291,10 @@ class dataSource(threading.Thread):
 			# Put data on the pub/sub queue.
 			self.__psQ.publish(config.connPub['qName'], jsonMsg)
 		
-		return
+		# Reset our lastEntry seconds.
+		self.__lastEntry = 0
 		
+		return
 
 #######################
 # Main execution body #

@@ -187,11 +187,7 @@ class d1090Connector():
 		Accepts a JSON string and queues it in the Redis database, assuming a duplicate string hasn't been queued within the last n seconds specified in config.py, and we're not dealing with MLAT data. (dedupeFlag = False prevents dedupliation operations.)
 		"""
 		jsonMsg = self.__jsonify(msg)
-		# See if we already have the key in the redis cache, or if we're supposed to dedupe this frame at all.
 		
-		print("Handle: " + str(jsonMsg))
-		
-		"""
 		# Set up a hashed version of our data.
 		dHash = "ssr-" + hashlib.md5(msg['data']).hexdigest()
 		
@@ -205,7 +201,6 @@ class d1090Connector():
 			
 			# Put data on the pub/sub queue.
 			self.__psQ.publish(config.connPub['qName'], jsonMsg)
-		"""
 		return
 
 

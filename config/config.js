@@ -23,7 +23,9 @@ exports.getConfig = function() {
             dump1090Port: 30002, // "Binary" dump1090 data port number. Defaults is 30002
             connHost: "<insert hostname here>", // Dump1090 connector host
             connPort: 8091, // Dump1090 connector port
-            connectDelay: (5 * 1000) // Global reconnect attempt delay (for the dump1090 process and the destination server)
+            connectDelay: (5 * 1000), // Global reconnect attempt delay (for the dump1090 process and the destination server)
+            connTimeout: 20, // Timeout for a dead connection from the connector server. This should be at least 2x the clientPingInterval in the dump1090 connector config.
+            d1090Timeout: 300 // Timeout for not getting any data from the dump1090 instance. Defaults is 5 mins.
         }
     };
 }

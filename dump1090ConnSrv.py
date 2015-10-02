@@ -28,8 +28,8 @@ import datetime
 import threading
 import errno
 import binascii
-import ssrParse
 import hashlib
+import traceback
 from libAirSuck import ssrParse
 from pprint import pprint
 
@@ -42,9 +42,10 @@ class d1090Connector():
 	This class is a connector for dump1090 data submitted through the dump1090 client. The class accpets no arguments.
 	"""
 
-	def __init__(self):
+	def __init__(self):		
 		# Class-wide list of connections.
 		self.__conns = []
+		self.__connAddrs = {}
 		
 		# Buffer size settings.
 		self.__buffSz = 4096 # 4K
@@ -63,6 +64,46 @@ class d1090Connector():
 		
 		# Create our SSR parser.
 		self.__ssrParser = ssrParse()
+	
+	# Send a "ping" to connected hosts.
+	def __sendPing(self):
+		"""
+		__sendPing()
+		
+		Send a ping to all connected hosts.
+		"""
+		
+		# For each client we have send the ping JSON sentence.
+		for thisSock in self.__conns:
+			
+			# If we're not the listener send data.
+			if thisSock != self.__listenSock:
+				# We have something from a client so let's try to handle it.
+				try:
+					# Get the incoming data from our socket.
+					thisSock.send("{\"ping\": \"abcdef\"}\n")
+				
+				except KeyboardInterrupt:
+					self.__log("Keyboard interrupt. Shutting down.")
+					self.__keepRunning = False
+					self.__myPinger.cancel()
+				
+				except:
+					# Kill the socket so the main loop will throw an exception.
+					thisSock.close()
+					self.__conns.remove(thisSock)
+					killedClient = self.__connAddrs.pop(thisSock)
+					
+					# Log
+					self.__log("Can't ping " + killedClient[0] + ":" + str(killedClient[1]) + ". Disconnecting them.")
+		
+		try:
+			# Respawn the pinger.
+			self.__myPinger = threading.Timer(config.d1090ConnSettings['clientPingInterval'], self.__sendPing)
+			self.__myPinger.start()
+		
+		except KeyboardInterrupt:
+			self.__keepRunning = False
 	
 	def __log(self, logEvt):
 		"""
@@ -145,10 +186,10 @@ class d1090Connector():
 		
 		Accepts a JSON string and queues it in the Redis database, assuming a duplicate string hasn't been queued within the last n seconds specified in config.py, and we're not dealing with MLAT data. (dedupeFlag = False prevents dedupliation operations.)
 		"""
-		jsonMsg = self.jsonify(msg)
+		jsonMsg = self.__jsonify(msg)
 		# See if we already have the key in the redis cache, or if we're supposed to dedupe this frame at all.
 		
-		print("Handle: " + jsonMsg)
+		print("Handle: " + str(jsonMsg))
 		
 		"""
 		# Set up a hashed version of our data.
@@ -231,20 +272,25 @@ class d1090Connector():
 		This method is the main method that runs for the connector.
 		"""
 		
-		self.__log("Starting dump1090 connector...")
+		self.__log("Starting dump1090 connector server on " + config.d1090ConnSettings['connListenHost'] + ":" + str(config.d1090ConnSettings['connListenPort']) + "...")
 		
 		try:
 			# Build our TCP socket to recieve the magical happy JSON data we need!
-			listenSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			listenSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-			listenSock.bind((config.d1090ConnSettings['connListenHost'], config.d1090ConnSettings['connListenPort']))
-			listenSock.listen(10)
+			self.__listenSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.__listenSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			self.__listenSock.bind((config.d1090ConnSettings['connListenHost'], config.d1090ConnSettings['connListenPort']))
+			self.__listenSock.listen(10)
 			
 			# Add our listener socket to our connection list.
-			self.__conns.append(listenSock)
+			self.__conns.append(self.__listenSock)
 		
-		except Exception as e:
-			self.__log("Exception while trying to open incoming socket:\n" + str(e))
+		except :
+			tb = traceback.format_exc()
+			self.__log("Exception while trying to open incoming socket:\n" + tb)
+			
+		
+		# Fire up ping process
+		self.__sendPing()
 		
 		# Keep processing data as long as we want to keep running.
 		while self.__keepRunning:
@@ -255,6 +301,8 @@ class d1090Connector():
 			except KeyboardInterrupt:
 				self.__log("Keyboard interrupt. Shutting down.")
 				self.__keepRunning = False
+				self.__myPinger.cancel()
+				
 				continue
 			
 			# For each of our sockets...
@@ -264,12 +312,13 @@ class d1090Connector():
 				data = None
 				
 				# If we have a new incoming connection
-				if sock == listenSock:
+				if sock == self.__listenSock:
 					# Handle the case in which there is a new connection recieved through listenSock
-					sockDesc, cltAddr = listenSock.accept()
+					sockDesc, cltAddr = self.__listenSock.accept()
 					
 					# Add the new conneciton to the array
 					self.__conns.append(sockDesc)
+					self.__connAddrs.update({sockDesc: cltAddr})
 					
 					# Log connection.
 					self.__log("New connection from " + str(cltAddr[0]) + ":" + str(cltAddr[1]))
@@ -288,13 +337,20 @@ class d1090Connector():
 					
 					# Client disconnected.
 					except:
-						self.__log("Client " + str(cltAddr[0]) + ":" + str(cltAddr[1]) + " disconnected")
+						try:
+							# Remove the socet from the connection list and keep going.
+							self.__conns.remove(sock)
+							killedClient = self.__connAddrs.pop(sock)
+						except:
+							# Don't do anything since sometimes there's a race condition from the watchdog.
+							None
 						
 						# Close the socket.
 						sock.close()
 						
-						# Remove the socet from the connection list and keep going.
-						self.__conns.remove(sock)
+						# Log
+						self.__log("Disconnected client " + killedClient[0] + ":" + str(killedClient[1]))
+						
 						continue
 				
 				# If we have some sort of data try to do something useful with it.
@@ -302,10 +358,12 @@ class d1090Connector():
 					self.__handleIncoming(data)
 		
 		# Shut down our listener socket.
-		listenSock.close()
+		self.__listenSock.close()
 		
 		# Print shutdown message.
 		self.__log("dump1090Connector runner stopped.")
+		
+		return
 
 #######################
 # Main execution body #

@@ -28,6 +28,7 @@ d1090ConnSettings = {
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
     'connListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
+    'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
     'connClientList': { # Array of hosts to connect to when running client connector script.
         "<server name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
     },

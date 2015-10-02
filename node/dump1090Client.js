@@ -15,11 +15,32 @@ var dConn = new net.Socket();
 
 // Vars
 var dConnConnected = false;
+var lastConnPing = 0;
+var lastD1090Data = 0;
 
 // Log event.
 function log(eventText) {
     // Just do a console.log().
     console.log(new Date().toISOString().replace(/T/, ' ') + ' - ' + eventText);
+}
+
+// Watchdog
+function watchdog() {
+    // See if our connector timeout has been reached.
+    if (lastConnPing > config.client1090.connTimeout) {
+        log("Connector timed out.");
+        setTimeout(function(){ process.exit(-1); }, config.client1090.connectDelay);
+        process.exit(-1);
+    }
+    
+    // See if dump1090 timed out.
+    if (lastD1090Data > config.client1090.d1090Timeout) {
+        log("Dump1090 timed out.");
+        setTimeout(function(){ process.exit(-1); }, config.client1090.connectDelay);
+    }
+    
+    lastConnPing++;
+    lastD1090Data++;
 }
 
 // Process message arrays.
@@ -45,6 +66,8 @@ function handleMessage(message) {
                 dConn.write(data + "\n");
                 //log("Send frame: " + data);
             }
+            
+            lastD1090Data = 0;
         }
     }
 }
@@ -74,9 +97,7 @@ d1090.on('error', function(err) {
     // Destroy the connection since we don't want it anymore...
     d1090.destroy();
     
-    // Find a way to wait for n amount of time.
-    
-    process.exit(-1);
+    setTimeout(function(){ process.exit(-1); }, config.client1090.connectDelay);
 });
 
 // When we get data...
@@ -107,12 +128,25 @@ dConn.on('error', function(err) {
     
     dConnConnected = false;
     
-    process.exit(-1);
+    setTimeout(function(){ process.exit(-1); }, config.client1090.connectDelay);
 });
 
 // When we get data from the connector...
 dConn.on('data', function(data) {
-    // Do nothing.
+    // See if we get a ping from our connector. If so, send one back.
+    try {
+        ping = JSON.parse(data)
+        
+        // If we got a ping.
+        if (ping.ping) {
+            // We got a ping, so set the lastConnPing to 0.
+            lastConnPing = 0
+        } else {
+            log('Bad JSON ping from connector.')
+        }
+    } catch(e) {
+        log('Bad JSON ping from connector.')
+    }
 });
 
 // When the connection is closed...
@@ -127,8 +161,13 @@ dConn.on('close', function() {
 // Make the initial attempt to connect, assuming we're enabled.
 if (config.client1090.enabled) {
     log("Starting dump1090 client...")
+    
+    // Connect up.
     connect2Connector();
     connect2Dump1090();
+    
+    // Start our watchdog.
+    setInterval(watchdog, 1000)
 } else {
     log("Dump1090 client not enabled in configuration, but executed.")
 }

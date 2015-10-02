@@ -52,7 +52,7 @@ function handleMessage(message) {
         // If we have non-empty data...
         if (message[i] != "") {
             // Handle our data frame.
-            data = {'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': message[i]}
+            data = {'type': 'airSSR', 'dts': new Date().toISOString().replace('T', ' ').replace('Z', ''), 'src': config.client1090.srcName, 'dataOrigin': 'dump1090', 'data': message[i]}
             
             // Convert the data object to a JSON string.
             data = JSON.stringify(data)

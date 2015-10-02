@@ -169,13 +169,28 @@ class d1090Connector():
 		
 		try:
 			# Get a dict from the incoming JSON string.
-			retVal = json.loads(thisStr)
+			retVal = json.loads(str(thisStr))
 		except:
 			# If it doesn't work just set retVal to none.
 			retVal = None
+			tb = traceback
+			print(tb)
 		
 		return retVal
-	
+
+	# Get one line from TCP output, from:
+	# http://synack.me/blog/using-python-tcp-sockets
+	def __splitLines(self, dataStr):
+		"""__splitLines(dataStr)
+		
+		Split JSON data into lines for individual processing
+		"""
+		
+		# Split on newlines.
+		retVal = dataStr.split("\n")
+		
+		return retVal
+
 	# Queue the ADS-B data for processing.
 	def __queueADSB(self, msg, dedupeFlag):
 		"""__queueADSB(msg)
@@ -197,6 +212,7 @@ class d1090Connector():
 			
 			# Put data on the pub/sub queue.
 			self.__psQ.publish(config.connPub['qName'], jsonMsg)
+			
 		return
 
 
@@ -248,7 +264,7 @@ class d1090Connector():
 				
 				# Parse our data and add it to the stream.
 				thisEntry.update(self.__ssrParser.ssrParse(binData))
-			
+				
 			# If the SSR parser got something good out of the SSR data...
 			if thisEntry["mode"] != "invalid":
 				# Queue up our data.
@@ -319,6 +335,7 @@ class d1090Connector():
 					# We have something from a client so let's try to handle it.
 					try:
 						# Get the incoming data from our socket.
+						
 						data = sock.recv(self.__buffSz)
 						
 					except KeyboardInterrupt:
@@ -346,7 +363,9 @@ class d1090Connector():
 				
 				# If we have some sort of data try to do something useful with it.
 				if type(data) is str:
-					self.__handleIncoming(data)
+					for thisLine in self.__splitLines(data):
+						if thisLine !="":
+							self.__handleIncoming(thisLine)
 		
 		# Shut down our listener socket.
 		self.__listenSock.close()

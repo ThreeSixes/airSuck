@@ -64,11 +64,46 @@ class dataSource(threading.Thread):
 		self.enqueue = enqueue
 		self.__aisParser = aisParse()
 		
+		# This keeps track of the number of seconds since our last connection.
+		self.__lastEntry = 0
+		
 		# Redis queues and entities
 		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
 		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
 		self.__frag = redis.StrictRedis(host=config.aisConnSettings['fragHost'], port=config.aisConnSettings['fragPort'])
 		self.__dedupe = redis.StrictRedis(host=config.aisConnSettings['dedupeHost'], port=config.aisConnSettings['dedupePort'])
+	
+	# Make sure we have data. If we don't throw an exception.
+	def watchdog(self):
+		"""
+		checkTimeout()
+		
+		Check this thread to see if it has not recieved data in the given thread timeout.
+		"""
+		
+		try:
+			# Check to see if our last entry was inside the timeout window.
+			if self.__lastEntry >= self.AISSrc['threadTimeout']:
+				# Stop the watchdog.
+				self.__myWatchdog.cancel()
+				
+				# Puke if we have been running for too long without data.
+				raise IOError(self.myName + ": No data recieved in " + str(self.AISSrc['threadTimeout']) + " sec. Restarting connection.")
+			else:
+				# Restart our watchdog.
+				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+				self.__myWatchdog.start()
+		except Exception as e:
+			# Stop the watchdog to avoid spawning more than one.
+			self.__myWatchdog.cancel()
+			
+			# Dump the exception and restart.
+			tb = traceback.format_exc()
+			print(tb)
+			self.run()
+		
+		# Increment our last entry.
+		self.__lastEntry += 1
 	
 	# Strip metachars.
 	def metaStrip(self, subject):
@@ -287,6 +322,9 @@ class dataSource(threading.Thread):
 					print(self.myName + " error defragmenting data.")
 					tb = traceback.format_exc()
 					print(tb)
+		
+		# Reset our lastEntry seconds.
+		self.__lastEntry = 0
 	
 	def run(self):
 		"""run
@@ -314,15 +352,25 @@ class dataSource(threading.Thread):
 						#Print some messages
 						print(self.myName + " failed to connect to " + self.AISSrc["host"] + ":" + str(self.AISSrc["port"]))
 						print(self.myName + " sleeping " + str(self.AISSrc["reconnectDelay"]) + " sec")
+						AISSock.close()
 					else:
 						# Something besides connection refused happened. Let's figure out what happened.
-						pprint(e)
+						print(self.myName + " error while trying to connect.")
+						tb = traceback.format_exc()
+						print(tb)
+						AISSock.close()
 					
 					# In the event our connect fails, try again after the configured delay
 					time.sleep(self.AISSrc["reconnectDelay"])
 			
 			# Try to read a lone from our established socket.
 			try:
+				
+				# The watchdog should be run every second.
+				self.__lastEntry = 0
+				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+				self.__myWatchdog.start()
+				
 				# Get lines of data from dump1090
 				for thisLine in self.readLines(AISSock):
 					# Do our thing.
@@ -331,12 +379,16 @@ class dataSource(threading.Thread):
 			
 			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
 			except:
+				# Stop the watchdog to avoid spawning more than one.
+				self.__myWatchdog.cancel()
+				
 				# Dafuhq happened!?
 				print(self.myName + " went boom.")
 				tb = traceback.format_exc()
 				print(tb)
 			
 			finally:
+				# Close the socket.
 				AISSock.close()
 
 #######################

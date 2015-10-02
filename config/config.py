@@ -40,7 +40,7 @@ d1090ConnSettings = {
 aisConnSettings = {
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connClientList': { # Array of hosts to connect to when running client connector script.
-        "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5} # This can contain additional dictionaries.
+        "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
     },
     'fragTTLSec': 1, # Time to live for frame fragments. This clears fragmented frames no recieved within n sec of each other.
     'fragHost': genRedisHost, # This host contains the objects used to assemble fragemented frames.

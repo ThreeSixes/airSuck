@@ -169,12 +169,13 @@ class d1090Connector():
 		
 		try:
 			# Get a dict from the incoming JSON string.
-			retVal = json.loads(str(thisStr))
+			retVal = json.loads(thisStr)
 		except:
 			# If it doesn't work just set retVal to none.
 			retVal = None
-			tb = traceback
-			print(tb)
+			
+			tb = traceback.format_exc()
+			self.__log("Failed to parse JSON data.\nString: " + thisStr + "\n" + tb)
 		
 		return retVal
 

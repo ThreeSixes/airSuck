@@ -76,7 +76,7 @@ class dataSource(threading.Thread):
 	# Make sure we have data. If we don't throw an exception.
 	def watchdog(self):
 		"""
-		checkTimeout()
+		watchdog()
 		
 		Check this thread to see if it has not recieved data in the given thread timeout.
 		"""

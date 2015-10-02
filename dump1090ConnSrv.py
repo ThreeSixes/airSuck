@@ -53,14 +53,10 @@ class d1090Connector():
 		# Should we keep running?
 		self.__keepRunning = True
 		
-		# Reliable queue object
+		# Redis queues and entities
 		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
-		
-		# Pub/sub queue object
 		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
-		
-		# Dedupe object
-		self.__dedupe = redis.StrictRedis(host=config.d1090ConnSettings['dedupeHost'], port=config.d1090ConnSettings['dedupePort'])
+		self.__dedeupe = redis.StrictRedis(host=config.d1090ConnSettings['dedupeHost'], port=config.d1090ConnSettings['dedupePort'])
 		
 		# Create our SSR parser.
 		self.__ssrParser = ssrParse()

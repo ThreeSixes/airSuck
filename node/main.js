@@ -503,7 +503,7 @@ function infoFactory(vehName) {
         // Create our dimension string.
         shipLen = dimBow + dimStern;
         shipWidth = dimPort + dimStarboard;
-        dimStr = shipLen.toString() + "x" + shipWidth.toString();
+        dimStr = shipWidth.toString() + "x" + shipLen.toString();
       }
     }
     

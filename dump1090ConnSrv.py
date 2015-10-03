@@ -350,15 +350,15 @@ class d1090Connector():
 							# Remove the socet from the connection list and keep going.
 							self.__conns.remove(sock)
 							killedClient = self.__connAddrs.pop(sock)
+							
+							# Log
+							self.__log("Disconnected client " + killedClient[0] + ":" + str(killedClient[1]))
 						except:
 							# Don't do anything since sometimes there's a race condition from the watchdog.
 							None
 						
 						# Close the socket.
 						sock.close()
-						
-						# Log
-						self.__log("Disconnected client " + killedClient[0] + ":" + str(killedClient[1]))
 						
 						continue
 				

@@ -39,7 +39,7 @@ class ssrParse:
     def __init__(self):
         # Do we set the names of DFs, formats, etc.?
         self.decodeNames = False
-    
+        
         # CRC stuff
         self.__crcPoly = 0xfff409
         self.__crc24Mask = 0xffffff

@@ -381,6 +381,9 @@ class SubListener(threading.Thread):
                             # Set our datetime stamp for this data.
                             data.update({"dts": ssrWrapped['dts']})
                             
+                            # Set our datetime stamp for this data.
+                            data.update({"entryPoint": ssrWrapped['entryPoint']})
+                            
                             # Set our lastSeen time stamp for this data.
                             data.update({"lastSeen": ssrWrapped['dts']})
                             

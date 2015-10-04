@@ -286,7 +286,7 @@ class dataSource(threading.Thread):
 				dtsStr = dtsStr + ".000000"
 			
 			# Set this entry up with some initial data.
-			thisEntry = {'dataOrigin': 'aisConn', 'type': 'airAIS', 'dts': dtsStr, 'src': self.myName, 'data': thisLine, 'isFrag': False, 'isAssembled': False}
+			thisEntry = {'entryPoint': 'aisConnector', 'dataOrigin': 'aisConn', 'type': 'airAIS', 'dts': dtsStr, 'src': self.myName, 'data': thisLine, 'isFrag': False, 'isAssembled': False}
 			
 			try:
 				# Decapsulate the AIS payload and get relevant data.

@@ -186,7 +186,7 @@ class dataSource(threading.Thread):
 						thisEntry.update({ 'data': formattedSSR })
 						
 						# Create an entry to be queued.
-						thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName })
+						thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName, 'entryPoint': 'dump1090ConnClt' })
 						
 						# Parse our data and add it to the stream.
 						thisEntry.update(self.__ssrParser.ssrParse(binData))

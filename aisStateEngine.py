@@ -89,7 +89,8 @@ class SubListener(threading.Thread):
             'etaHour': 'etaHour',
             'etaMinute': 'etaMinute',
             'draught': 'draught',
-            'destination': 'destination'
+            'destination': 'destination',
+            'entryPoint': 'entryPoint'
         }
         
         # Data we don't to end up in the monogoDB

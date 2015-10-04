@@ -229,6 +229,8 @@ class d1090Connector():
 		
 		# Check to make sure we have a dict from the JSON parser. If not something went wrong.
 		if type(thisEntry) == dict:
+			# Tag our data with an entry point.
+			thisEntry.update({'entryPoint': 'dump1090ConnSrv'})
 			
 			# Extract our SSR info.
 			ssrData = thisEntry['data']
@@ -354,7 +356,7 @@ class d1090Connector():
 							# Log
 							self.__log("Disconnected client " + killedClient[0] + ":" + str(killedClient[1]))
 						except:
-							# Don't do anything since sometimes there's a race condition from the watchdog.
+							# Don't do anything since sometimes there's a race condition from the watchdog removing clients and triggering exceptions here.
 							None
 						
 						# Close the socket.

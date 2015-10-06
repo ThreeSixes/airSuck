@@ -698,7 +698,7 @@ class aisParse:
                 nmeaData.update({'etaMonth': etaMonth, 'etaDay': etaDay, 'etaHour': etaHour, 'etaMinute': etaMinute})
                 
                 # Get the ship's draught
-                draught = (((self.__vector2Bin(payloadBin[49]) << 6) | self.__vector2Bin(payloadBin[50]) & 0x3f)) >> 4
+                draught = ((self.__vector2Bin(payloadBin[49]) << 6) | (self.__vector2Bin(payloadBin[50]) & 0x3f)) >> 4
                 
                 # Draught is in 1/10m scale.
                 draught = round(draught * 0.1, 1)
@@ -720,6 +720,50 @@ class aisParse:
                 
                 # Set DTE
                 nmeaData.update({'dte': bool(dte)})
+                
+            # Addressed binary message
+            elif payloadType == 6:
+                # Set the repeat indicator.
+                nmeaData.update(self.__getRepeatIndicator(payloadBin))
+                
+                # Set the MMSI (this is the source MMSI).
+                nmeaData.update(self.__getMMSI(payloadBin))
+                
+                # Get the sequence number bits.
+                seqNo = (self.__vector2Bin(payloadBin[6]) & 0x0c) >> 2
+                
+                # Set the sequence number.
+                nmeaData.update({'seqNo': seqNo})
+                
+                # Get the destination MMSI.
+                destMmsi = (self.__toSixer(payloadBin, 40, 69) >> 2) & 0x3fffffff
+                
+                # Destination MMSI
+                nmeaData.update({'destMmsi': destMmsi})
+                
+                # Get the retransmit flag.
+                retFlag = (self.__vector2Bin(payloadBin[11]) & 0x02) >> 1
+                
+                # Set the retransmit flag.
+                nmeaData.update({'retransmit': bool(retFlag)})
+                
+                # Get the spare bits.
+                spare = self.__vector2Bin(payloadBin[11]) & 0x01
+                
+                # Set the spare bits.
+                nmeaData.update({'spare': spare})
+                
+                # Get the designated area code.
+                dac = ((self.__vector2Bin(payloadBin[12]) << 6) | self.__vector2Bin(payloadBin[13])) >> 2
+                
+                # Set the designated area code.
+                nmeaData.update({'dac': dac})
+                
+                # Get the functional ID.
+                fid = (((self.__vector2Bin(payloadBin[13]) << 6) | self.__vector2Bin(payloadBin[14])) >> 2) & 0x3f
+                
+                # Set the functional ID.
+                nmeaData.update({'fid': fid})
         else:
             nmeaData.update({'sentenceType': 'unsupported'})
         

@@ -698,7 +698,7 @@ class aisParse:
                 nmeaData.update({'etaMonth': etaMonth, 'etaDay': etaDay, 'etaHour': etaHour, 'etaMinute': etaMinute})
                 
                 # Get the ship's draught
-                draught = ((((self.__vector2Bin(payloadBin[49]) & 0x03) << 6) | self.__vector2Bin(payloadBin[50]) & 0x3f)) & 0xff
+                draught = (((self.__vector2Bin(payloadBin[49]) << 6) | self.__vector2Bin(payloadBin[50]) & 0x3f)) >> 4
                 
                 # Draught is in 1/10m scale.
                 draught = round(draught * 0.1, 1)

@@ -23,6 +23,7 @@ import json
 import threading
 import binascii
 import datetime
+import traceback
 from libAirSuck import airSuckUtil
 from pprint import pprint
 
@@ -130,7 +131,7 @@ class SubListener(threading.Thread):
             'utcSecond': int,
             'utcYear': int,
             'posAcc': bool,
-            'imo': 'imo',
+            'imo': int,
             'shipType': int,
             'dimToBow': int,
             'dimToStern': int,
@@ -245,8 +246,11 @@ class SubListener(threading.Thread):
                 # Run the conversion.
                 if subject in retVal:
                     retVal[subject] = self.__subject2Type[subject](retVal[subject])
-            except Exception as e:
-                pprint(e)
+            except:
+                print("Exception fixing datatypes:")
+                print("Subject -> " + str(subject))
+                tb = traceback.format_exc()
+                print(tb)
         
         return retVal
 
@@ -335,8 +339,9 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             # Die nicely.
             quit()
-        except Exception as e:
-            print("Caught unhandled exception")
-            pprint(e)
+        except Exception:
+            print("Caught unhandled exception:")
+            tb = traceback.format_exc()
+            print(tb)
     else:
         print("AIS state engine not enabled in config.")

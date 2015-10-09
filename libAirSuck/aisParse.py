@@ -764,8 +764,7 @@ class aisParse:
                 
                 # Set the functional ID.
                 nmeaData.update({'fid': fid})
-                
-                
+            
         else:
             nmeaData.update({'sentenceType': 'unsupported'})
         

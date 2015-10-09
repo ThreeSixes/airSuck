@@ -11,6 +11,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 ############
 
 import math
+import traceback
 
 #########################
 # AirSuck Utility class #
@@ -802,11 +803,16 @@ class airSuckUtil:
             # Where does the MID start?
             midCursor = 3
         
-        # Get the MID portion of the MMSI.
-        midStr = mmsiStr[midCursor:(midCursor + 3)]
-        
-        # Set the country data.
-        retVal.update({'mmsiCountry': mid2Country[midStr]})
+        try:
+            # Get the MID portion of the MMSI.
+            midStr = mmsiStr[midCursor:(midCursor + 3)]
+            
+            # Set the country data.
+            retVal.update({'mmsiCountry': mid2Country[midStr]})
+        except:
+            print("Failed to derive country data from MID:")
+            tb = traceback.format_exc()
+            print(tb)
         
         # Send the data back along.
         return retVal

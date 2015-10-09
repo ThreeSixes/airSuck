@@ -826,6 +826,7 @@ class airSuckUtil:
             # Get the MID portion of the MMSI.
             midStr = mmsiStr[midCursor:(midCursor + 3)]
             midCtry = mid2Country[midStr]
+            
             # Set the country data.
             retVal.update({'mmsiCountry': midCtry['country']})
             retVal.update({'mmsiCC': midCtry['isoCC']})

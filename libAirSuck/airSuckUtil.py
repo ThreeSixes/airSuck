@@ -604,6 +604,7 @@ class airSuckUtil:
             "371": {"country": "Panama (Republic of)", "isoCC": "PA"},
             "372": {"country": "Panama (Republic of)", "isoCC": "PA"},
             "373": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "374": {"country": "Panama (Republic of)", "isoCC": "PA"},
             "375": {"country": "Saint Vincent and the Grenadines", "isoCC": "VC"},
             "376": {"country": "Saint Vincent and the Grenadines", "isoCC": "VC"},
             "377": {"country": "Saint Vincent and the Grenadines", "isoCC": "VC"},

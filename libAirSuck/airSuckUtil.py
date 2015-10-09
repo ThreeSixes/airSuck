@@ -470,7 +470,12 @@ class airSuckUtil:
         
         # Convert the MMSI to a string because it's easier to parse.
         mmsiStr = str(mmsi)
+        
+        # The character at which our MID starts
         midCursor = 0
+        
+        # Type of MMSI address. Defaults to ship.
+        mmsiType = "Ship"
         
         # This is our master list of country codes and associated info.
         mid2Country = {
@@ -759,56 +764,69 @@ class airSuckUtil:
         
         # Figure out if we have certain types of MMSI address.
         if (mmsi >= 800000000) and (mmsi <= 899999999):
-            retVal.update({'mmsiType': "Diver's radio"})
+            mmsiType = "Diver's radio"
+            
             # Where does the MID start?
             midCursor = 1
         
         if (mmsi >= 10000000) and (mmsi <= 99999999):
-            retVal.update({'mmsiType': "Group of ships"})
+            mmsiType = "Group of ships"
+            
             # Where does the MID start?
             midCursor = 0
         
         if (mmsi >= 1000000) and (mmsi <= 9999999):
-            retVal.update({'mmsiType': "Coastal stations"})
+            mmsiType = "Coastal station"
+            
             # Where does the MID start?
             midCursor = 0
         
         if (mmsi >= 111000000) and (mmsi <= 111999999):
-            retVal.update({'mmsiType': "SAR aircraft"})
+            mmsiType = "SAR aircraft"
+            
             # Where does the MID start?
             midCursor = 3
         
         if (mmsi >= 990000000) and (mmsi <= 999999999):
-            retVal.update({'mmsiType': "Aid to Navigation"})
+            mmsiType = "Aid to Navigation"
+            
             # Where does the MID start?
             midCursor = 2
         
         if (mmsi >= 980000000) and (mmsi <= 989999999):
-            retVal.update({'mmsiType': "Craft w/ parent ship"})
+            mmsiType = "Craft w/ parent ship"
+            
             # Where does the MID start?
             midCursor = 2
         
         if (mmsi >= 970000000) and (mmsi <= 970999999):
-            retVal.update({'mmsiType': "SART (Search and Rescue Xmitter)"})
+            mmsiType = "SART (Search and Rescue Xmitter)"
+            
             # Where does the MID start?
             midCursor = 3
         
         if (mmsi >= 972000000) and (mmsi <= 972999999):
-            retVal.update({'mmsiType': "MOB (Man Overboard) device"})
+            mmsiType = "MOB (Man Overboard) device"
+            
             # Where does the MID start?
             midCursor = 3
         
         if (mmsi >= 974000000) and (mmsi <= 974999999):
-            retVal.update({'mmsiType': "EPIRB"})
+            mmsiType = "EPIRB"
+            
             # Where does the MID start?
             midCursor = 3
+        
+        # Set the mmsiType.
+        retVal.update({'mmsiType': mmsiType})
         
         try:
             # Get the MID portion of the MMSI.
             midStr = mmsiStr[midCursor:(midCursor + 3)]
-            
+            midCtry = mid2Country[midStr]
             # Set the country data.
-            retVal.update({'mmsiCountry': mid2Country[midStr]})
+            retVal.update({'mmsiCountry': midCtry['country']})
+            retVal.update({'mmsiCC': midCtry['isoCC']})
         except:
             print("Failed to derive country data from MID:")
             tb = traceback.format_exc()

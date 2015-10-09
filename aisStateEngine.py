@@ -91,7 +91,9 @@ class SubListener(threading.Thread):
             'etaMinute': 'etaMinute',
             'draught': 'draught',
             'destination': 'destination',
-            'entryPoint': 'entryPoint'
+            'entryPoint': 'entryPoint',
+            'mmsiType': 'mmsiType',
+            'mmsiCC': 'mmsiCC'
         }
         
         # Data we don't to end up in the monogoDB
@@ -99,7 +101,8 @@ class SubListener(threading.Thread):
             'navStatMeta',
             'locationMeta',
             'epfdMeta',
-            'shipTypeMeta'
+            'shipTypeMeta',
+            'mmsiType'
         ]
         
         # Conversion table for type fixing. field -> type
@@ -162,8 +165,20 @@ class SubListener(threading.Thread):
             # Delete the original timestamp.
             thisTime = cacheData.pop('dts', None)
             
-            # Set the first seen data.
-            self.__redHash.hsetnx(fullName, 'firstSeen', thisTime)
+            # Set the first seen data, and get MMSI metadata
+            if self.__redHash.hsetnx(fullName, 'firstSeen', thisTime):
+                # Get the metatdata from the MMSI
+                mmsiMeta = self.asu.getMMSIMeta(cacheData['addr'])
+                
+                # if we have good data from the metadata processor
+                if type(mmsiMeta) == dict:
+                    # If we have a country code, set it.
+                    if 'mmsiCC' in mmsiMeta:
+                        cacheData.update({'mmsiCC': mmsiMeta['mmsiCC']})
+                    
+                    # If we have a country code, set it.
+                    if 'mmsiType' in mmsiMeta:
+                        cacheData.update({'mmsiType': mmsiMeta['mmsiType']})
             
             # Update or create cached data, if we have more than just a name
             if type(cacheData) == dict:

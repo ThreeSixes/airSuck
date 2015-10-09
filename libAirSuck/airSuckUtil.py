@@ -456,3 +456,357 @@ class airSuckUtil:
         
         # Return the string.
         return retVal
+    
+    def getMMSIMeta(self, mmsi):
+        """
+        getMMSIMeta(mmsi)
+        
+        Get metatdata from a given MMSI address
+        """
+        
+        # Empty reuturn dict.
+        retVal = {}
+        
+        # Convert the MMSI to a string because it's easier to parse.
+        mmsiStr = str(mmsi)
+        midCursor = 0
+        
+        # This is our master list of country codes and associated info.
+        mid2Country = {
+            "201": {"country": "Albania (Republic of)", "isoCC": "AL"},
+            "202": {"country": "Andorra (Principality of)", "isoCC": "AD"},
+            "203": {"country": "Austria", "isoCC": "AT"},
+            "204": {"country": "Azores", "isoCC": "PT-20"},
+            "205": {"country": "Belgium", "isoCC": "BE"},
+            "206": {"country": "Belarus (Republic of)", "isoCC": "BY"},
+            "207": {"country": "Bulgaria (Republic of)", "isoCC": "BG"},
+            "208": {"country": "Vatican City State", "isoCC": "VA"},
+            "209": {"country": "Cyprus (Republic of)", "isoCC": "CY"},
+            "210": {"country": "Cyprus (Republic of)", "isoCC": "CY"},
+            "211": {"country": "Germany (Federal Republic of)", "isoCC": "DE"},
+            "212": {"country": "Pakistan (Islamic Republic of)", "isoCC": "CY"},
+            "213": {"country": "Georgia", "isoCC": "GE"},
+            "214": {"country": "Moldova (Republic of)", "isoCC": "MD"},
+            "215": {"country": "Malta", "isoCC": "MT"},
+            "216": {"country": "Armenia (Republic of)", "isoCC": "AM"},
+            "218": {"country": "Germany (Federal Republic of)", "isoCC": "DE"},
+            "219": {"country": "Denmark", "isoCC": "DK"},
+            "220": {"country": "Denmark", "isoCC": "DK"},
+            "224": {"country": "Spain", "isoCC": "ES"},
+            "225": {"country": "Spain", "isoCC": "ES"},
+            "226": {"country": "France", "isoCC": "FR"},
+            "227": {"country": "France", "isoCC": "FR"},
+            "228": {"country": "France", "isoCC": "FR"},
+            "230": {"country": "Finland", "isoCC": "FI"},
+            "231": {"country": "Faroe Islands", "isoCC": "FO"},
+            "232": {"country": "United Kingdom of Great Britain and Northern Ireland", "isoCC": "GB"},
+            "233": {"country": "United Kingdom of Great Britain and Northern Ireland", "isoCC": "GB"},
+            "234": {"country": "United Kingdom of Great Britain and Northern Ireland", "isoCC": "GB"},
+            "235": {"country": "United Kingdom of Great Britain and Northern Ireland", "isoCC": "GB"},
+            "236": {"country": "Gibraltar", "isoCC": "GI"},
+            "237": {"country": "Greece", "isoCC": "GR"},
+            "238": {"country": "Croatia (Republic of)", "isoCC": "HR"},
+            "239": {"country": "Greece", "isoCC": "GR"},
+            "240": {"country": "Greece", "isoCC": "GR"},
+            "241": {"country": "Greece", "isoCC": "GR"},
+            "242": {"country": "Morocco (Kingdom of)", "isoCC": "MA"},
+            "243": {"country": "Hungary (Republic of)", "isoCC": "UR"},
+            "244": {"country": "Netherlands (Kingdom of the)", "isoCC": "NL"},
+            "245": {"country": "Netherlands (Kingdom of the)", "isoCC": "NL"},
+            "246": {"country": "Netherlands (Kingdom of the)", "isoCC": "NL"},
+            "247": {"country": "Italy", "isoCC": "IT"},
+            "248": {"country": "Malta", "isoCC": "MT"},
+            "249": {"country": "Malta", "isoCC": "MT"},
+            "250": {"country": "Ireland", "isoCC": "IE"},
+            "251": {"country": "Iceland", "isoCC": "IE"},
+            "252": {"country": "Liechtenstein (Principality of)", "isoCC": "LI"},
+            "253": {"country": "Luxembourg", "isoCC": "LU"},
+            "254": {"country": "Monaco (Principality of)", "isoCC": "MC"},
+            "255": {"country": "Madeira", "isoCC": "PT-30"},
+            "256": {"country": "Malta", "isoCC": "MT"},
+            "257": {"country": "Norway", "isoCC": "NO"},
+            "258": {"country": "Norway", "isoCC": "NO"},
+            "259": {"country": "Norway", "isoCC": "NO"},
+            "261": {"country": "Poland (Republic of)", "isoCC": "PL"},
+            "262": {"country": "Montenegro", "isoCC": "ME"},
+            "263": {"country": "Portugal", "isoCC": "PT"},
+            "264": {"country": "Romania", "isoCC": "RO"},
+            "265": {"country": "Sweden", "isoCC": "SE"},
+            "266": {"country": "Sweden", "isoCC": "SE"},
+            "267": {"country": "Slovak Republic", "isoCC": "SK"},
+            "268": {"country": "San Marino (Republic of)", "isoCC": "SM"},
+            "269": {"country": "Switzerland (Confederation of)", "isoCC": "CH"},
+            "270": {"country": "Czech Republic", "isoCC": "CZ"},
+            "271": {"country": "Turkey", "isoCC": "TR"},
+            "272": {"country": "Ukraine", "isoCC": "UA"},
+            "273": {"country": "Russian Federation", "isoCC": "RU"},
+            "274": {"country": "The Former Yugoslav Republic of Macedonia", "isoCC": "MK"},
+            "275": {"country": "Latvia (Republic of)", "isoCC": "LV"},
+            "276": {"country": "Estonia (Republic of)", "isoCC": "EE"},
+            "277": {"country": "Lithuania (Republic of)", "isoCC": "LT"},
+            "278": {"country": "Slovenia (Republic of)", "isoCC": "SI"},
+            "279": {"country": "Serbia (Republic of)", "isoCC": "RS"},
+            "301": {"country": "Anguilla", "isoCC": "AI"},
+            "303": {"country": "Alaska (State of)", "isoCC": "US-AK"},
+            "304": {"country": "Antigua and Barbuda", "isoCC": "AG"},
+            "305": {"country": "Antigua and Barbuda", "isoCC": "AG"},
+            "306": {"country": "Netherlands Antilles", "isoCC": "AN"},
+            "307": {"country": "Aruba", "isoCC": "NL-AW"},
+            "308": {"country": "Bahamas (Commonwealth of the)", "isoCC": "BS"},
+            "309": {"country": "Bahamas (Commonwealth of the)", "isoCC": "BS"},
+            "310": {"country": "Bermuda", "isoCC": "BM"},
+            "311": {"country": "Bahamas (Commonwealth of the)", "isoCC": "BS"},
+            "312": {"country": "Belize", "isoCC": "BZ"},
+            "314": {"country": "Barbados", "isoCC": "BB"},
+            "316": {"country": "Canada", "isoCC": "CA"},
+            "319": {"country": "Cayman Islands", "isoCC": "KY"},
+            "321": {"country": "Costa Rica", "isoCC": "CR"},
+            "323": {"country": "Cuba", "isoCC": "CU"},
+            "325": {"country": "Dominica (Commonwealth of)", "isoCC": "DM"},
+            "327": {"country": "Dominican Republic", "isoCC": "DO"},
+            "329": {"country": "Guadeloupe (French Department of)", "isoCC": "FR-GP"},
+            "330": {"country": "Grenada", "isoCC": "GD"},
+            "331": {"country": "Greenland", "isoCC": "GL"},
+            "332": {"country": "Guatemala (Republic of)", "isoCC": "GT"},
+            "334": {"country": "Honduras (Republic of)", "isoCC": "HN"},
+            "336": {"country": "Haiti (Republic of)", "isoCC": "HT"},
+            "338": {"country": "United States of America", "isoCC": "US"},
+            "339": {"country": "Jamaica", "isoCC": "JM"},
+            "341": {"country": "Saint Kitts and Nevis (Federation of)", "isoCC": "KN"},
+            "343": {"country": "Saint Lucia", "isoCC": "LC"},
+            "345": {"country": "Mexico", "isoCC": "MX"},
+            "347": {"country": "Martinique (French Department of)", "isoCC": "FR-MQ"},
+            "348": {"country": "Montserrat", "isoCC": "MS"},
+            "350": {"country": "Nicaragua", "isoCC": "NI"},
+            "351": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "352": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "353": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "354": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "355": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "356": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "357": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "358": {"country": "Puerto Rico", "isoCC": "US-PR"},
+            "359": {"country": "El Salvador (Republic of)", "isoCC": "SV"},
+            "361": {"country": "Saint Pierre and Miquelon (Territorial Collectivity of)", "isoCC": "FR-PM"},
+            "362": {"country": "Trinidad and Tobago", "isoCC": "TT"},
+            "364": {"country": "Turks and Caicos Islands", "isoCC": "TC"},
+            "366": {"country": "United States of America", "isoCC": "US"},
+            "367": {"country": "United States of America", "isoCC": "US"},
+            "368": {"country": "United States of America", "isoCC": "US"},
+            "369": {"country": "United States of America", "isoCC": "US"},
+            "370": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "371": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "372": {"country": "Panama (Republic of)", "isoCC": "PA"},
+            "375": {"country": "Saint Vincent and the Grenadines", "isoCC": "VC"},
+            "376": {"country": "Saint Vincent and the Grenadines", "isoCC": "VC"},
+            "377": {"country": "Saint Vincent and the Grenadines", "isoCC": "VC"},
+            "378": {"country": "British Virgin Islands", "isoCC": "VG"},
+            "379": {"country": "United States Virgin Islands", "isoCC": "US-VI"},
+            "401": {"country": "Afghanistan", "isoCC": "AF"},
+            "403": {"country": "Saudi Arabia (Kingdom of)", "isoCC": "SA"},
+            "405": {"country": "Bangladesh (People's Republic of)", "isoCC": "BD"},
+            "408": {"country": "Bahrain (Kingdom of)", "isoCC": "BH"},
+            "410": {"country": "Bhutan (Kingdom of)", "isoCC": "BT"},
+            "412": {"country": "China (People's Republic of)", "isoCC": "CN"},
+            "413": {"country": "China (People's Republic of)", "isoCC": "CN"},
+            "416": {"country": "Taiwan (Province of China)", "isoCC": "CN-TW"},
+            "417": {"country": "Sri Lanka (Democratic Socialist Republic of)", "isoCC": "LK"},
+            "419": {"country": "India (Republic of)", "isoCC": "IN"},
+            "422": {"country": "Iran (Islamic Republic of)", "isoCC": "IR"},
+            "423": {"country": "Azerbaijani Republic", "isoCC": "AZ"},
+            "425": {"country": "Iraq (Republic of)", "isoCC": "IQ"},
+            "428": {"country": "Israel (State of)", "isoCC": "IL"},
+            "431": {"country": "Japan", "isoCC": "JP"},
+            "432": {"country": "Japan", "isoCC": "JP"},
+            "434": {"country": "Turkmenistan", "isoCC": "TM"},
+            "436": {"country": "Kazakhstan (Republic of)", "isoCC": "KZ"},
+            "437": {"country": "Uzbekistan (Republic of)", "isoCC": "UZ"},
+            "438": {"country": "Jordan (Hashemite Kingdom of)", "isoCC": "JO"},
+            "440": {"country": "Korea (Republic of)", "isoCC": "KR"},
+            "441": {"country": "Korea (Republic of)", "isoCC": "KR"},
+            "443": {"country": "Palestine (In accordance with Resolution 99 Rev. Antalya 2006)", "isoCC": "PS"},
+            "445": {"country": "Democratic People's Republic of Korea", "isoCC": "KP"},
+            "447": {"country": "Kuwait (State of)", "isoCC": "KW"},
+            "450": {"country": "Lebanon", "isoCC": "LB"},
+            "451": {"country": "Kyrgyz Republic", "isoCC": "KG"},
+            "453": {"country": "Macao (Special Administrative Region of China)", "isoCC": "CN-MO"},
+            "455": {"country": "Maldives (Republic of)", "isoCC": "MV"},
+            "457": {"country": "Mongolia", "isoCC": "MN"},
+            "459": {"country": "Nepal (Federal Democratic Republic of)", "isoCC": "NP"},
+            "461": {"country": "Oman (Sultanate of)", "isoCC": "OM"},
+            "463": {"country": "Pakistan (Islamic Republic of)", "isoCC": "PK"},
+            "466": {"country": "Qatar (State of)", "isoCC": "QA"},
+            "468": {"country": "Syrian Arab Republic", "isoCC": "SY"},
+            "470": {"country": "United Arab Emirates", "isoCC": "AE"},
+            "473": {"country": "Yemen (Republic of)", "isoCC": "YE"},
+            "475": {"country": "Yemen (Republic of)", "isoCC": "YE"},
+            "477": {"country": "Hong Kong (Special Administrative Region of China)", "isoCC": "CN-HK"},
+            "478": {"country": "Bosnia and Herzegovina", "isoCC": "BA"},
+            "501": {"country": "Adelie Land", "isoCC": "AQ"},
+            "503": {"country": "Australia", "isoCC": "AU"},
+            "506": {"country": "Myanmar (Union of)", "isoCC": "MM"},
+            "508": {"country": "Brunei Darussalam", "isoCC": "BN"},
+            "510": {"country": "Micronesia (Federated States of)", "isoCC": "FM"},
+            "511": {"country": "Palau (Republic of)", "isoCC": "PW"},
+            "512": {"country": "New Zealand", "isoCC": "NZ"},
+            "514": {"country": "Cambodia (Kingdom of)", "isoCC": "KH"},
+            "515": {"country": "Cambodia (Kingdom of)", "isoCC": "KH"},
+            "516": {"country": "Christmas Island (Indian Ocean)", "isoCC": "CX"},
+            "518": {"country": "Cook Islands", "isoCC": "CK"},
+            "520": {"country": "Fiji (Republic of)", "isoCC": "FJ"},
+            "523": {"country": "Cocos (Keeling) Islands", "isoCC": "CC"},
+            "525": {"country": "Indonesia (Republic of)", "isoCC": "ID"},
+            "529": {"country": "Kiribati (Republic of)", "isoCC": "KI"},
+            "531": {"country": "Lao People's Democratic Republic", "isoCC": "LA"},
+            "533": {"country": "Malaysia", "isoCC": "MY"},
+            "536": {"country": "Northern Mariana Islands (Commonwealth of the)", "isoCC": "US-MP"},
+            "538": {"country": "Marshall Islands (Republic of the)", "isoCC": "MH"},
+            "540": {"country": "New Caledonia", "isoCC": "NC"},
+            "542": {"country": "Niue", "isoCC": "NU"},
+            "544": {"country": "Nauru (Republic of)", "isoCC": "NR"},
+            "546": {"country": "French Polynesia", "isoCC": "FR-PF"},
+            "548": {"country": "Philippines (Republic of the)", "isoCC": "PH"},
+            "553": {"country": "Papua New Guinea", "isoCC": "PG"},
+            "555": {"country": "Pitcairn Island", "isoCC": "PN"},
+            "557": {"country": "Solomon Islands", "isoCC": "SB"},
+            "559": {"country": "American Samoa", "isoCC": "US-AS"},
+            "561": {"country": "Samoa (Independent State of)", "isoCC": "WS"},
+            "563": {"country": "Singapore (Republic of)", "isoCC": "SG"},
+            "564": {"country": "Singapore (Republic of)", "isoCC": "SG"},
+            "565": {"country": "Singapore (Republic of)", "isoCC": "SG"},
+            "567": {"country": "Thailand", "isoCC": "TH"},
+            "570": {"country": "Tonga (Kingdom of)", "isoCC": "TO"},
+            "572": {"country": "Tuvalu", "isoCC": "TV"},
+            "574": {"country": "Viet Nam (Socialist Republic of)", "isoCC": "VN"},
+            "576": {"country": "Vanuatu (Republic of)", "isoCC": "VU"},
+            "578": {"country": "Wallis and Futuna Islands", "isoCC": "FR-WF"},
+            "601": {"country": "South Africa (Republic of)", "isoCC": "ZA"},
+            "603": {"country": "Angola (Republic of)", "isoCC": "AO"},
+            "605": {"country": "Algeria (People's Democratic Republic of)", "isoCC": "DZ"},
+            "607": {"country": "Saint Paul and Amsterdam Islands", "isoCC": "FR-TF"},
+            "608": {"country": "Ascension Island", "isoCC": "SH"},
+            "609": {"country": "Burundi (Republic of)", "isoCC": "BI"},
+            "610": {"country": "Benin (Republic of)", "isoCC": "BJ"},
+            "611": {"country": "Botswana (Republic of)", "isoCC": "BW"},
+            "612": {"country": "Central African Republic", "isoCC": "CF"},
+            "613": {"country": "Cameroon (Republic of)", "isoCC": "CM"},
+            "615": {"country": "Congo (Republic of the)", "isoCC": "CG"},
+            "616": {"country": "Comoros (Union of the)", "isoCC": "KM"},
+            "617": {"country": "Cape Verde (Republic of)", "isoCC": "CV"},
+            "618": {"country": "Crozet Archipelago", "isoCC": "FR-TF"},
+            "619": {"country": "C?te d'Ivoire (Republic of)", "isoCC": "CI"},
+            "621": {"country": "Djibouti (Republic of)", "isoCC": "DJ"},
+            "622": {"country": "Egypt (Arab Republic of)", "isoCC": "EG"},
+            "624": {"country": "Ethiopia (Federal Democratic Republic of)", "isoCC": "ET"},
+            "625": {"country": "Eritrea", "isoCC": "ER"},
+            "626": {"country": "Gabonese Republic", "isoCC": "GA"},
+            "627": {"country": "Ghana", "isoCC": "GH"},
+            "629": {"country": "Gambia (Republic of the)", "isoCC": "GM"},
+            "630": {"country": "Guinea-Bissau (Republic of)", "isoCC": "GW"},
+            "631": {"country": "Equatorial Guinea (Republic of)", "isoCC": "GQ"},
+            "632": {"country": "Guinea (Republic of)", "isoCC": "GN"},
+            "633": {"country": "Burkina Faso", "isoCC": "BF"},
+            "634": {"country": "Kenya (Republic of)", "isoCC": "KE"},
+            "635": {"country": "Kerguelen Islands", "isoCC": "FR-TF"},
+            "636": {"country": "Liberia (Republic of)", "isoCC": "LR"},
+            "637": {"country": "Liberia (Republic of)", "isoCC": "LR"},
+            "642": {"country": "Socialist People's Libyan Arab Jamahiriya", "isoCC": "LY"},
+            "644": {"country": "Lesotho (Kingdom of)", "isoCC": "LS"},
+            "645": {"country": "Mauritius (Republic of)", "isoCC": "MU"},
+            "647": {"country": "Madagascar (Republic of)", "isoCC": "MG"},
+            "649": {"country": "Mali (Republic of)", "isoCC": "ML"},
+            "650": {"country": "Mozambique (Republic of)", "isoCC": "MZ"},
+            "654": {"country": "Mauritania (Islamic Republic of)", "isoCC": "MR"},
+            "655": {"country": "Malawi", "isoCC": "MW"},
+            "656": {"country": "Niger (Republic of the)", "isoCC": "NE"},
+            "657": {"country": "Nigeria (Federal Republic of)", "isoCC": "NG"},
+            "659": {"country": "Namibia (Republic of)", "isoCC": "NA"},
+            "660": {"country": "Reunion (French Department of)", "isoCC": "FR-RE"},
+            "661": {"country": "Rwanda (Republic of)", "isoCC": "RW"},
+            "662": {"country": "Sudan (Republic of the)", "isoCC": "SS"},
+            "663": {"country": "Senegal (Republic of)", "isoCC": "SN"},
+            "664": {"country": "Seychelles (Republic of)", "isoCC": "SC"},
+            "665": {"country": "Saint Helena", "isoCC": "SH"},
+            "666": {"country": "Somali Democratic Republic", "isoCC": "SO"},
+            "667": {"country": "Sierra Leone", "isoCC": "SL"},
+            "668": {"country": "Sao Tome and Principe (Democratic Republic of)", "isoCC": "ST"},
+            "669": {"country": "Swaziland (Kingdom of)", "isoCC": "SZ"},
+            "670": {"country": "Chad (Republic of)", "isoCC": "TD"},
+            "671": {"country": "Togolese Republic", "isoCC": "GB"},
+            "672": {"country": "Tunisia", "isoCC": "TN"},
+            "674": {"country": "Tanzania (United Republic of)", "isoCC": "TZ"},
+            "675": {"country": "Uganda (Republic of)", "isoCC": "UG"},
+            "676": {"country": "Democratic Republic of the Congo", "isoCC": "CG"},
+            "677": {"country": "Tanzania (United Republic of)", "isoCC": "TZ"},
+            "678": {"country": "Zambia (Republic of)", "isoCC": "ZM"},
+            "679": {"country": "Zimbabwe (Republic of)", "isoCC": "ZW"},
+            "701": {"country": "Argentine Republic", "isoCC": "AR"},
+            "710": {"country": "Brazil (Federative Republic of)", "isoCC": "BR"},
+            "720": {"country": "Bolivia (Plurinational State of)", "isoCC": "BO"},
+            "725": {"country": "Chile", "isoCC": "CL"},
+            "730": {"country": "Colombia (Republic of)", "isoCC": "CO"},
+            "735": {"country": "Ecuador", "isoCC": "EC"},
+            "740": {"country": "Falkland Islands (Malvinas)", "isoCC": "FK"},
+            "745": {"country": "Guiana (French Department of)", "isoCC": "FR-GF"},
+            "750": {"country": "Guyana", "isoCC": "GY"},
+            "755": {"country": "Paraguay (Republic of)", "isoCC": "PY"},
+            "760": {"country": "Peru", "isoCC": "PE"},
+            "765": {"country": "Suriname (Republic of)", "isoCC": "SR"},
+            "770": {"country": "Uruguay (Eastern Republic of)", "isoCC": "UR"},
+            "775": {"country": "Venezuela (Bolivarian Republic of)", "isoCC": "VE"}
+        }
+        
+        # Figure out if we have certain types of MMSI address.
+        if (mmsi >= 800000000) and (mmsi <= 899999999):
+            retVal.update({'mmsiType': "Diver's radio"})
+            # Where does the MID start?
+            midCursor = 1
+        
+        if (mmsi >= 10000000) and (mmsi <= 99999999):
+            retVal.update({'mmsiType': "Group of ships"})
+            # Where does the MID start?
+            midCursor = 0
+        
+        if (mmsi >= 1000000) and (mmsi <= 9999999):
+            retVal.update({'mmsiType': "Coastal stations"})
+            # Where does the MID start?
+            midCursor = 0
+        
+        if (mmsi >= 111000000) and (mmsi <= 111999999):
+            retVal.update({'mmsiType': "SAR aircraft"})
+            # Where does the MID start?
+            midCursor = 3
+        
+        if (mmsi >= 990000000) and (mmsi <= 999999999):
+            retVal.update({'mmsiType': "Aid to Navigation"})
+            # Where does the MID start?
+            midCursor = 2
+        
+        if (mmsi >= 980000000) and (mmsi <= 989999999):
+            retVal.update({'mmsiType': "Craft w/ parent ship"})
+            # Where does the MID start?
+            midCursor = 2
+        
+        if (mmsi >= 970000000) and (mmsi <= 970999999):
+            retVal.update({'mmsiType': "SART (Search and Rescue Xmitter)"})
+            # Where does the MID start?
+            midCursor = 3
+        
+        if (mmsi >= 972000000) and (mmsi <= 972999999):
+            retVal.update({'mmsiType': "MOB (Man Overboard) device"})
+            # Where does the MID start?
+            midCursor = 3
+        
+        if (mmsi >= 974000000) and (mmsi <= 974999999):
+            retVal.update({'mmsiType': "EPIRB"})
+            # Where does the MID start?
+            midCursor = 3
+        
+        # Get the MID portion of the MMSI.
+        midStr = mmsiStr[midCursor:(midCursor + 3)]
+        
+        # Set the country data.
+        retVal.update({'mmsiCountry': mid2Country[midStr]})
+        
+        # Send the data back along.
+        return retVal

@@ -419,6 +419,7 @@ function infoFactory(vehName) {
     var dimStr = "--";
     var turnRtStr = "--";
     var posStr = "--";
+    var flagStr = "--";
     
     // If we have the vessel name...
     if ("vesselName" in vehData[vehName]) {
@@ -490,6 +491,11 @@ function infoFactory(vehName) {
       posStr = vehData[vehName].lat + ", " + vehData[vehName].lon;
     }
     
+    // If we have country code data...
+    if ("mmsiCC" in vehData[vehName]) {
+      flagStr = vehData[vehName].mmsiCC;
+    }
+    
     // Figure out our dimensions.
     if ("dimToBow" in vehData[vehName]) {
       // 
@@ -510,10 +516,10 @@ function infoFactory(vehName) {
     // Build our table.
     retVal = "<table class=\"infoTable\">";
     retVal += "<tr><td colspan=4 class=\"vehInfoHeader\">" + idStr + "</td></td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Heading</td><td class=\"tblCell\">" + headingStr + " deg</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">COG</td><td class=\"tblCell\">" + cogStr + " deg</td><td class=\"tblHeader\">Position type</td><td class=\"tblCell\">" + epfdMetaStr + "</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">Velocity</td><td class=\"tblCell\">" + veloStr + " kt</td><td class=\"tblHeader\">Flag</td><td class=\"tblCell\">" + flagStr + "</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">COG / Hdg</td><td class=\"tblCell\">" + cogStr + " / " + headingStr + " deg</td><td class=\"tblHeader\">Pos. type</td><td class=\"tblCell\">" + epfdMetaStr + "</td></tr>";
     retVal += "<tr><td class=\"tblHeader\">Callsign</td><td class=\"tblCell\">" + callsignStr + "</td><td class=\"tblHeader\">Draught</td><td class=\"tblCell\">" + draughtStr + " m</td></tr>";
-    retVal += "<tr><td class=\"tblHeader\">Turn rate</td><td class=\"tblCell\">" + turnRtStr + " deg</td><td class=\"tblHeader\">Dimensions</td><td class=\"tblCell\">" + dimStr + " m</td></tr>";
+    retVal += "<tr><td class=\"tblHeader\">Turn rate</td><td class=\"tblCell\">" + turnRtStr + " deg</td><td class=\"tblHeader\">Dim.</td><td class=\"tblCell\">" + dimStr + " m</td></tr>";
     
     if (posStr != "--") {
       retVal += "<tr><td class=\"tblHeader\">Position</td><td colspan=3 class=\"tblCell\">" + posStr + "</td></tr>";
@@ -534,13 +540,18 @@ function infoFactory(vehName) {
     // If we have destination data...
     if ('destination' in vehData[vehName]) {
       if (vehData[vehName].destination != "") {
-        retVal += "<td class=\"tblHeader\">Destination</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].destination + "</td></tr>";
+        retVal += "<td class=\"tblHeader\">Dest.</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].destination + "</td></tr>";
       }
     }
     
     // If we have ETA data...
     if (etaStr != "--") {
       retVal += "<td class=\"tblHeader\">ETA</td><td colspan=3 class=\"tblCell\">" + etaStr + "</td></tr>";
+    }
+    
+    // If we have MMSI type data...
+    if ('mmsiType' in vehData[vehName]) {
+      retVal += "<td class=\"tblHeader\">MMSI type</td><td colspan=3 class=\"tblCell\">" + vehData[vehName].mmsiType + "</td></tr>";
     }
     
     // If we have some sort of emergency...

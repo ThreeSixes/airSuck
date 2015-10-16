@@ -204,7 +204,7 @@ class airSuckUtil:
             elif (aInt >= 7601 and aInt <= 7607) or (aInt >= 7701 and aInt <= 7707):
                 aMeta = "Special ops by Federal LEO"
             
-            elif (aInt >= 5001 and aInt <= 5057) or (aInt >= 5063 and aInt <= 5077) or (aInt >= 5401 and aInt <= 5077) or (aInt >= 6101 and aInt <= 6177) or (aInt >= 6401 and aInt <= 6477) or (aInt == 7501) or (aInt == 7577):
+            elif (aInt >= 5001 and aInt <= 5057) or (aInt >= 5063 and aInt <= 5077) or (aInt >= 5401 and aInt <= 5477) or (aInt >= 6101 and aInt <= 6177) or (aInt >= 6401 and aInt <= 6477) or (aInt == 7501) or (aInt == 7577):
                 aMeta = "DoD aircraft, NORAD assigned"
             
             elif ((aInt >= 1) and (aInt <= 77)) or ((aInt >= 4201) and (aInt <= 4277)) or ((aInt >= 4301) and (aInt <= 4377)) or ((aInt >= 4501) and (aInt <= 4577)) or ((aInt >= 4601) and (aInt <= 4677)) or ((aInt >= 4701) and (aInt <= 4777)) or ((aInt >= 5101) and (aInt <= 5177)) or ((aInt >= 5201) and (aInt <= 5277)) or ((aInt >= 5301) and (aInt <= 5377)) or ((aInt >= 5501) and (aInt <= 5577)):

@@ -378,6 +378,56 @@ class aisParse:
         # Return the last two ASCII-encoded hex bytes of the frame converted to an integer.
         return ord(binascii.unhexlify(frameStr[-2:]))
     
+    def __getImoCheck(self, imo):
+        """
+        __getImoCheck(imo)
+        
+        Implements the IMO number checking algrithm given an IMO number as an integer.
+        
+        Returns a dict containing imoCheck as a key and True or False indicating whether or not the check digit is valid.
+        """
+        
+        # Set our return value.
+        retVal = False
+        
+        # Starting divisor to get digits staring at the seventh.
+        divisor = 1000000
+        
+        # Running sum of the current digit times its position
+        runningSum = 0
+        
+        # Multiplier for each position.
+        multiplier = 0
+        
+        # This is used to manipulate the IMO in the loop, preserving the original IMO
+        loopImo = imo
+        
+        for i in range(1, 7):
+            # Compute our multiplier since range() can't go backward.
+            multiplier = (i - 8) * -1
+            
+            # Get the current digit.
+            thisDigit = loopImo / divisor
+            
+            # Remove the digit we just handled from the loop's IMO tracker.
+            loopImo -= thisDigit * divisor
+            
+            # Add the current digit times the multiplier for it to the sum.
+            runningSum += thisDigit * multiplier
+            
+            # Set the divisor to handle the next digit in the loop IMO.
+            divisor = divisor / 10
+        
+        
+        # Get the last digit of the running sum..
+        imoCheck = runningSum % 10
+        
+        # Get the last digit of the IMO, and check it against the computed IMO check value.
+        if (imo % 10) == imoCheck:
+            retVal = True
+        
+        return {'imoCheck': retVal}
+    
     def nmeaDecapsulate(self, sentence):
         """
         aisDecapsulate(sentence)
@@ -646,6 +696,10 @@ class aisParse:
                 # Get IMO number
                 imo = (self.__toSixer(payloadBin, 6, 11) >> 2) & 0x01ffffff
                 nmeaData.update({'imo': imo})
+                
+                # If we have a non-zero IMO number verify its checksum
+                if imo > 0:
+                    nmeaData.update(self.__getImoCheck(imo))
                 
                 # Get, decode, set callsign.
                 callsignRaw = (self.__toSixer(payloadBin, 11, 18) >> 2) & 0x3ffffffffff

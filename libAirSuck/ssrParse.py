@@ -834,8 +834,9 @@ class ssrParse:
                 # Get the CA/Capability value
                 retVal['ca'] = self.getCACO(binData)
                 
-                # Get the ICAO AA as a hex string.
+                # Get the ICAO AA as a hex string and int.
                 retVal['icaoAAHx'] = self.getIcaoAAHx(binData)
+                retVal['icaoAAInt'] = self.getIcaoAAInt(binData)
             
             # Long air-to-air ACAS
             elif(retVal['df'] == 16):
@@ -866,11 +867,9 @@ class ssrParse:
                     # Set our CA
                     retVal['ca'] = caCo
                     
-                    # Get the aircraft address for DF 17
-                    aa = self.getIcaoAAHx(binData)
-                    
-                    # Get the ICAO AA as a hex string.
-                    retVal['icaoAAHx'] = aa
+                    # Get the ICAO AA as a hex string and int.
+                    retVal['icaoAAHx'] = self.getIcaoAAHx(binData)
+                    retVal['icaoAAInt'] = self.getIcaoAAInt(binData)
                 else:
                     if self.decodeNames: retVal['dfName'] = "TIS-B"
                      # Control field description
@@ -890,18 +889,21 @@ class ssrParse:
                     
                     # ADSB ES/NT w/ICAO AA
                     if caCo == 0:
-                        # Set address.
+                        # Get the ICAO AA as a hex string and int.
                         retVal['icaoAAHx'] = self.getIcaoAAHx(binData)
-                
+                        retVal['icaoAAInt'] = self.getIcaoAAInt(binData)
+                    
                     # ADS-B ES/NT w/ other addr
                     elif caCo == 1:
                         # Set address.
                         retVal['addrHx'] = self.getIcaoAAHx(binData)
+                        retVal['addrInt'] = self.getIcaoAAInt(binData)
                     
                     # ADS-B rebroadcast using DF17 msg fmt.
                     elif caCo == 6:
-                        # Set address.
+                        # Get the ICAO AA as a hex string and int.
                         retVal['icaoAAHx'] = self.getIcaoAAHx(binData)
+                        retVal['icaoAAInt'] = self.getIcaoAAInt(binData)
                 
                 #Only proceed if we have DF17 or DF18 + CO0/1/6
                 if(retVal['df'] == 17) or ((retVal['df'] == 18) and ((caCo <= 1) or (caCo == 6))):

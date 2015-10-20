@@ -132,8 +132,6 @@ class aisParse:
         
         retVal = ""
         
-        #vector = ord(vector)
-        
         # Make sure the data we're trying to handle is in range.
         if (vector >= 48) and (vector <= 119):
             
@@ -536,7 +534,7 @@ class aisParse:
                 
                 # Set rate of turn
                 nmeaData.update({'turnRt': turnRt})
-                    
+                
                 #### TODO: CREATE METHOD TO HANDLE TURN RATE DATA #####
                 
                 # Speed over ground

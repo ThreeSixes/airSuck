@@ -578,7 +578,7 @@ class aisParse:
                 
                 # Convert course over ground to be in tenths of a degree.
                 cog = round(cog / 10.0, 1)
-                    
+                
                 # Course over the ground.
                 nmeaData.update({'courseOverGnd': cog})
                 
@@ -697,9 +697,8 @@ class aisParse:
                 imo = (self.__toSixer(payloadBin, 6, 11) >> 2) & 0x01ffffff
                 nmeaData.update({'imo': imo})
                 
-                # If we have a non-zero IMO number verify its checksum
-                if imo > 0:
-                    nmeaData.update(self.__getImoCheck(imo))
+                # Get IMO checksum
+                nmeaData.update(self.__getImoCheck(imo))
                 
                 # Get, decode, set callsign.
                 callsignRaw = (self.__toSixer(payloadBin, 11, 18) >> 2) & 0x3ffffffffff
@@ -737,10 +736,8 @@ class aisParse:
                 # Get our EPFD bits
                 epfd = (self.__vector2Bin(payloadBin[45]) & 0x3f) >> 2
                 
-                # If we have something that's defined...
-                if epfd > 0:
-                    # Set the EPFD data.
-                    nmeaData.update({'epfd': epfd})
+                # Set the EPFD data.
+                nmeaData.update({'epfd': epfd})
                 
                 # Get ETA info.
                 etaMonth = (((self.__vector2Bin(payloadBin[45]) << 6) | self.__vector2Bin(payloadBin[46])) >> 4) & 0x0f

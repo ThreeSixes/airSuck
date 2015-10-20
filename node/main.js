@@ -420,16 +420,24 @@ function infoFactory(vehName) {
     var turnRtStr = "--";
     var posStr = "--";
     var flagStr = "--";
+    var imoFlagStr = "";
     
     // If we have the vessel name...
     if ("vesselName" in vehData[vehName]) {
       idStr += vehData[vehName].vesselName + " ";
     }
     
-    // If we have the vessel name...
+    // If we an IMO that doesn't check out...
+    if ("imoCheck" in vehData[vehName]) {
+      if (vehData[vehName].imoCheck == false) {
+        imoFlagStr = "*";
+      }
+    }
+    
+    // If we have a non-zero IMO...
     if ("imo" in vehData[vehName]) {
       if (vehData[vehName].imo > 0) {
-        idStr += "(" + vehData[vehName].imo + ") ";
+        idStr += "(" + vehData[vehName].imo + imoFlagStr + ") ";
       }
     }
     

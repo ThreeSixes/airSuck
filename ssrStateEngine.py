@@ -373,8 +373,9 @@ class SubListener(threading.Thread):
                             if 'idInfo' in ssrWrapped:
                                 data.update({"idInfo": ssrWrapped['idInfo']})
                             
-                            # Add our ICAO AA as an integer.
-                            data.update({'icaoAAInt': ssrWrapped['icaoAAInt']})
+                            if 'icaoAAInt' in ssrWrapped:
+                                # Add our ICAO AA as an integer.
+                                data.update({'icaoAAInt': ssrWrapped['icaoAAInt']})
                             
                             # Check for emergency conditions.
                             data.update(self.getEmergencyInfo(ssrWrapped))

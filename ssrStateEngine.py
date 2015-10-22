@@ -357,6 +357,10 @@ class SubListener(threading.Thread):
                         # If we have an aircraft address specified and a good CRC...
                         if ('icaoAAHx' in ssrWrapped) and (crcGood == True):
                             
+                            # ICAO AA as integer if we have it.
+                            if 'icaoAAInt' in ssrWrapped:
+                                data.update({"icaoAAInt": ssrWrapped['icaoAAInt']})
+                            
                             # Mode A squawk code if we have one!
                             if 'aSquawk' in ssrWrapped:
                                 data.update({"aSquawk": ssrWrapped['aSquawk']})
@@ -372,10 +376,6 @@ class SubListener(threading.Thread):
                             # idIfno if we have it!
                             if 'idInfo' in ssrWrapped:
                                 data.update({"idInfo": ssrWrapped['idInfo']})
-                            
-                            if 'icaoAAInt' in ssrWrapped:
-                                # Add our ICAO AA as an integer.
-                                data.update({'icaoAAInt': ssrWrapped['icaoAAInt']})
                             
                             # Check for emergency conditions.
                             data.update(self.getEmergencyInfo(ssrWrapped))

@@ -210,7 +210,7 @@ class airSuckUtil:
             elif ((aInt >= 0) and (aInt <= 77)) or ((aInt >= 4200) and (aInt <= 4377)) or ((aInt >= 4500) and (aInt <= 4777)) or ((aInt >= 5100) and (aInt <= 5377)) or ((aInt >= 5500) and (aInt <= 5577)):
                 aMeta = "Internal ARTCC"
             
-            elif ((aInt >= 500) and (aInt <= 1100)) or ((aInt >= 1300) and (aInt <= 4177)) or ((aInt >= 5600) and (aInt <= 6077)) or ((aInt >= 6200) and (aInt <= 6377)) or ((aInt >= 6500) and (aInt <= 7077)) or ((aInt >= 7100) and (aInt <= 7377)) or ((aInt >= 7610) and (aInt <= 7677)) or ((aInt >= 7710) and (aInt <= 7776)):
+            elif ((aInt >= 500) and (aInt <= 1177)) or ((aInt >= 1300) and (aInt <= 4177)) or ((aInt >= 5600) and (aInt <= 6077)) or ((aInt >= 6200) and (aInt <= 6377)) or ((aInt >= 6500) and (aInt <= 7077)) or ((aInt >= 7100) and (aInt <= 7377)) or ((aInt >= 7610) and (aInt <= 7677)) or ((aInt >= 7710) and (aInt <= 7776)):
                 aMeta = "External ARTCC"
             
         return aMeta

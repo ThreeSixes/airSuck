@@ -49,7 +49,7 @@ class dataSource(threading.Thread):
 	
 	A generic class that represents a given dump1090 data source
 	"""
-	 
+	
 	def __init__(self, myName, dump1090Src):
 		print("Init thread for " + myName)
 		threading.Thread.__init__(self)
@@ -259,14 +259,25 @@ class dataSource(threading.Thread):
 		"""
 		buffer = ''
 		data = True
-		while data:
-			data = sock.recv(recvBuffer)
-			buffer += data
-			
-			while buffer.find(delim) != -1:
-				line, buffer = buffer.split('\n', 1)
-				yield line
-		return
+		try:
+			while data:
+				data = sock.recv(recvBuffer)
+				buffer += data
+				
+				while buffer.find(delim) != -1:
+					line, buffer = buffer.split('\n', 1)
+					# Debugging...
+					#print("L: " + str(line) + ", B: " + str(buffer))
+					yield line
+			return
+		
+		except:
+			print(self.myName + " choked reading buffer.")
+			tb = traceback.format_exc()
+			print(tb)
+			data = False
+			buffer = ""
+			line = ""
 	
 	# Convert the data we want to send to JSON format.
 	def queueADSB(self, msg, dedupeFlag):

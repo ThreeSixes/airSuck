@@ -153,7 +153,7 @@ class dataSource(threading.Thread):
 					#Make sure we didn't trim microseconds because if we did the mongoDump script gets pissed off.
 					if (len(dtsStr) == 19):
 						dtsStr = dtsStr + ".000000"
-						
+					
 					# Todo: handle MLAT data here.
 					if thisLine.find('@') >= 0:
 						# This doesn't get deduplicated.
@@ -173,7 +173,7 @@ class dataSource(threading.Thread):
 						
 						# Add parsed data.
 						thisEntry.update(self.__ssrParser.ssrParse(binData))
-						
+					
 					else:
 						# This gets fed to the deduplicator.
 						dedupeFlag = True
@@ -185,12 +185,12 @@ class dataSource(threading.Thread):
 						# Properly format the "line"
 						thisEntry.update({ 'data': formattedSSR })
 						
-						# Create an entry to be queued.
-						thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName, 'entryPoint': 'dump1090ConnClt' })
-						
 						# Parse our data and add it to the stream.
 						thisEntry.update(self.__ssrParser.ssrParse(binData))
-						
+					
+					# Create an entry to be queued.
+					thisEntry.update({ 'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': myName, 'entryPoint': 'dump1090ConnClt' })
+					
 					# Queue up our data.
 					self.queueADSB(thisEntry, dedupeFlag)
 				

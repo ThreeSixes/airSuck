@@ -949,7 +949,7 @@ class ssrParse:
                         
                         # Get our track validity bit
                         headingValid = (binData[5] & 0x08) >> 3
-                        retVal['headingValid'] = trackValid
+                        retVal['headingValid'] = headingValid
                         
                         # If we have a valid track, get our track bits
                         if(headingValid == 1):

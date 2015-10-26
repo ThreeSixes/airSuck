@@ -51,7 +51,7 @@ class dataSource(threading.Thread):
 	"""
 	
 	def __init__(self, myName, dump1090Src):
-		print("Init thread for " + myName)
+		print("Init thread for " + myName + ".")
 		threading.Thread.__init__(self)
 		
 		# Extend properties to be class-wide.
@@ -323,7 +323,7 @@ r = redis.StrictRedis()
 
 # Spin up our client threads.
 for thisName, connData in dump1909Srcs.iteritems():
-	print("Spinning up thread for " + thisName)
+	print("Spinning up thread for " + thisName + ".")
 	client = dataSource(thisName, connData)
 	client.daemon = True
 	client.start()

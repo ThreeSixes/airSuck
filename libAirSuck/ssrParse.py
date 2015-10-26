@@ -956,7 +956,7 @@ class ssrParse:
                             headingRaw = ((binData[5] & 0x07) << 4) | (((binData[6] & 0xF0)) >> 4)
                             
                             # The track data is from 0-360, in 128 steps.
-                            headingRaw = trackRaw * 2.8125
+                            headingRaw = headingRaw * 2.8125
                             
                             # Round to 1 decimal place
                             headingRaw = round(headingRaw, 1)

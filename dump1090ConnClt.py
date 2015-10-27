@@ -109,10 +109,11 @@ class dataSource(threading.Thread):
 		
 		print(myName + " running.")
 		
+		# Create our socket.
+		dump1090Sock = socket()
+		
 		# Do stuff.
 		while (alive):
-			dump1090Sock = socket()
-			
 			# Attempt to connect.
 			try:
 				# Connect up
@@ -121,15 +122,18 @@ class dataSource(threading.Thread):
 				print(myName + " connected.")
 				
 			except Exception as e:
-					# If we weren't able to connect, dump a message
-					if e.errno == errno.ECONNREFUSED:
-						
-						#Print some messages
-						print(myName + " failed to connect to " + dump1090Src["host"] + ":" + str(dump1090Src["port"]))
-						print(myName + " sleeping " + str(dump1090Src["reconnectDelay"]) + " sec")
+					if 'errno' in e:
+						# If we weren't able to connect, dump a message
+						if e.errno == errno.ECONNREFUSED:
+							
+							#Print some messages
+							print(myName + " failed to connect to " + dump1090Src["host"] + ":" + str(dump1090Src["port"]))
+							print(myName + " sleeping " + str(dump1090Src["reconnectDelay"]) + " sec")
 					else:
-						# Something besides connection refused happened. Let's figure out what happened.
-						pprint(e)
+						# Dafuhq happened!?
+						print(self.myName + " went boom.")
+						tb = traceback.format_exc()
+						print(tb)
 					
 					# In the event our connect fails, try again after the configured delay
 					time.sleep(dump1090Src["reconnectDelay"])
@@ -194,6 +198,7 @@ class dataSource(threading.Thread):
 					# Queue up our data.
 					self.queueADSB(thisEntry, dedupeFlag)
 				
+				# Close the connection.
 				dump1090Sock.close()
 				
 			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
@@ -205,6 +210,10 @@ class dataSource(threading.Thread):
 				print(self.myName + " went boom.")
 				tb = traceback.format_exc()
 				print(tb)
+				
+				# Delete our connection.
+				del dump1090Sock
+				dump1090Sock = socket()
 	
 	def formatSSRMsg(self, strMsg):
 		"""
@@ -259,8 +268,8 @@ class dataSource(threading.Thread):
 		"""
 		buffer = ''
 		data = True
-		try:
-			while data:
+		while data:
+			try:
 				data = sock.recv(recvBuffer)
 				buffer += data
 				
@@ -269,15 +278,21 @@ class dataSource(threading.Thread):
 					# Debugging...
 					#print("L: " + str(line) + ", B: " + str(buffer))
 					yield line
-			return
-		
-		except:
-			print(self.myName + " choked reading buffer.")
-			tb = traceback.format_exc()
-			print(tb)
-			data = False
-			buffer = ""
-			line = ""
+			
+			except Exception as e:
+				# If we had a disconnect event drop out of the loop.
+				if e.errno == 9:
+					print(self.myName + " disconnected.")
+					data = False
+					raise e
+				else:
+					print(self.myName + " choked reading buffer.")
+					tb = traceback.format_exc()
+					#print(tb)
+					data = False
+					#buffer = ""
+					line = ""
+			
 	
 	# Convert the data we want to send to JSON format.
 	def queueADSB(self, msg, dedupeFlag):
@@ -301,7 +316,9 @@ class dataSource(threading.Thread):
 			
 			# Put data on the pub/sub queue.
 			self.__psQ.publish(config.connPub['qName'], jsonMsg)
-		
+			
+			print("Q: " + str(msg['data']))
+			
 		# Reset our lastEntry seconds.
 		self.__lastEntry = 0
 		

@@ -59,6 +59,7 @@ class dataSource(threading.Thread):
 		self.dump1090Src = dump1090Src
 		self.__ssrParser = ssrParse()
 		self.__watchdogFail = False
+		self.__backoff = 1.0
 		
 		# Our class-wide socket object.
 		self.__dump1090Sock = None
@@ -81,8 +82,7 @@ class dataSource(threading.Thread):
 		
 		try:
 			# Check to see if our last entry was inside the timeout window.
-			#if self.__lastEntry >= self.dump1090Src['threadTimeout']:
-			if self.__lastEntry >= 20:
+			if self.__lastEntry >= self.dump1090Src['threadTimeout']:
 				# Puke if we have been running for too long without data.
 				raise IOError()
 			else:
@@ -114,9 +114,8 @@ class dataSource(threading.Thread):
 		Connects to our host.
 		"""
 		
-		# Create a new socket object, and set a 1-second timeout on blocking operations.
+		# Create a new socket object.
 		self.__dump1090Sock = socket.socket()
-		self.__dump1090Sock.settimeout(1.0)
 		
 		# We're not connected so set the flag.
 		notConnected = True
@@ -155,8 +154,11 @@ class dataSource(threading.Thread):
 					print(tb)
 				
 				# In the event our connect fails, try again after the configured delay
-				print(self.myName + " sleeping " + str(self.dump1090Src["reconnectDelay"]) + " sec")
-				time.sleep(self.dump1090Src["reconnectDelay"] * self.backoff)
+				print(self.myName + " sleeping " + str(self.dump1090Src["reconnectDelay"] * self.__backoff) + " sec.")
+				time.sleep(self.dump1090Src["reconnectDelay"] * self.__backoff)
+		
+		# Set 1 second timeout for blocking operations.
+		self.__dump1090Sock.settimeout(1.0)
 	
 	# Disconnect the source and re-create the socket object.
 	def disconnectSouce(self):
@@ -194,7 +196,7 @@ class dataSource(threading.Thread):
 			# Attempt to connect.
 			self.connectSource()
 			
-			# Try to read a lone from our established socket.
+			# Try to read a line from our established socket.
 			try:
 				# The watchdog should be run every second.
 				self.__lastEntry = 0
@@ -416,7 +418,8 @@ class dataSource(threading.Thread):
 				# Put data on the pub/sub queue.
 				self.__psQ.publish(config.connPub['qName'], jsonMsg)
 				
-				print("Q: " + str(msg['data']))
+				# Debug
+				#print("Q: " + str(msg['data']))
 				
 			# Reset our lastEntry seconds.
 			self.__lastEntry = 0

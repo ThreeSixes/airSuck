@@ -112,6 +112,26 @@ class dataSource(threading.Thread):
 		# Increment our last entry.
 		self.__lastEntry += 1
 	
+	# Handle backoff data.
+	def handleBackoff(self, reset=False):
+		"""
+		handleBackoff([reset])
+		
+		Handle the backoff algorithm for reconnect delay. Accepts one optional argument, reset which is a boolean value. When reset is true, the backoff value is set back to 1. Returns no data.
+		"""
+		
+		# If we're resetting the backoff set it to 1.0.
+		if reset:
+			self.__backoff = 1.0
+		else:
+			# backoff ^ 2 for each iteration, ending at 4.0.
+			if self.__backoff == 1.0:
+				self.__backoff = 2.0
+			elif self.__backoff == 2.0:
+				self.__backoff = 4.0
+		
+		return
+	
 	# Connect to our data source.
 	def connectSource(self):
 		"""
@@ -146,6 +166,9 @@ class dataSource(threading.Thread):
 				# Reset the watchdog state.
 				self.__watchdogFail = False
 				
+				# Reset the backoff value
+				self.handleBackoff(True)
+				
 			except Exception as e:
 				if 'errno' in e:
 					# If we weren't able to connect, dump a message
@@ -162,9 +185,17 @@ class dataSource(threading.Thread):
 				# In the event our connect fails, try again after the configured delay
 				print(self.myName + " sleeping " + str(self.AISSrc["reconnectDelay"] * self.__backoff) + " sec.")
 				time.sleep(self.AISSrc["reconnectDelay"] * self.__backoff)
+				
+				# Handle backoff.
+				self.handleBackoff()
 		
 		# Set 1 second timeout for blocking operations.
 		self.__aisSock.settimeout(1.0)
+		
+		# The watchdog should be run every second.
+		self.__lastEntry = 0
+		self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+		self.__myWatchdog.start()
 	
 	# Disconnect the source and re-create the socket object.
 	def disconnectSouce(self):
@@ -186,6 +217,13 @@ class dataSource(threading.Thread):
 		
 		# Reset the lastEntry counter.
 		self.__lastEntry = 0
+		
+		try:
+			# Stop the watchdog.
+			self.__myWatchdog.cancel()
+		except:
+			# Don't do anything.
+			None
 	
 	# Strip metachars.
 	def metaStrip(self, subject):
@@ -455,31 +493,6 @@ class dataSource(threading.Thread):
 		while (True):
 			# Attempt to connect.
 			self.connectSource()
-			
-			# Try to read a line from our established socket.
-			try:
-				# The watchdog should be run every second.
-				self.__lastEntry = 0
-				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
-				self.__myWatchdog.start()
-				
-			except Exception as e:
-					# If we weren't able to connect, dump a message
-					if e.errno == errno.ECONNREFUSED:
-						
-						#Print some messages
-						print(self.myName + " failed to connect to " + self.AISSrc["host"] + ":" + str(self.AISSrc["port"]))
-						print(self.myName + " sleeping " + str(self.AISSrc["reconnectDelay"]) + " sec")
-						AISSock.close()
-					else:
-						# Something besides connection refused happened. Let's figure out what happened.
-						print(self.myName + " error while trying to connect.")
-						tb = traceback.format_exc()
-						print(tb)
-						AISSock.close()
-					
-					# In the event our connect fails, try again after the configured delay
-					time.sleep(self.AISSrc["reconnectDelay"])
 			
 			# Try to read a lone from our established socket.
 			try:				

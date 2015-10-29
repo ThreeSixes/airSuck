@@ -26,7 +26,7 @@ import errno
 import binascii
 import hashlib
 import traceback
-from socket import socket
+import socket
 from pprint import pprint
 from libAirSuck import aisParse
 
@@ -63,6 +63,11 @@ class dataSource(threading.Thread):
 		self.AISSrc = AISSrc
 		self.enqueue = enqueue
 		self.__aisParser = aisParse()
+		self.__watchdogFail = False
+		self.__backoff = 1.0
+		
+		# Our class-wide socket object.
+		self.__aisSock = None
 		
 		# This keeps track of the number of seconds since our last connection.
 		self.__lastEntry = 0
@@ -72,8 +77,8 @@ class dataSource(threading.Thread):
 		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
 		self.__frag = redis.StrictRedis(host=config.aisConnSettings['fragHost'], port=config.aisConnSettings['fragPort'])
 		self.__dedupe = redis.StrictRedis(host=config.aisConnSettings['dedupeHost'], port=config.aisConnSettings['dedupePort'])
-	
-	# Make sure we have data. If we don't throw an exception.
+
+	# Make sure we don't have a dead connection.
 	def watchdog(self):
 		"""
 		watchdog()
@@ -84,26 +89,103 @@ class dataSource(threading.Thread):
 		try:
 			# Check to see if our last entry was inside the timeout window.
 			if self.__lastEntry >= self.AISSrc['threadTimeout']:
-				# Stop the watchdog.
-				self.__myWatchdog.cancel()
-				
 				# Puke if we have been running for too long without data.
-				raise IOError(self.myName + ": No data recieved in " + str(self.AISSrc['threadTimeout']) + " sec. Restarting connection.")
+				raise IOError()
 			else:
 				# Restart our watchdog.
 				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
 				self.__myWatchdog.start()
+		
 		except Exception as e:
-			# Stop the watchdog to avoid spawning more than one.
+			# Set the watchdog failure flag.
+			self.__watchdogFail = True
+			
+			# Stop the watchdog.
 			self.__myWatchdog.cancel()
 			
-			# Dump the exception and restart.
-			tb = traceback.format_exc()
-			print(tb)
-			self.run()
+			# Prion the error message
+			print(self.myName + " watchdog: No data recieved in " + str(self.AISSrc['threadTimeout']) + " sec.")
+			
+			# Close the connection.
+			self.__aisSock.close()
 		
 		# Increment our last entry.
 		self.__lastEntry += 1
+	
+	# Connect to our data source.
+	def connectSource(self):
+		"""
+		connectSource()
+		
+		Connects to our host.
+		"""
+		
+		# Create a new socket object
+		self.__aisSock = socket.socket()
+		
+		# We're not connected so set the flag.
+		notConnected = True
+		
+		# Keep trying to connect until it works.
+		while notConnected:
+			# Print message
+			print(self.myName + " connecting to " + self.AISSrc["host"] + ":" + str(self.AISSrc["port"]))
+			
+			# Attempt to connect.
+			try:
+				# Connect up
+				self.__aisSock.connect((self.AISSrc["host"], self.AISSrc["port"]))
+				print(self.myName + " connected.")
+				
+				# We connected so now we can move on.
+				notConnected = False
+				
+				# Reset the lastEntry counter.
+				self.__lastEntry = 0
+				
+				# Reset the watchdog state.
+				self.__watchdogFail = False
+				
+			except Exception as e:
+				if 'errno' in e:
+					# If we weren't able to connect, dump a message
+					if e.errno == errno.ECONNREFUSED:
+						#Print some messages
+						print(myName + " failed to connect to " + self.AISSrc["host"] + ":" + str(self.AISSrc["port"]))
+				
+				else:
+					# Dafuhq happened!?
+					print(self.myName + " went boom connecting.")
+					tb = traceback.format_exc()
+					print(tb)
+				
+				# In the event our connect fails, try again after the configured delay
+				print(self.myName + " sleeping " + str(self.AISSrc["reconnectDelay"] * self.__backoff) + " sec.")
+				time.sleep(self.AISSrc["reconnectDelay"] * self.__backoff)
+		
+		# Set 1 second timeout for blocking operations.
+		self.__aisSock.settimeout(1.0)
+	
+	# Disconnect the source and re-create the socket object.
+	def disconnectSouce(self):
+		"""
+		disconnectSource()
+		
+		Disconnect from our host.
+		"""
+		
+		print(self.myName + " disconnecting.")
+		
+		try:	
+			# Close the connection.
+			self.__aisSock.close()
+		except:
+			print(self.myName + " threw exception disconnecting.")
+			tb = traceback.format_exc()
+			print(tb)
+		
+		# Reset the lastEntry counter.
+		self.__lastEntry = 0
 	
 	# Strip metachars.
 	def metaStrip(self, subject):
@@ -139,13 +221,45 @@ class dataSource(threading.Thread):
 		buffer = ''
 		data = True
 		while data:
-			data = sock.recv(recvBuffer)
-			buffer += data
+			try:
+				data = sock.recv(recvBuffer)
+				buffer += data
+				
+				while buffer.find(delim) != -1:	
+					line, buffer = buffer.split('\n', 1)
+					# Debugging...
+					#print("L: " + str(line) + ", B: " + str(buffer))
+					yield line
 			
-			while buffer.find(delim) != -1:
-				line, buffer = buffer.split('\n', 1)
-				yield line
-		return
+			except socket.timeout:
+				continue
+			
+			except Exception as e:
+				# If we had a disconnect event drop out of the loop.
+				if 'errno' in e:
+					if e.errno == 9:
+						print(self.myName + " disconnected.")
+						data = False
+						raise e
+					
+					else:
+						print(self.myName + " choked reading buffer.")
+						tb = traceback.format_exc()
+						print(tb)
+						data = False
+						line = ""
+				else:
+					print(self.myName + " choked reading buffer.")
+					tb = traceback.format_exc()
+					print(tb)
+					data = False
+					line = ""
+			
+			# See if our watchdog is working.
+			if self.__watchdogFail:
+				print(self.myName + " watchdog terminating readLines.")
+				data = False
+				break
 
 	# Convert the data we want to send to JSON format.
 	def queueAIS(self, msg):
@@ -184,6 +298,9 @@ class dataSource(threading.Thread):
 				
 				# Put data on the pub/sub queue.
 				self.__psQ.publish(config.connPub['qName'], jsonMsg)
+				
+				# Debug
+				#print("Q: " + enqueueMe['data'])
 		else:
 			# Just dump the JSON data as a string.
 			print(jsonMsg)
@@ -335,15 +452,16 @@ class dataSource(threading.Thread):
 		print(self.myName + " running.")
 		
 		# Do stuff.
-		while (alive):
-			AISSock = socket()
-			
+		while (True):
 			# Attempt to connect.
+			self.connectSource()
+			
+			# Try to read a line from our established socket.
 			try:
-				# Connect up
-				print(self.myName + " connecting to " + self.AISSrc["host"] + ":" + str(self.AISSrc["port"]))
-				AISSock.connect((self.AISSrc["host"], self.AISSrc["port"]))
-				print(self.myName + " connected.")
+				# The watchdog should be run every second.
+				self.__lastEntry = 0
+				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+				self.__myWatchdog.start()
 				
 			except Exception as e:
 					# If we weren't able to connect, dump a message
@@ -364,32 +482,36 @@ class dataSource(threading.Thread):
 					time.sleep(self.AISSrc["reconnectDelay"])
 			
 			# Try to read a lone from our established socket.
-			try:
-				
-				# The watchdog should be run every second.
-				self.__lastEntry = 0
-				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
-				self.__myWatchdog.start()
-				
+			try:				
 				# Get lines of data from dump1090
-				for thisLine in self.readLines(AISSock):
+				for thisLine in self.readLines(self.__aisSock):
 					# Do our thing.
 					self.handleLine(thisLine)
-				AISSock.close()
-			
-			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
-			except:
-				# Stop the watchdog to avoid spawning more than one.
-				self.__myWatchdog.cancel()
 				
-				# Dafuhq happened!?
-				print(self.myName + " went boom.")
-				tb = traceback.format_exc()
-				print(tb)
-			
-			finally:
-				# Close the socket.
-				AISSock.close()
+				# Close the connection.
+				self.disconnectSouce()
+				
+			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
+			except Exception as e:
+				if 'errno' in e:
+					if e.errno == 9:
+						continue
+					else:
+						# Dafuhq happened!?
+						print(self.myName + " went boom processing data.")
+						tb = traceback.format_exc()
+						print(tb)
+						
+						# Close the connection.
+						self.disconnectSouce()
+				else:
+					# Dafuhq happened!?
+					print(self.myName + " went boom processing data.")
+					tb = traceback.format_exc()
+					print(tb)
+					
+					# Close the connection.
+					self.disconnectSouce()
 
 #######################
 # Main execution body #

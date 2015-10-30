@@ -1,0 +1,11 @@
+Dependencies for components of the dump1090 stack:
+++ General requirements for the software stack.
+    Python
+    Supervisor: Daemons and clients.
+    MonogoDB: mongoDump.py, stateMongoDump.py
+    Redis: All
+    python-redis: All
+    python-pymongo: mongoDump.py, stateMongoDump.py
+    Node.JS: stateNode.js
+    npm: Node.JS
+    stateNode.js: Node.JS modules socket.io, express

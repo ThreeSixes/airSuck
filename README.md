@@ -13,19 +13,21 @@ Features:
  - The libAirSuck package can be used in part or entirely by other python projects to process telemetry data.
    - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, and cprMath.py.
 
-Future support for ACARS data and using the FAA downloadable aircraft database to provide additional aircraft data are planned in future releases. 
+Support for ACARS data and using the FAA downloadable aircraft database to provide additional aircraft data are planned in future releases. 
 
 
 File list:
 
 "Daemons":
+  - aisConnector.py - Handles connections to one or more AIS NMEA TCP source to recieve AIS data.
   - dump1090ConnClt.py - Handles connections to one or more dump1090 instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
   - dump1090ConnSrv.py - Recieves JSON data from dump1090 client connector instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
   - mongoDump.py - Stores incoming raw data from sources in a database for storage and reprocessing if necessary.
+  - aisStateEngine.py - Handles processing of stateful AIS data to build vessel and station data, locaions, callsigns, IMOs, etc. This process dumps AIS on a pub/sub queue for halding by other processes, and on a reliable queue for storage in MongoDB.
   - ssrStateEngine.py - Handles processing of stateful ADS-B data to build aircraft location data, call signs, etc. This process dumps aircraft state updates on a pub/sub queue for handling by other processes, and on a reliable queue for storage in MongoDB.
   - stateMongoDump.py - Stores state data in MongoDB for later processing.
   - node/stateNode.js - Node.js server for passing state JSON to a browser or other service. Requires Node.js and the following Node.js packages: redis, express, socket.io
-  - node/dump1090Client.js - dump1090 node.js submitter for connecting to dump1090Srv.py.
+  - node/dump1090Client.js - dump1090 node.js submitter for connecting to dump1090Srv.py. Will be replaced by another script.
 
 Libraries:
   - libAirSuck/ - Package folder for libAirSuck which includes parsers, etc.

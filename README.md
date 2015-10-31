@@ -55,7 +55,7 @@ Support config files:
   - supervisor/airSuck-dump1090ConnClt.conf - Supversior config file to keep dump1090ConnClt.py running as a daemon.
   - supervisor/airSuck-dump1090ConnSrv.conf - Supversior config file to keep dump1090ConnSrv.py running as a daemon.
   - supervisor/airSuck-mongoDump.conf - Supervisor config file to keep mongoDump.py running as a daemon.
-  - supervisor/airSuck-asiStateEngine.conf - Supervisor config file to keep aisStateEngine.py running as a daemon.
+  - supervisor/airSuck-aisStateEngine.conf - Supervisor config file to keep aisStateEngine.py running as a daemon.
   - supervisor/airSuck-ssrStateEngine.conf - Supervisor config file to keep ssrStateEngine.py running as a daemon.
   - supervisor/airSuck-stateMongoDump.conf - Supervisor config file to keep stateMongoDump.py running as a daemon.
   - supervisor/airSuck-stateNode.conf - Supervisor config file to keep node/stateNode.js running as a daemon.

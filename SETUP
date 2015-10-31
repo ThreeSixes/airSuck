@@ -9,3 +9,20 @@ Dependencies for components of the dump1090 stack:
     Node.JS: stateNode.js
     npm: Node.JS
     stateNode.js: Node.JS modules socket.io, express
+
+++ Instructions to set up airSuck
+  - Install prerequisites listed above on the host or hosts that will run each component.
+  - Clone the airSuck git repository using: git clone https://github.com/ThreeSixes/airSuck.git
+  - Move the airSuck folder to /opt.
+  - Copy the necessary supervisor scripts from supervisor/ to /etc/supervisor/conf.d/
+    - In order to recieve AIS data you'll need the aisConnector and aisStateEngine scripts.
+    - In order to recieve ADS-B data you'll need at least one of the dump1090ConnClt or dump1090ConnSrv scripts and the ssrStateEngine.
+    - In order to use the Node.JS web server copy the stateNode script to the conf.d folder.
+    - If you want to store state or raw data in MongoDB you'll need to add mongoDump and/or stateMongoDump.
+  - In /opt/airSuck/config copy config.py to /opt/airSuck. This is a template for the main configuration file.
+  - Edit /opt/airSuck/config.py to match your environment in terms of hosts, requirements, etc.
+  - If you're using stateNode to view vehicle telemetry on Google Maps make sure you copy /opt/airSuck/config/config.js to /opt/airSuck/node/.
+    - Edit config.js in the node folder to have the same Redis state queue properties as the ones conifigured in config.py.
+    - The default web server port for stateNode is 8090. It can be changed to wahtever you want.
+  - Restart supervisor using /etc/init.d/supervisor restart. That will start the airSuck stack.
+  - To check for issues with the stack you can manually run scripts inside /opt/airSuck, and check log files in /var/log/supervisor/.

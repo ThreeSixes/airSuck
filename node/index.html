@@ -15,34 +15,15 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
     
     <title>AirSuck geospatial viewer</title>
     
-    <!-- Master stylesheet -->
-    <link rel="stylesheet" type="text/css" href="main.css">
-    
-    <!-- Include jQuery because normal JS sucks. -->
-    <script src="jquery-2.1.4.min.js" type="text/javascript"></script>
-    
-    <!-- Include the Socket.IO JS package -->
-    <script src="socket.io/socket.io.js" type="text/javascript"></script>
-    
-    <!-- Include the Google Maps API -->
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?&callback=initMap&signed_in=true" async defer></script>
-    
-    <!-- Include color ramp system rainbowvis-js -->
-    <script src="rainbowvis.js" type="text/javascript"></script>
+    <!-- Scripts and CSS -->
+    <link rel="stylesheet" type="text/css" href="css/main.css"><!-- Master stylesheet -->
+    <script src="js/jquery-2.1.4.min.js" type="text/javascript"></script><!-- Include jQuery because normal JS sucks. -->
+    <script src="js/airsuckLoad.js" type="text/javascript"></script><!-- Include airsuck JS loader. -->
   
   </head>
   <body>
     <!-- The Giggle map goes here. -->
     <div id="map"></div>
     
-    <form>
-      <input type="text" class="dbgBx" id="debugBx" value="Debug stream..." />
-      <!-- We're magically making the message appear here. -->
-      <input type="text" class="msgBx" id="message" value="Waiting for message data..." />
-    </form>
-    
-    <!-- Include our main javascript file here. -->
-    <script type="text/javascript" src="main.js"></script>
-    </script>
   </body>
 </html>

@@ -5,11 +5,12 @@
 //  This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
 
 // Settings
-var cfg = require('./config.js');
+var cfg = require('./nodeConfig.js');
 var config = cfg.getConfig();
 
 // Set up our needed libraries.
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var redis = require('redis');
@@ -26,25 +27,9 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
-// Serve our javascript.
-app.get('/main.js', function(req, res){
-  res.sendFile(__dirname + '/main.js');
-});
-
-// Serve our CSS.
-app.get('/main.css', function(req, res){
-  res.sendFile(__dirname + '/main.css');
-});
-
-// Serve a version of jQuery.
-app.get('/jquery-2.1.4.min.js', function(req, res){
-  res.sendFile(__dirname + '/jquery-2.1.4.min.js');
-});
-
-// Serve a version of rainbowvis.js
-app.get('/rainbowvis.js', function(req, res){
-  res.sendFile(__dirname + '/rainbowvis.js');
-});
+// Serve our script and style directories
+app.use('/js', express.static('js'));
+app.use('/css', express.static('css'));
 
 // When we have a message in Redis send it to all connected clients. 
 client.on("message", function (channel, message) {

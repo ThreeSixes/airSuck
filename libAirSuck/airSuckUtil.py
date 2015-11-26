@@ -831,9 +831,8 @@ class airSuckUtil:
             retVal.update({'mmsiCountry': midCtry['country']})
             retVal.update({'mmsiCC': midCtry['isoCC']})
         except:
-            print("Failed to derive country data from MID:")
             tb = traceback.format_exc()
-            print(tb)
+            print("Failed to derive country data from MID:\n%s" %tb)
         
         # Send the data back along.
         return retVal

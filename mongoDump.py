@@ -72,7 +72,7 @@ if config.connMongo['enabled'] == True:
             except KeyboardInterrupt:
                 quit()
             except:
-                print("Failed to pull from the Redis queue. Sleeping " + str(checkDelay) + " sec")
+                print("Failed to pull from the Redis queue. Sleeping %s sec" %checkDelay)
                 pprint(sys.exc_info())
 else:
     print("The connector mongoDB engine is not enabled in the configuration.")

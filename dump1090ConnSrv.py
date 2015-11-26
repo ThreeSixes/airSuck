@@ -91,7 +91,7 @@ class d1090Connector():
 					killedClient = self.__connAddrs.pop(thisSock)
 					
 					# Log
-					self.__log("Can't ping " + killedClient[0] + ":" + str(killedClient[1]) + ". Disconnecting them.")
+					self.__log("Can't ping %s:%s. Disconnecting them." %(killedClient[0], str(killedClient[1])))
 		
 		try:
 			# Respawn the pinger.
@@ -115,7 +115,7 @@ class d1090Connector():
 		if len(dts) == 19:
 			dts = dts + ".000000"
 		
-		print(dts + " - " + logEvt)
+		print("%s - %s" %(dts, logEvt))
 	
 	def __formatSSRMsg(self, strMsg):
 		"""
@@ -175,7 +175,7 @@ class d1090Connector():
 			retVal = None
 			
 			tb = traceback.format_exc()
-			self.__log("Failed to parse JSON data.\nString: " + thisStr + "\n" + tb)
+			self.__log("Failed to parse JSON data.\nString: %s\n%s" %(thisStr, tb))
 		
 		return retVal
 
@@ -282,7 +282,7 @@ class d1090Connector():
 		This method is the main method that runs for the connector.
 		"""
 		
-		self.__log("Starting dump1090 connector server on " + config.d1090ConnSettings['connListenHost'] + ":" + str(config.d1090ConnSettings['connListenPort']) + "...")
+		self.__log("Starting dump1090 connector server on %s:%s..." %(config.d1090ConnSettings['connListenHost'], config.d1090ConnSettings['connListenPort']))
 		
 		try:
 			# Build our TCP socket to recieve the magical happy JSON data we need!
@@ -296,8 +296,8 @@ class d1090Connector():
 		
 		except :
 			tb = traceback.format_exc()
-			self.__log("Exception while trying to open incoming socket:\n" + tb)
-			
+			self.__log("Exception while trying to open incoming socket:\n%s" %tb)
+		
 		
 		# Fire up ping process
 		self.__sendPing()
@@ -393,4 +393,5 @@ if __name__ == "__main__":
 		connector.run()
 	else:
 		print("The dump1090 connector shouldn't be run according to the configuration.")
+	
 	

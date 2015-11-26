@@ -23,6 +23,7 @@ import time
 import json
 import threading
 import time
+import traceback
 from socket import socket
 from pprint import pprint
 
@@ -101,7 +102,7 @@ class SubListener(threading.Thread):
         while True:
             try:
                 # Attempt a connection.
-                print("Connecting to " + dump1090Dst["host"] + ":" + str(dump1090Dst["port"]))
+                print("Connecting to %s:%s" %(dump1090Dst["host"], dump1090Dst["port"]))
                 
                 # Connect up.
                 dump1090Sock.connect((dump1090Dst["host"], dump1090Dst["port"]))
@@ -116,11 +117,10 @@ class SubListener(threading.Thread):
             except KeyboardInterrupt:
                 quit()
                 
-            except Exception as x:
-                print("Failed to connect to " + dump1090Dst["host"] + ":" + str(dump1090Dst["port"]))
-                print(type(x))
-                print(x)
-                print("Sleeping " + str(dump1090Dst["reconnectDelay"]) + " sec")
+            except:
+                tb = traceback.format_exc()
+                print("Failed to connect to %s:%s\n%s" %(dump1090Dst["host"], dump1090Dst["port"], tb))
+                print("Sleeping %s sec" %dump1090Dst["reconnectDelay"])
                 time.sleep(dump1090Dst["reconnectDelay"])
 
 # Start up.
@@ -137,6 +137,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         # Die nicely.
         quit()
-    except Exception as e:
-        print("Unexpected exception")
-        pprint(e)
+    except Exception:
+        tb = traceback.format_exc()
+        print("Unexpected exception\n%s" %tb)

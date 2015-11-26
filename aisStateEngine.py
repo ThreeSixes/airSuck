@@ -200,10 +200,10 @@ class SubListener(threading.Thread):
             # Adjust datatypes to be correct since redis stores everything as a string.
             retVal = self.fixDataTypes(retVal)
         
-        except Exception as e:
-            print("Blew up trying to update data in Redis.")
-            pprint(e)
-        
+        except:
+            tb = traceback.format_exc()
+            print("Blew up trying to update data in Redis.\n%s" %tb)
+            
         return retVal
     
 
@@ -264,10 +264,8 @@ class SubListener(threading.Thread):
                 if subject in retVal:
                     retVal[subject] = self.__subject2Type[subject](retVal[subject])
             except:
-                print("Exception fixing datatypes:")
-                print("Subject -> " + str(subject))
                 tb = traceback.format_exc()
-                print(tb)
+                print("Exception fixing datatypes:\nSubject -> %s\n%s" %(subject, tb))
         
         return retVal
 
@@ -357,8 +355,8 @@ if __name__ == "__main__":
             # Die nicely.
             quit()
         except Exception:
-            print("Caught unhandled exception:")
             tb = traceback.format_exc()
-            print(tb)
+            print("Caught unhandled exception:\n%s" %tb)
+        
     else:
         print("AIS state engine not enabled in config.")

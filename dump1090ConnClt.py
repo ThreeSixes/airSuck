@@ -51,7 +51,7 @@ class dataSource(threading.Thread):
 	"""
 	
 	def __init__(self, myName, dump1090Src):
-		print("Init thread for " + myName + ".")
+		print("Init thread for %s." %myName)
 		threading.Thread.__init__(self)
 		
 		# Extend properties to be class-wide.
@@ -98,7 +98,7 @@ class dataSource(threading.Thread):
 			self.__myWatchdog.cancel()
 			
 			# Prion the error message
-			print(self.myName + " watchdog: No data recieved in " + str(self.dump1090Src['threadTimeout']) + " sec.")
+			print("%s watchdog: No data recieved in %s sec." %(self.myName, str(self.dump1090Src['threadTimeout'])))
 			
 			# Close the connection.
 			self.__dump1090Sock.close()
@@ -143,13 +143,13 @@ class dataSource(threading.Thread):
 		# Keep trying to connect until it works.
 		while notConnected:
 			# Print message
-			print(self.myName + " connecting to " + self.dump1090Src["host"] + ":" + str(self.dump1090Src["port"]))
+			print("%s connecting to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
 			
 			# Attempt to connect.
 			try:
 				# Connect up
 				self.__dump1090Sock.connect((self.dump1090Src["host"], self.dump1090Src["port"]))
-				print(self.myName + " connected.")
+				print("%s connected." %self.myName)
 				
 				# We connected so now we can move on.
 				notConnected = False
@@ -168,16 +168,15 @@ class dataSource(threading.Thread):
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:
 						#Print some messages
-						print(myName + " failed to connect to " + self.dump1090Src["host"] + ":" + str(self.dump1090Src["port"]))
+						print("%s failed to connect to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
 				
 				else:
 					# Dafuhq happened!?
-					print(self.myName + " went boom connecting.")
 					tb = traceback.format_exc()
-					print(tb)
+					print("%s went boom connecting.\n%s" %(self.myName, tb))
 				
 				# In the event our connect fails, try again after the configured delay
-				print(self.myName + " sleeping " + str(self.dump1090Src["reconnectDelay"] * self.__backoff) + " sec.")
+				print("%s sleeping %s sec." %(self.myName, str(self.dump1090Src["reconnectDelay"] * self.__backoff)))
 				time.sleep(self.dump1090Src["reconnectDelay"] * self.__backoff)
 				
 				# Handle backoff.
@@ -199,16 +198,15 @@ class dataSource(threading.Thread):
 		Disconnect from our host.
 		"""
 		
-		print(self.myName + " disconnecting.")
+		print("%s disconnecting." %self.myName)
 		
 		try:	
 			# Close the connection.
 			self.__dump1090Sock.close()
 		except:
-			print(self.myName + " threw exception disconnecting.")
 			tb = traceback.format_exc()
-			print(tb)
-		
+			print("%s threw exception disconnecting.\n%s" %(self.myName, tb))
+			
 		# Reset the lastEntry counter.
 		self.__lastEntry = 0
 		
@@ -227,7 +225,7 @@ class dataSource(threading.Thread):
 		myName = self.myName
 		dump1090Src = self.dump1090Src
 		
-		print(myName + " running.")
+		print("%s running." %self.myName)
 		
 		# Do stuff.
 		while (True):
@@ -267,7 +265,7 @@ class dataSource(threading.Thread):
 							# Blank our incoming data and dump an error.
 							binData = ""
 							formattedSSR = ""
-							print(self.myName + " got invlaid hex SSR data: " + lineParts[1])
+							print("%s got invlaid hex SSR data: %s" %(self.myName, lineParts[1]))
 						
 						# Set MLAT data and SSR data.
 						thisEntry.update({ 'mlatData': lineParts[0], 'data': lineParts[1] })
@@ -292,7 +290,7 @@ class dataSource(threading.Thread):
 							# Blank our incoming data and dump an error.
 							binData = ""
 							formattedSSR = ""
-							print(self.myName + " got invlaid hex SSR data: " + formattedSSR)
+							print("%s got invlaid hex SSR data: %s" %(self.myName, formattedSSR))
 						
 						# Properly format the "line"
 						thisEntry.update({ 'data': formattedSSR })
@@ -316,17 +314,15 @@ class dataSource(threading.Thread):
 						continue
 					else:
 						# Dafuhq happened!?
-						print(self.myName + " went boom processing data.")
 						tb = traceback.format_exc()
-						print(tb)
+						print("%s went boom processing data.\n%s" %(self.myName, tb))
 						
 						# Close the connection.
 						self.disconnectSouce()
 				else:
 					# Dafuhq happened!?
-					print(self.myName + " went boom processing data.")
 					tb = traceback.format_exc()
-					print(tb)
+					print("%s went boom processing data.\n%s" %(self.myName, tb))
 					
 					# Close the connection.
 					self.disconnectSouce()
@@ -391,8 +387,6 @@ class dataSource(threading.Thread):
 				
 				while buffer.find(delim) != -1:	
 					line, buffer = buffer.split('\n', 1)
-					# Debugging...
-					#print("L: " + str(line) + ", B: " + str(buffer))
 					yield line
 			
 			except socket.timeout:
@@ -402,26 +396,24 @@ class dataSource(threading.Thread):
 				# If we had a disconnect event drop out of the loop.
 				if 'errno' in e:
 					if e.errno == 9:
-						print(self.myName + " disconnected.")
+						print("%s disconnected." %self.myName)
 						data = False
 						raise e
 					
 					else:
-						print(self.myName + " choked reading buffer.")
 						tb = traceback.format_exc()
-						print(tb)
+						print("%s choked reading buffer.\n%s" %(self.myName, tb))
 						data = False
 						line = ""
 				else:
-					print(self.myName + " choked reading buffer.")
 					tb = traceback.format_exc()
-					print(tb)
+					print("%s choked reading buffer.\n%s" %(self.myName, tb))
 					data = False
 					line = ""
 			
 			# See if our watchdog is working.
 			if self.__watchdogFail:
-				print(self.myName + " watchdog terminating readLines.")
+				print("%s watchdog terminating readLines." %self.myName)
 				data = False
 				break
 	
@@ -452,7 +444,7 @@ class dataSource(threading.Thread):
 				self.__psQ.publish(config.connPub['qName'], jsonMsg)
 				
 				# Debug
-				#print("Q: " + str(msg['data']))
+				#print("Q: %s" %str(msg['data']))
 				
 			# Reset our lastEntry seconds.
 			self.__lastEntry = 0
@@ -475,7 +467,7 @@ r = redis.StrictRedis()
 
 # Spin up our client threads.
 for thisName, connData in dump1909Srcs.iteritems():
-	print("Spinning up thread for " + thisName + ".")
+	print("Spinning up thread for %s." %thisName)
 	client = dataSource(thisName, connData)
 	client.daemon = True
 	client.start()

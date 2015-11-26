@@ -123,9 +123,9 @@ class SubListener(threading.Thread):
             # Adjust datatypes to be correct since redis stores everything as a string.
             retVal = self.fixDataTypes(retVal)
         
-        except Exception as e:
-            print("Blew up trying to update data in Redis.")
-            pprint(e)
+        except:
+            tb = traceback.format_exc()
+            print("Blew up trying to update data in Redis.\n%s" %tb)
         
         return retVal
     
@@ -225,8 +225,7 @@ class SubListener(threading.Thread):
                     retVal[subject] = round(retVal[subject], self.__subject2Round[subject])
         except:
             tb = traceback.format_exc()
-            print("Choked fixing data types.")
-            print(tb)
+            print("Choked fixing data types.\n%s" %tb)
         
         return retVal
 
@@ -342,7 +341,7 @@ class SubListener(threading.Thread):
                             crcGood = True
                         
                         if crcGood == False:
-                            print("Bad CRC detected in frame:\n DF " + str(ssrWrapped['df']) + ": " + ssrWrapped['data'])
+                            print("Bad CRC detected in frame:\n DF %s: %s" %(ssrWrapped['df'], ssrWrapped['data']))
                         
                         # Get mode A metadata.
                         if 'aSquawk' in ssrWrapped:
@@ -497,8 +496,8 @@ class SubListener(threading.Thread):
                                                 # Set location data.
                                                 data.update({"lat": locData[0], "lon": locData[1], "locationMeta": "CPRGlobal"})
                                         
-                                        except Exception as e:
-                                            pprint(e)
+                                        except:
+                                            print(traceback.format_exc())
                             
                             # Enqueue processed state data.
                             self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
@@ -525,7 +524,7 @@ class SubListener(threading.Thread):
                         self.enqueueData(self.updateState('A-' + ssrWrapped['aSquawk'], data))
             except:
                     tb = traceback.format_exc()
-                    print("Failed to parse data:\n" + tb)
+                    print("Failed to parse data:\n%s" %tb)
                     # Get the hex data as a string
                     #pprint(ssrWrapped)
     
@@ -547,6 +546,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         # Die nicely.
         quit()
-    except Exception as e:
-        print("Caught unhandled exception")
-        pprint(e)
+    except:
+        tb = traceback.format_exc()
+        print("Caught unhandled exception.\n%s" %tb)

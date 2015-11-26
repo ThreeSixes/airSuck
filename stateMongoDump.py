@@ -19,6 +19,7 @@ import pymongo
 import time
 import json
 import datetime
+import traceback
 from pprint import pprint
 
 # Redis instance for queueing.
@@ -86,10 +87,10 @@ if config.stateMongo['enabled'] == True:
                     
             except KeyboardInterrupt:
                 quit()
-            except Exception as e:
-               print("Failed to pull from the Redis queue. Sleeping " + str(checkDelay) + " sec")
-               pprint(e)
-               pprint(sys.exc_info())
+            except:
+                tb = traceback.format_exc()
+                print("Failed to pull from the Redis queue. Sleeping %s sec\n%s" %(checkDelay, tb))
+                
 
 else:
     print("Connector mongoDB engine not enabled in configuration.")

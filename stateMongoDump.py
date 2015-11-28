@@ -20,7 +20,11 @@ import time
 import json
 import datetime
 import traceback
+from libAirSuck import asLog
 from pprint import pprint
+
+# Set up the logger.
+logger = asLog(config.stateMongo['logMode'])
 
 # Redis instance for queueing.
 rQ = redis.StrictRedis(host=config.stateRel['host'], port=config.stateRel['port'])
@@ -54,7 +58,7 @@ def serializeState(entry):
 if config.stateMongo['enabled'] == True:
 
     # Infinite fucking loop.
-    print("Dumping state data from queue to MongoDB.")
+    logger.log("Dumping state data from queue to MongoDB.")
     while(True) :
             try:
                     # Pull oldest entry from the queue.
@@ -89,8 +93,8 @@ if config.stateMongo['enabled'] == True:
                 quit()
             except:
                 tb = traceback.format_exc()
-                print("Failed to pull from the Redis queue. Sleeping %s sec\n%s" %(checkDelay, tb))
+                logger.log("Failed to pull from the Redis queue. Sleeping %s sec\n%s" %(checkDelay, tb))
                 
 
 else:
-    print("Connector mongoDB engine not enabled in configuration.")
+    logger.log("Connector mongoDB engine not enabled in configuration.")

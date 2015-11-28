@@ -19,12 +19,15 @@ genRedisPort = 6379 # Redis server port default is 6379
 genMongoHost = "<insert host/IP here>" # This machine hosts all the mongoDB instances used by all connectors and servers.
 genMongoPort = 27017 # MongoDB server port default is 217017
 
+genLogMode   = "stdout" # Set the default logging mode to standard out. You can choose 'stdout', 'syslog', or 'none'.
+
 ########################################
 # Connector and state engine settings. #
 ########################################
 
 # Dump1090Client settings
 d1090ClientSettings = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 client? True = yes, False = no
     'host': "<insert hostname here>", # Hostname for dump1090ConnSrv host.
     'port': 8091, # dump1090ConnSrv port number.
@@ -35,6 +38,7 @@ d1090ClientSettings = {
 
 # Dump1090Connector settings
 d1090ConnSettings = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
     'connListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
@@ -49,6 +53,7 @@ d1090ConnSettings = {
 
 # aisConnector settings
 aisConnSettings = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connClientList': { # Array of hosts to connect to when running client connector script.
         "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
@@ -63,6 +68,7 @@ aisConnSettings = {
 
 # SSR State engine settings
 ssrStateEngine = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the state engine? True = yes, False = no
     'hashTTL': 300, # Expire vehicles that we haven't seen in this number of seconds. Default is 300 sec (5 min)
     'cprExpireSec': 20, # This specifies how old CPR data can be before we reject it as too old to be valid in sec. Default is 20.
@@ -72,6 +78,7 @@ ssrStateEngine = {
 
 # AIS State engine settings
 aisStateEngine = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the state engine? True = yes, False = no
     'hashTTL': 1200, # Expire vehicles that we haven't seen in this number of seconds. Default is 1200 sec (20 min)
     'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
@@ -84,6 +91,7 @@ aisStateEngine = {
 
 # Raw connector data MongoDB storage engine settings
 connMongo = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Turn on storage of connector data before processing? True = on, False = off.
     'host': genMongoHost, # MongoDB server that holds connector data.
     'port': genMongoPort, # Port number for the mongoDB instance.
@@ -94,6 +102,7 @@ connMongo = {
 
 # State data MongoDB storage engine settings
 stateMongo = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Turn on storage of state data after processing? True = on, False = off.
     'host': genMongoHost, # MongoDB server that holds state data.
     'port': genMongoPort, # Port number for the mongoDB instance.

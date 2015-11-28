@@ -23,6 +23,16 @@ genMongoPort = 27017 # MongoDB server port default is 217017
 # Connector and state engine settings. #
 ########################################
 
+# Dump1090Client settings
+d1090ClientSettings = {
+    'enabled': True, # Do we want to run the dump1090 client? True = yes, False = no
+    'host': "<insert hostname here>", # Hostname for dump1090ConnSrv host.
+    'port': 8091, # dump1090ConnSrv port number.
+    'name': "<insert name here>", # Name for this client instance.
+    'dump1090Timeout': 30, # How long do we wait in seconds to restart dump1090 if there's no output?
+    'serverTimerout': 30 # How long do we wait to reconnect to the server if not heartbeats are recieved?
+}
+
 # Dump1090Connector settings
 d1090ConnSettings = {
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no

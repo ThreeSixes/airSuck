@@ -10,3 +10,4 @@ from cprMath import cprMath
 from airSuckUtil import airSuckUtil
 from ssrParse import ssrParse
 from aisParse import aisParse
+from asLog import asLog

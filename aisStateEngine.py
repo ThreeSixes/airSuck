@@ -25,6 +25,7 @@ import binascii
 import datetime
 import traceback
 from libAirSuck import airSuckUtil
+from libAirSuck import asLog
 from pprint import pprint
 
 
@@ -202,7 +203,7 @@ class SubListener(threading.Thread):
         
         except:
             tb = traceback.format_exc()
-            print("Blew up trying to update data in Redis.\n%s" %tb)
+            logger.log("Blew up trying to update data in Redis.\n%s" %tb)
             
         return retVal
     
@@ -265,7 +266,7 @@ class SubListener(threading.Thread):
                     retVal[subject] = self.__subject2Type[subject](retVal[subject])
             except:
                 tb = traceback.format_exc()
-                print("Exception fixing datatypes:\nSubject -> %s\n%s" %(subject, tb))
+                logger.log("Exception fixing datatypes:\nSubject -> %s\n%s" %(subject, tb))
         
         return retVal
 
@@ -338,10 +339,13 @@ class SubListener(threading.Thread):
             self.worker(work)
 
 if __name__ == "__main__":
+    # Set up the logger.
+    logger = asLog(config.aisStateEngine['logMode'])
+
     # If we're enabled in config...
-    
     if config.aisStateEngine['enabled'] == True:
-        print("AIS state engine starting...")
+        
+        logger.log("AIS state engine starting...")
         
         # Start up our AIS parser
         client = SubListener([config.connPub['qName']])
@@ -356,7 +360,7 @@ if __name__ == "__main__":
             quit()
         except Exception:
             tb = traceback.format_exc()
-            print("Caught unhandled exception:\n%s" %tb)
+            logger.log("Caught unhandled exception:\n%s" %tb)
         
     else:
-        print("AIS state engine not enabled in config.")
+        logger.log("AIS state engine not enabled in config.")

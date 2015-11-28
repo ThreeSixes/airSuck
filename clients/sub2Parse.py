@@ -24,6 +24,7 @@ import redis
 import time
 import json
 import threading
+import traceback
 import binascii
 from pprint import pprint
 from libAirSuck import ssrParse
@@ -114,6 +115,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         # Die nicely.
         quit()
-    except Exception as e:
-        print("Caught unhandled exception")
+    except:
+        tb = traceback.format_exc()
+        print("Caught unhandled exception:\n%s" %tb)
         pprint(e)

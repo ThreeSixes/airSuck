@@ -24,6 +24,7 @@ import redis
 import time
 import json
 import threading
+import traceback
 from pprint import pprint
 
 #################
@@ -59,21 +60,21 @@ class SubListener(threading.Thread):
 				if 'lat' in stateWrapped:
 					# If we have ID data for the flight put it in.
 					if 'idInfo' in stateWrapped:
-						locStr =  locStr + stateWrapped['idInfo'] + " "
+						locStr =  locStr + "%s " %stateWrapped['idInfo']
 					
 					# If we know the aircraft's squawk code add it, too.
 					if 'aSquawk' in stateWrapped:
-						locStr = locStr + "(" + stateWrapped['aSquawk'] + ") " 
+						locStr = locStr + "(%s) " %stateWrapped['aSquawk'] 
 					
 					# Add ICAO AA address.
-					locStr = locStr + "[" + stateWrapped['addr'] + "]: "
+					locStr = locStr + "[%s]: " %stateWrapped['addr']
 					
 					# Add coordinates.
-					locStr = locStr + str(stateWrapped['lat']) + ", " + str(stateWrapped['lon'])
+					locStr = locStr + "%s, %s" %(stateWrapped['lat'], stateWrapped['lon'])
 					
 					# If we know the altitude put it in, too.
 					if 'alt' in stateWrapped:
-						locStr = locStr + " @ " + str(stateWrapped['alt']) + " ft"
+						locStr = locStr + " @ %s ft" %stateWrapped['alt']
 					
 					# If we know the vertical rate put it in as well.
 					if 'vertRate' in stateWrapped:
@@ -84,7 +85,7 @@ class SubListener(threading.Thread):
 					    signExtra = "+"
 					
 					# Add sign and unit to string.
-					locStr = locStr + " (" + signExtra + str(stateWrapped['vertRate']) + " ft/min)"
+					locStr = locStr + " (%s%s ft/min)" %(signExtra, stateWrapped['vertRate'])
 					
 					if 'velo' in stateWrapped:
 					
@@ -94,22 +95,22 @@ class SubListener(threading.Thread):
 						    else:
 						        ssExtra = ""
 					
-					locStr = locStr + ", " + ssExtra + str(stateWrapped['velo']) + " kt (" + stateWrapped['veloType'] + ")"
+					locStr = locStr + ", %s%s kt (%s)" %(ssExtra, stateWrapped['velo'], stateWrapped['veloType'])
 					
 					# Put in the heading if we know it.
 					if 'heading' in stateWrapped:
-						locStr = locStr + ", " + str(stateWrapped['heading']) + " deg"
+						locStr = locStr + ", %s deg" %stateWrapped['heading']
 					
 					# Add aircraft category if we know it.
 					if 'category' in stateWrapped:
-						locStr = locStr + ", cat " + stateWrapped['category']
+						locStr = locStr + ", cat %s" %stateWrapped['category']
 					
 					if 'fs' in stateWrapped:
-						locStr = locStr + " [" + str(stateWrapped['fs']) + "]"
+						locStr = locStr + " [%s]" %stateWrapped['fs']
 					
 					# Add vertical status if we know it (air/ground)
 					if 'vertStat' in stateWrapped:
-						locStr = locStr + " (" + stateWrapped['vertStat'] + ")"
+						locStr = locStr + " (%s)" %stateWrapped['vertStat']
 					
 					print(locStr)
 	
@@ -131,6 +132,6 @@ if __name__ == "__main__":
 	except KeyboardInterrupt:
 		# Die nicely.
 		quit()
-	except Exception as e:
-		print("Unhandled exception:")
-		pprint(e)
+	except:
+		tb = traceback.format_exc()
+		print("Unhandled exception:\n%s" %tb)

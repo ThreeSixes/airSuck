@@ -24,6 +24,7 @@ import redis
 import time
 import json
 import threading
+import traceback
 from pprint import pprint
 from airSuckUtil import airSuckUtil
 

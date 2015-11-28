@@ -24,6 +24,7 @@ import redis
 import time
 import json
 import threading
+import traceback
 from pprint import pprint
 
 
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         # Die incely.
         quit()
-    except Exception as e:
-        print("Unhandled exception:")
-        pprint(e)
+    except:
+        tb = traceback.format_exc()
+        print("Unhandled exception:\n%s" %tb)
+

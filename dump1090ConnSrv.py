@@ -331,7 +331,7 @@ class d1090Connector():
 					self.__connAddrs.update({sockDesc: cltAddr})
 					
 					# Log connection.
-					self.__log("New connection from " + str(cltAddr[0]) + ":" + str(cltAddr[1]))
+					self.__log("New connection from %s:%s" %(cltAddr[0], cltAddr[1]))
 					
 				# If we have data from a connection.
 				else:
@@ -354,7 +354,7 @@ class d1090Connector():
 							killedClient = self.__connAddrs.pop(sock)
 							
 							# Log
-							self.__log("Disconnected client " + killedClient[0] + ":" + str(killedClient[1]))
+							self.__log("Disconnected client %s:%s" %(killedClient[0], killedClient[1]))
 						except:
 							# Don't do anything since sometimes there's a race condition from the watchdog removing clients and triggering exceptions here.
 							None
@@ -393,5 +393,3 @@ if __name__ == "__main__":
 		connector.run()
 	else:
 		print("The dump1090 connector shouldn't be run according to the configuration.")
-	
-	

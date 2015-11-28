@@ -80,7 +80,7 @@ class d1090Connector():
 					thisSock.send("{\"ping\": \"abcdef\"}\n")
 				
 				except KeyboardInterrupt:
-					self.__log("Keyboard interrupt. Shutting down.")
+					logger.log("Keyboard interrupt. Shutting down.")
 					self.__keepRunning = False
 					self.__myPinger.cancel()
 				
@@ -91,7 +91,7 @@ class d1090Connector():
 					killedClient = self.__connAddrs.pop(thisSock)
 					
 					# Log
-					self.__log("Can't ping %s:%s. Disconnecting them." %(killedClient[0], str(killedClient[1])))
+					logger.log("Can't ping %s:%s. Disconnecting them." %(killedClient[0], str(killedClient[1])))
 		
 		try:
 			# Respawn the pinger.
@@ -100,22 +100,6 @@ class d1090Connector():
 		
 		except KeyboardInterrupt:
 			self.__keepRunning = False
-	
-	def __log(self, logEvt):
-		"""
-		__log(logEvt)
-		
-		Log data to stdout with a timestamp.
-		"""
-		
-		# Get timestamp.
-		dts = str(datetime.datetime.utcnow())
-		
-		# Keep the log looking pretty and uniform.
-		if len(dts) == 19:
-			dts = dts + ".000000"
-		
-		print("%s - %s" %(dts, logEvt))
 	
 	def __formatSSRMsg(self, strMsg):
 		"""
@@ -175,7 +159,7 @@ class d1090Connector():
 			retVal = None
 			
 			tb = traceback.format_exc()
-			self.__log("Failed to parse JSON data.\nString: %s\n%s" %(thisStr, tb))
+			logger.log("Failed to parse JSON data.\nString: %s\n%s" %(thisStr, tb))
 		
 		return retVal
 
@@ -282,7 +266,7 @@ class d1090Connector():
 		This method is the main method that runs for the connector.
 		"""
 		
-		self.__log("Starting dump1090 connector server on %s:%s..." %(config.d1090ConnSettings['connListenHost'], config.d1090ConnSettings['connListenPort']))
+		logger.log("Starting dump1090 connector server on %s:%s..." %(config.d1090ConnSettings['connListenHost'], config.d1090ConnSettings['connListenPort']))
 		
 		try:
 			# Build our TCP socket to recieve the magical happy JSON data we need!
@@ -296,7 +280,7 @@ class d1090Connector():
 		
 		except :
 			tb = traceback.format_exc()
-			self.__log("Exception while trying to open incoming socket:\n%s" %tb)
+			logger.log("Exception while trying to open incoming socket:\n%s" %tb)
 		
 		
 		# Fire up ping process
@@ -309,7 +293,7 @@ class d1090Connector():
 				# Get the list sockets which are ready to be read through select
 				readSockets, writeSockets, errorSockets = select.select(self.__conns,[],[])
 			except KeyboardInterrupt:
-				self.__log("Keyboard interrupt. Shutting down.")
+				logger.log("Keyboard interrupt. Shutting down.")
 				self.__keepRunning = False
 				self.__myPinger.cancel()
 				
@@ -331,7 +315,7 @@ class d1090Connector():
 					self.__connAddrs.update({sockDesc: cltAddr})
 					
 					# Log connection.
-					self.__log("New connection from %s:%s" %(cltAddr[0], cltAddr[1]))
+					logger.log("New connection from %s:%s" %(cltAddr[0], cltAddr[1]))
 					
 				# If we have data from a connection.
 				else:
@@ -342,7 +326,7 @@ class d1090Connector():
 						data = sock.recv(self.__buffSz)
 						
 					except KeyboardInterrupt:
-						self.__log("Keyboard interrupt. Shutting down.")
+						logger.log("Keyboard interrupt. Shutting down.")
 						self.__keepRunning = False
 						continue
 					
@@ -354,7 +338,7 @@ class d1090Connector():
 							killedClient = self.__connAddrs.pop(sock)
 							
 							# Log
-							self.__log("Disconnected client %s:%s" %(killedClient[0], killedClient[1]))
+							logger.log("Disconnected client %s:%s" %(killedClient[0], killedClient[1]))
 						except:
 							# Don't do anything since sometimes there's a race condition from the watchdog removing clients and triggering exceptions here.
 							None
@@ -374,7 +358,7 @@ class d1090Connector():
 		self.__listenSock.close()
 		
 		# Print shutdown message.
-		self.__log("dump1090Connector runner stopped.")
+		logger.log("dump1090Connector runner stopped.")
 		
 		return
 
@@ -384,6 +368,10 @@ class d1090Connector():
 
 # If this isn't being executed directly...
 if __name__ == "__main__":
+	
+	# Set up the logger.
+	logger = asLog(config.d1090ConnSettings['logMode'])
+	
 	# If the dump1090 connector should be run
 	if config.d1090ConnSettings['enabled']:
 		# Create our connector object.
@@ -392,4 +380,4 @@ if __name__ == "__main__":
 		# And run it.
 		connector.run()
 	else:
-		print("The dump1090 connector shouldn't be run according to the configuration.")
+		logger.log("The dump1090 connector shouldn't be run according to the configuration.")

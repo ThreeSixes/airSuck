@@ -19,6 +19,8 @@ import pymongo
 import time
 import json
 import datetime
+import traceback
+from libAirSuck import asLog
 from pprint import pprint
 
 #Redis queue name
@@ -51,10 +53,13 @@ def dejsonify(msg):
 def serializeADSB(entry):
         mDBColl.insert(entry)
 
+# Set up the logger.
+logger = asLog(config.connMongo['logMode'])
+
 # If this mongo engine is enabled...
 if config.connMongo['enabled'] == True:
     # Infinite fucking loop.
-    print("Dumping connector data from queue to MongoDB.")
+    logger.log("Dumping connector data from queue to MongoDB.")
     while(True) :
             try:
                     # Pull oldest entry from the queue.
@@ -72,7 +77,7 @@ if config.connMongo['enabled'] == True:
             except KeyboardInterrupt:
                 quit()
             except:
-                print("Failed to pull from the Redis queue. Sleeping %s sec" %checkDelay)
-                pprint(sys.exc_info())
+                tb = traceback.format_exc()
+                logger.log("Failed to pull from the Redis queue. Sleeping %s sec.\n%s" %(checkDelay, tb))
 else:
-    print("The connector mongoDB engine is not enabled in the configuration.")
+    logger.log("The connector mongoDB engine is not enabled in the configuration.")

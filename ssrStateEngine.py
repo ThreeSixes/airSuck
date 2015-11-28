@@ -26,6 +26,7 @@ import datetime
 import traceback
 from libAirSuck import cprMath
 from libAirSuck import airSuckUtil
+from libAirSuck import asLog
 from pprint import pprint
 
 
@@ -125,7 +126,7 @@ class SubListener(threading.Thread):
         
         except:
             tb = traceback.format_exc()
-            print("Blew up trying to update data in Redis.\n%s" %tb)
+            logger.log("Blew up trying to update data in Redis.\n%s" %tb)
         
         return retVal
     
@@ -225,7 +226,7 @@ class SubListener(threading.Thread):
                     retVal[subject] = round(retVal[subject], self.__subject2Round[subject])
         except:
             tb = traceback.format_exc()
-            print("Choked fixing data types.\n%s" %tb)
+            logger.log("Choked fixing data types.\n%s" %tb)
         
         return retVal
 
@@ -341,7 +342,7 @@ class SubListener(threading.Thread):
                             crcGood = True
                         
                         if crcGood == False:
-                            print("Bad CRC detected in frame:\n DF %s: %s" %(ssrWrapped['df'], ssrWrapped['data']))
+                            logger.log("Bad CRC detected in frame:\n DF %s: %s" %(ssrWrapped['df'], ssrWrapped['data']))
                         
                         # Get mode A metadata.
                         if 'aSquawk' in ssrWrapped:
@@ -497,7 +498,7 @@ class SubListener(threading.Thread):
                                                 data.update({"lat": locData[0], "lon": locData[1], "locationMeta": "CPRGlobal"})
                                         
                                         except:
-                                            print(traceback.format_exc())
+                                            logger.log(traceback.format_exc())
                             
                             # Enqueue processed state data.
                             self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))
@@ -524,7 +525,7 @@ class SubListener(threading.Thread):
                         self.enqueueData(self.updateState('A-' + ssrWrapped['aSquawk'], data))
             except:
                     tb = traceback.format_exc()
-                    print("Failed to parse data:\n%s" %tb)
+                    logger.log("Failed to parse data:\n%s" %tb)
                     # Get the hex data as a string
                     #pprint(ssrWrapped)
     
@@ -532,8 +533,12 @@ class SubListener(threading.Thread):
         for work in self.__psObj.listen():
             self.worker(work)
 
+
 if __name__ == "__main__":
-    print("SSR state engine starting...")
+    # Set up the logger.
+    logger = asLog(config.connMongo['logMode'])
+
+    logger.log("SSR state engine starting...")
     
     # Start up our ADS-B parser
     client = SubListener([config.connPub['qName']])
@@ -548,4 +553,4 @@ if __name__ == "__main__":
         quit()
     except:
         tb = traceback.format_exc()
-        print("Caught unhandled exception.\n%s" %tb)
+        logger.log("Caught unhandled exception.\n%s" %tb)

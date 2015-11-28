@@ -536,7 +536,7 @@ class SubListener(threading.Thread):
 
 if __name__ == "__main__":
     # Set up the logger.
-    logger = asLog(config.connMongo['logMode'])
+    logger = asLog(config.ssrStateEngine['logMode'])
 
     logger.log("SSR state engine starting...")
     

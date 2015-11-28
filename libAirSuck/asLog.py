@@ -7,6 +7,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSuck)
 """
 
 # Imports
+import sys
 import datetime
 import syslog
 
@@ -45,7 +46,7 @@ class asLog():
             dts = dts + ".000000"
         
         # Dump the message.
-        print("%s - %s" %(dts, message))
+        sys.stdout.write("%s - %s\n" %(dts, message))
     
     def __logSyslog(self, message, sev=syslog.LOG_NOTICE):
         """

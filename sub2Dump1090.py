@@ -24,6 +24,7 @@ import json
 import threading
 import time
 import traceback
+from libAirSuck import asLog
 from socket import socket
 from pprint import pprint
 
@@ -102,16 +103,16 @@ class SubListener(threading.Thread):
         while True:
             try:
                 # Attempt a connection.
-                print("Connecting to %s:%s" %(dump1090Dst["host"], dump1090Dst["port"]))
+                logger.log("Connecting to %s:%s" %(dump1090Dst["host"], dump1090Dst["port"]))
                 
                 # Connect up.
                 dump1090Sock.connect((dump1090Dst["host"], dump1090Dst["port"]))
-                print("Connected.")
+                logger.log("Connected.")
                 
                 # Handle incoming data.
                 for work in self.pubsub.listen():
                     self.worker(work, dump1090Sock)
-                    
+                
                 dump1090Sock.close()
                 
             except KeyboardInterrupt:
@@ -119,13 +120,15 @@ class SubListener(threading.Thread):
                 
             except:
                 tb = traceback.format_exc()
-                print("Failed to connect to %s:%s\n%s" %(dump1090Dst["host"], dump1090Dst["port"], tb))
-                print("Sleeping %s sec" %dump1090Dst["reconnectDelay"])
+                logger.log("Failed to connect to %s:%s\n%s" %(dump1090Dst["host"], dump1090Dst["port"], tb))
+                logger.log("Sleeping %s sec" %dump1090Dst["reconnectDelay"])
                 time.sleep(dump1090Dst["reconnectDelay"])
 
 # Start up.
 if __name__ == "__main__":
-    
+    # Set up the logger.
+    logger = asLog('stdout')
+
     # Start up redis, create our threaded client, and start it.
     r = redis.Redis(host=config.connPub['host'], port=config.connPub['port'])
     client = SubListener(r, [config.connPub['qName']])
@@ -139,4 +142,4 @@ if __name__ == "__main__":
         quit()
     except Exception:
         tb = traceback.format_exc()
-        print("Unexpected exception\n%s" %tb)
+        logger.log("Unexpected exception\n%s" %tb)

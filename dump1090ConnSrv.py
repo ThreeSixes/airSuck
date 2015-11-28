@@ -31,6 +31,7 @@ import binascii
 import hashlib
 import traceback
 from libAirSuck import ssrParse
+from libAirSuck import asLog
 from pprint import pprint
 
 ########################

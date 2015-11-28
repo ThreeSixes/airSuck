@@ -26,7 +26,7 @@ class asLog():
             # Set class-wide logging mode.
             self.mode = loggingMode
         else:
-            raise ValueError("Loging mode not specified.")
+            raise ValueError("Valid loging mode not specified. Please use 'stdout', 'syslog', or 'none'.")
         
         if loggingMode == "syslog":
             syslog.openlog(logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)

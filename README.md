@@ -26,7 +26,7 @@ File list:
   - aisStateEngine.py - Handles processing of stateful AIS data to build vessel and station data, locaions, callsigns, IMOs, etc. This process dumps AIS on a pub/sub queue for halding by other processes, and on a reliable queue for storage in MongoDB.
   - ssrStateEngine.py - Handles processing of stateful ADS-B data to build aircraft location data, call signs, etc. This process dumps aircraft state updates on a pub/sub queue for handling by other processes, and on a reliable queue for storage in MongoDB.
   - stateMongoDump.py - Stores state data in MongoDB for later processing.
-  - node/stateNode.js - Node.js server for passing state JSON to a browser or other service. Requires Node.js and the following Node.js packages: redis, express, socket.io
+  - node/stateNode.js - Node.js server for passing state JSON to a browser or other service. Requires Node.js and the following Node.js packages: redis, express, socket.io, node-syslog
   - node/dump1090Client.js - dump1090 node.js submitter for connecting to dump1090Srv.py. Will be replaced by another script.
 
 Libraries:

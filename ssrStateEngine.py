@@ -498,7 +498,9 @@ class SubListener(threading.Thread):
                                                 data.update({"lat": locData[0], "lon": locData[1], "locationMeta": "CPRGlobal"})
                                         
                                         except:
-                                            logger.log(traceback.format_exc())
+                                            # Log exception when trying to get ADS-B data.
+                                            tb = traceback.format_exc()
+                                            logger.log("Error processing ADS-B location for %s:\n%s" %(ssrWrapped['icaoAAHx'], tb))
                             
                             # Enqueue processed state data.
                             self.enqueueData(self.updateState(ssrWrapped['icaoAAHx'], data))

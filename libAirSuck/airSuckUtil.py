@@ -86,10 +86,10 @@ class airSuckUtil:
         """
         
         # Set up or starting latitude and longitude.
-        startLat = math.radians(coordsA[0])
-        startLong = math.radians(coordsA[1])
-        endLat = math.radians(coordsB[0])
-        endLong = math.radians(coordsB[1])
+        startLat = math.radians(float(coordsA[0]))
+        startLong = math.radians(float(coordsA[1]))
+        endLat = math.radians(float(coordsB[0]))
+        endLong = math.radians(float(coordsB[1]))
         
         # Longitude delta.
         dLong = endLong - startLong

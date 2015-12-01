@@ -16,10 +16,40 @@ var io = require('socket.io')(http);
 var redis = require('redis');
 var client = redis.createClient(config.server.redisPort, config.server.redisHost);
 
+// If we're doing syslog let's load and setup the syslog stuff.
+if (config.server.logMode == "syslog") {
+  // Load the module.
+  var syslog = require('node-syslog');
+  
+  // Configure the module.
+  syslog.init("stateNode.js", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_DAEMON);
+}
+
 // Log event.
 function log(eventText) {
-  // Just do a console.log().
-  console.log(new Date().toISOString().replace(/T/, ' ') + ' - ' + eventText);
+  // See how we log.
+  switch (config.server.logMode) {
+    // We're using syslog.
+    case "syslog":
+      //do the thing
+      syslog.log(syslog.LOG_NOTICE, eventText);
+      break;
+    
+    // We're logging to the console.
+    case "console":
+      // Do a console.log().
+      console.log(new Date().toISOString().replace(/T/, ' ') + ' - ' + eventText);
+      break;
+    
+    // No logging.
+    case "none":
+      // Do nothing.
+      break;
+    
+    // IDK?
+    default:
+      break;
+  }
 }
 
 // Serve index.html if a browser asks for it.

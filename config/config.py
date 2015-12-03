@@ -19,13 +19,35 @@ genRedisPort = 6379 # Redis server port default is 6379
 genMongoHost = "<insert host/IP here>" # This machine hosts all the mongoDB instances used by all connectors and servers.
 genMongoPort = 27017 # MongoDB server port default is 217017
 
+# Globally set logging settings.
 genLogMode   = "stdout" # Set the default logging mode to standard out. You can choose 'stdout', 'syslog', or 'none'.
 
-########################################
-# Connector and state engine settings. #
-########################################
 
-# Dump1090Client settings
+###########################
+# Remote client settings. #
+###########################
+
+# airSuck client - for submitting AIS or SSR data to a remote server running the Dump 1090 Connector Server.
+airSuckClientSettings = {
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
+    'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
+    'connSrvHost': "<hostname or IP>", # Remote connector server to submit data to.
+    'connSrvPort': 8091, # Dump 1900 connect incoming port when running as a server.
+    'serverPingInterval': 10.0, # This is how often we want to "ping" a server so if it doesn't get a ping it knows to reconnect (in seconds).
+    
+    # Dump1090 data source settings.
+    'dump1090Enabled': False, # Enable if you want to submit dump1090 data.
+    'dump1090Path': "/opt/dump1090/dump1090", # Path to the dump1090 executable.
+    'dump1090Args': "--aggressive --gain 40 --raw", # Dump1090 arguments
+    
+    # AIS source(s)
+    'aisEnabled': False, # Do we want to connect to the AIS servers in the list?
+    'aisSrvList': { # Dictionary of host(s) to connect to when running the AIS connector.
+        "<source name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 300} # Server name, host address, port, reconnect delay (if disconnected), and timeout before reconnecting to AIS source if we don't have data.
+    }
+};
+
+# Dump1090Client settings (Depricated by airSuckClient)
 d1090ClientSettings = {
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 client? True = yes, False = no
@@ -34,7 +56,12 @@ d1090ClientSettings = {
     'name': "<insert name here>", # Name for this client instance.
     'dump1090Timeout': 30, # How long do we wait in seconds to restart dump1090 if there's no output?
     'serverTimerout': 30 # How long do we wait to reconnect to the server if not heartbeats are recieved?
-}
+};
+
+
+########################################
+# Connector and state engine settings. #
+########################################
 
 # Dump1090Connector settings
 d1090ConnSettings = {
@@ -44,7 +71,7 @@ d1090ConnSettings = {
     'connListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
     'connClientList': { # Array of hosts to connect to when running client connector script.
-        "<server name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
+        "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
     },
     'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
     'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.

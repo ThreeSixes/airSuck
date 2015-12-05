@@ -120,15 +120,21 @@ class airSuckClient():
         Principal workhorse of the class.
         """
         
-        logger.log("Starting airSuck client worker.")
+        None
     
     def run(self):
         """
         Run the airSuck client.
         """
         
-        # Start the worker.
-        self.__worker()
+        logger.log("Starting airSuck client worker.")
+        
+        try:
+            self.__worker()
+        
+        except KeyboardInterrupt:
+            # Pass the keyboard interrupt up the chain to our main execution
+            raise KeyboardInterrupt
 
 
 #########################

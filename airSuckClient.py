@@ -17,7 +17,10 @@ try:
 except:
     raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
 
+import datetime
+import json
 import re
+import socket
 import time
 import threading
 import traceback
@@ -26,19 +29,118 @@ from subprocess import Popen, PIPE, STDOUT
 from pprint import pprint
 
 
+##########################
+# airSuckConnector class #
+##########################
+
+class airSuckClient():
+    def __init__(self):
+        """
+        airSuckClient handles connecting to the airSuck server to submit recieved frames.
+        """
+        
+        logger.log("Init airSuckClient...")
+        
+        # Setup watchdogs.
+        self.__myWatchdogRX = None
+        self.__myWatchdogTX = None
+        self.__lastKeepalive = 0
+        self.__maxTime = 2.0 * asConfig['keepaliveInterval']
+    
+    def __watchdogRX(self):
+        """
+        Check to make sure dump1090 is still giving us data. If not this should be called to stop it.
+        """
+        
+        try:
+            # Check to see if we got data from dump1090.
+            if self.__lastRX >= self.__maxTime:
+                
+                # Raise an exception.
+                raise IOError()
+            
+            else:        
+                # Increment our last entry.
+                self.__lastKeepalive += 1
+                
+                # Restart our watchdog.
+                self.__myWatchdogRX = threading.Timer(1.0, self.__watchdogRX)
+                self.__myWatchdogRX.start()
+            
+        except IOError:
+            # Print the error message
+            logger.log("airSuck RX watchdog: No keepalive %s sec." %self.__maxTime)
+            # Stop the watchdog.
+            self.__myWatchdogRX.cancel()
+        
+        except:
+            tb = traceback.format_exc()
+            logger.log("airSuck RX watchdog threw exception:\n%s" %tb)
+            
+            # Stop the watchdog.
+            self.__myWatchdogRX.cancel()
+    
+    def __watchdogTX(self):
+        """
+        Send a keepalive frame to the server so it knows we're still connected.
+        """
+        
+        try:
+            # Restart our watchdog.
+            self.__myWatchdogTX = threading.Timer(asConfig['keepaliveInterval'], self.__watchdogTX)
+            self.__myWatchdogTX.start()
+        
+        except:
+            tb = traceback.format_exc()
+            logger.log("airSuck client RX watchdog threw exception:\n%s" %tb)
+            
+            # Stop the watchdog.
+            self.__myWatchdogTX.cancel()
+    
+    def __handleBackoff(self, reset=False):
+        """
+        Handle the backoff algorithm for reconnect delay. Accepts one optional argument, reset which is a boolean value. When reset is true, the backoff value is set back to 1. Returns no data.
+        """
+        
+        # If we're resetting the backoff set it to 1.0.
+        if reset:
+            self.__backoff = 1.0
+        else:
+            # backoff ^ 2 for each iteration, ending at 4.0.
+            if self.__backoff == 1.0:
+                self.__backoff = 2.0
+            
+            elif self.__backoff == 2.0:
+                self.__backoff = 4.0
+        
+        return
+    
+    def __worker(self):
+        """
+        Principal workhorse of the class.
+        """
+        
+        logger.log("Starting airSuck client worker.")
+    
+    def run(self):
+        """
+        Run the airSuck client.
+        """
+        
+        # Start the worker.
+        self.__worker()
+
+
 #########################
 # dump1090Handler class #
 #########################
 
 class dump1090Handler():
-    """
-    dump1090Handler class handles the dump1090 executable to make sure it's running, and hasn't jammed.
-    """
     
     # Class consructor
     def __init__(self):
         """
-        Class constructor.
+        dump1090Handler handles the dump1090 executable to grab ADS-B, and makes sure it's running. If the process jams it's restarted.
         """
         # Init message.
         logger.log("Init dump1090Handler...")
@@ -129,9 +231,8 @@ class dump1090Handler():
         
         # And return...
         return retVal
-
-
-    def __handleADSB(self, someInput):
+    
+    def __handleADSB(self, adsb):
         """
         Place holder method that should result in the data being JSON wrapped and sent over the network.
         """
@@ -139,8 +240,15 @@ class dump1090Handler():
         # Reset watchdog value.
         self.__lastADSB = 0
         
+        # Build a dictionary with minimal information to send.
+        dtsStr = str(datetime.datetime.utcnow())
+        adsbDict = {'dts': dtsStr, "type": "airSSR", "data": adsb.replace("\n", "")}
+        
+        # JSONify the dictionary.
+        adsbJSON = json.dumps(adsbDict)
+        
         # Log for now.
-        logger.log("ADS-B -> %s" %someInput.replace("\n", ""))
+        logger.log("Send -> %s" %adsbJSON)
 
     def killMe(self):
         """
@@ -292,6 +400,7 @@ class dump1090Handler():
     
     def run(self):
         logger.log("Starting dump1090 worker.")
+        
         try:
             self.__worker()
         
@@ -300,11 +409,9 @@ class dump1090Handler():
             raise KeyboardInterrupt
 
 
-
 #######################
 # Main execution body #
 #######################
-
 
 if __name__ == "__main__":
     # Get the config.
@@ -318,6 +425,7 @@ if __name__ == "__main__":
     
     # Set up our dump1090 handler instance.
     instance1090 = dump1090Handler()
+    instanceAS = airSuckClient()
     
     # We'll store our threads here:
     threadList = []
@@ -325,7 +433,13 @@ if __name__ == "__main__":
     # Do we have at least one data source configured?
     noDS = True
     
+    # Master connected flag...
+    serverConnected = False
+    
     try:
+        # Start the main connector.
+        threadList.append(threading.Thread(target=instanceAS.run()))
+        
         # If we are configured to run the dump1090 client add it to our thread list.
         if asConfig['dump1090Enabled']:
             # Set the data source config flag.
@@ -341,7 +455,7 @@ if __name__ == "__main__":
             
             # Add the AIS thread.
             #threadList.append(threading.Thread(target=instance1090.run()))
-        
+    
     except KeyboardInterrupt:
         logger.log("Keyboard interrupt.")
     

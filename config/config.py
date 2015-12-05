@@ -32,8 +32,9 @@ airSuckClientSettings = {
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connSrvHost': "<hostname or IP>", # Remote connector server to submit data to.
+    'myName': "<name of this data source>", # A descriptive name for this data source.
     'connSrvPort': 8091, # Dump 1900 connect incoming port when running as a server.
-    'serverPingInterval': 10.0, # This is how often we want to "ping" a server so if it doesn't get a ping it knows to reconnect (in seconds).
+    'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
     
     # Dump1090 data source settings.
     'dump1090Enabled': True, # Enable if you want to submit dump1090 data.

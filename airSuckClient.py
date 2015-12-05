@@ -115,6 +115,97 @@ class airSuckClient():
         
         return
     
+    def __connectServer(self):
+        """
+        Connects to our host.
+        """
+        
+        # Create a new socket object.
+        self.__serverSock = socket.socket()
+        
+        # We're not connected so set the flag.
+        notConnected = True
+        
+        # Keep trying to connect until it works.
+        while notConnected:
+            # Print message
+            logger.log("airSuck client connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+            
+            # Attempt to connect.
+            try:
+                # Connect up
+                self.__serverSock.connect((asConfig['connSrvHost'], asConfig['connSrvPort']))
+                logger.log("airSuck client connected.")
+                
+                # We're connected now.
+                serverConnected = True
+                
+                # Reset the lastEntry counter.
+                self.__lastEntry = 0
+                
+                # Reset the watchdog state.
+                self.__watchdogFail = False
+                
+                # Reset the backoff value
+                self.__handleBackoff(True)
+                
+            except Exception as e:
+                if 'errno' in e:
+                    # If we weren't able to connect, dump a message
+                    if e.errno == errno.ECONNREFUSED:
+                        #Print some messages
+                        logger.log("airSuck client failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+                    
+                    else:
+                        # Dafuhq happened!?
+                        tb = traceback.format_exc()
+                        logger.log("airSuck client went boom connecting:\n%s" %tb)
+                        
+                        # Set backoff delay.
+                        boDelay = asConfig['reconnectDelay'] * self.__backoff
+                        
+                        # In the event our connect fails, try again after the configured delay
+                        logger.log("aiSuck client sleeping %s sec." %boDelay)
+                        time.sleep(boDelay)
+                        
+                        # Handle backoff.
+                        self.__handleBackoff()
+                
+            # Set 1 second timeout for blocking operations.
+            self.__serverSock.settimeout(1.0)
+            
+            # The watchdog should be run every second.
+            self.__lastEntry = 0
+            self.__myTXWatchdog = threading.Timer(1.0, self.__myWatchdogTX)
+            self.__myTXWatchdog.start()
+        
+        # Disconnect the source and re-create the socket object.
+        def __disconnectSouce(self):
+            """
+            Disconnect from our host.
+            """
+            
+            logger.log("airSuck client disconnecting.")
+            
+            try:
+                # Close the connection.
+                self.__dump1090Sock.close()
+            
+            except:
+                tb = traceback.format_exc()
+                logger.log("airSuck client threw exception disconnecting.\n%s" %tb)
+                
+            # Reset the lastEntry counter.
+            self.__lastEntry = 0
+            
+            try:
+                # Stop the watchdog.
+                self.__myWatchdog.cancel()
+            
+            except:
+                # Don't do anything.
+                None
+    
     def __worker(self):
         """
         Principal workhorse of the class.
@@ -214,11 +305,14 @@ class dump1090Handler():
         # If we're resetting the backoff set it to 1.0.
         if reset:
             self.__backoff1090 = 1.0
+        
         else:
             # backoff ^ 2 for each iteration, ending at 4.0.
             if self.__backoff1090 == 1.0:
+                
                 self.__backoff1090 = 2.0
             elif self.__backoff1090 == 2.0:
+                
                 self.__backoff1090 = 4.0
         
         return

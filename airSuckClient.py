@@ -46,6 +46,9 @@ class airSuckClient():
         self.__myWatchdogTX = None
         self.__lastKeepalive = 0
         self.__maxTime = 2.0 * asConfig['keepaliveInterval']
+        
+        # Server socket.
+        self.__serverSock = None
     
     def __watchdogRX(self):
         """
@@ -140,8 +143,8 @@ class airSuckClient():
                 # We're connected now.
                 serverConnected = True
                 
-                # Reset the lastEntry counter.
-                self.__lastEntry = 0
+                # Reset the last keepalive counter.
+                self.__lastKeepalive = 0
                 
                 # Reset the watchdog state.
                 self.__watchdogFail = False
@@ -175,7 +178,7 @@ class airSuckClient():
             self.__serverSock.settimeout(1.0)
             
             # The watchdog should be run every second.
-            self.__lastEntry = 0
+            self.__lastKeepalive = 0
             self.__myTXWatchdog = threading.Timer(1.0, self.__myWatchdogTX)
             self.__myTXWatchdog.start()
         
@@ -189,14 +192,14 @@ class airSuckClient():
             
             try:
                 # Close the connection.
-                self.__dump1090Sock.close()
+                self.__serverSock.close()
             
             except:
                 tb = traceback.format_exc()
                 logger.log("airSuck client threw exception disconnecting.\n%s" %tb)
                 
-            # Reset the lastEntry counter.
-            self.__lastEntry = 0
+            # Reset the last keepalive counter.
+            self.__lastKeepalive = 0
             
             try:
                 # Stop the watchdog.
@@ -255,6 +258,9 @@ class dump1090Handler():
         
         # Backoff counter
         self.__backoff1090 = 1.0
+        
+        # Keepalive sentence.
+        self.__keepAliveDat = "{\"ping\": \"abcdef\"}\n"
     
     # Make sure we have data. If we don't throw an exception.
     def __watchdog1090(self):
@@ -342,7 +348,7 @@ class dump1090Handler():
         
         # Build a dictionary with minimal information to send.
         dtsStr = str(datetime.datetime.utcnow())
-        adsbDict = {'dts': dtsStr, "type": "airSSR", "data": adsb.replace("\n", "")}
+        adsbDict = {"dataOrigin": "dump1090Clt", "dts": dtsStr, "type": "airSSR", "data": adsb.replace("\n", "")}
         
         # JSONify the dictionary.
         adsbJSON = json.dumps(adsbDict)
@@ -397,6 +403,10 @@ class dump1090Handler():
             raise KeyboardInterrupt
         
         except ValueError:
+            # Just die nicely.
+            None
+        
+        except IOError:
             # Just die nicely.
             None
     

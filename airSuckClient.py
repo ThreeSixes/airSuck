@@ -437,6 +437,10 @@ class dump1090Handler():
         except ValueError:
             # Just die nicely.
             None
+            
+        except IOError:
+            # Just die nicely.
+            None
     
     def __worker(self):
         """

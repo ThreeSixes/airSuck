@@ -248,6 +248,17 @@ class dataSource(threading.Thread):
 					if (len(dtsStr) == 19):
 						dtsStr = dtsStr + ".000000"
 					
+					# If we have position data for this source...
+					if 'srcPos' in self.dump1090Src:
+						# If we have a list...
+						if type(self.dump1090Src['srcPos']) == list:
+							
+							# If our list has two elements...
+							if len(self.dump1090Src['srcPos']) == 3:
+								
+								# If we have good position data add it to any outgoing data.
+								thisEntry.update({"srcLat": self.dump1090Src['srcPos'][0], "srcLon": self.dump1090Src['srcPos'][1], "srcPosMeta": self.dump1090Src['srcPos'][2]})
+					
 					# Todo: handle MLAT data here.
 					if thisLine.find('@') >= 0:
 						# This doesn't get deduplicated.

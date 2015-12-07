@@ -63,7 +63,8 @@ d1090ConnSettings = {
     'connListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
     'connClientList': { # Array of hosts to connect to when running client connector script.
-        "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
+        "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30}, # This can contain additional dictionaries.
+        "<another source name>":  { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 120, "srcPos": [33.944128, -118.402787, "manual"]} # Same as above, but we have source position info that enabled CPR local decoding. The srcPos directive is optional.
     },
     'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
     'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.

@@ -49,6 +49,9 @@ class airSuckClient():
         
         # Server socket.
         self.__serverSock = None
+        
+        # Keepalive string. Used to send and verify keepalive data sent to or from the server.
+        self.__keepaliveJSON = "{\"keepalive\": \"abcdef\"}\n"
     
     def __watchdogRX(self):
         """
@@ -89,6 +92,8 @@ class airSuckClient():
         """
         
         try:
+            # Send the keepalive.
+            
             # Restart our watchdog.
             self.__myWatchdogTX = threading.Timer(asConfig['keepaliveInterval'], self.__watchdogTX)
             self.__myWatchdogTX.start()
@@ -99,6 +104,48 @@ class airSuckClient():
             
             # Stop the watchdog.
             self.__myWatchdogTX.cancel()
+    
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # REFACTOR THIS ENTIRE THING TO BE __watchdogTX, and use the server connection objects to send the ping.
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    def __sendPing(self): 
+        """
+        Send a ping to all connected hosts.
+        """
+        
+        # For each client we have send the ping JSON sentence.
+        for thisSock in self.__conns:
+        
+            # If we're not the listener send data.
+            if thisSock != self.__listenSock:
+                # We have something from a client so let's try to handle it.
+                try:
+                    # Get the incoming data from our socket.
+                    self.__serverSock.send(self.__keepaliveJSON)
+                    
+                except KeyboardInterrupt:
+                    self.__keepRunning = False
+                    self.__myPinger.cancel()
+                    
+                    # Send the KeyboardInterrupt back up the stack.
+                    raise KeyboardInterrupt
+                    
+                except:
+                    # Kill the socket so the main loop will throw an exception.
+                    thisSock.close()
+                    self.__conns.remove(thisSock)
+                    killedClient = self.__connAddrs.pop(thisSock)
+                    
+                    # Log
+                    logger.log("Can't ping %s:%s. Disconnecting them." %(killedClient[0], str(killedClient[1])))
+                
+                try:
+                    # Respawn the pinger.
+                    self.__myPinger = threading.Timer(config.d1090ConnSettings['clientPingInterval'], self.__sendPing)
+                    self.__myPinger.start()
+                
+                except KeyboardInterrupt:
+                    self.__keepRunning = False
     
     def __handleBackoff(self, reset=False):
         """

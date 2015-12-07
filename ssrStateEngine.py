@@ -78,7 +78,9 @@ class SubListener(threading.Thread):
             'vertRate': int,
             'fs': int,
             'utcSync': int,
-            'icaoAAInt': int
+            'icaoAAInt': int,
+            'srcLat': float,
+            'srcLon': float
         }
         
         # Float rounding table for type fixer.
@@ -279,7 +281,7 @@ class SubListener(threading.Thread):
         """
         
         return binascii.hexlify(chr((crcInt >> 16) & 0xff) + chr((crcInt >> 8) & 0xff) + chr((crcInt & 0xff)))
-
+    
     def worker(self, work):
         # Do work on the data returned from the subscriber.
         ssrJson = str(work['data'])
@@ -408,7 +410,9 @@ class SubListener(threading.Thread):
                             if 'fs' in ssrWrapped:
                                 data.update({"fs": ssrWrapped['fs']})
                                 
-                            # Velocity data
+                            # Source position data
+                            if ('srcLat' in ssrWrapped) and ('srcLon' in ssrWrapped) and ('srcPosMeta' in ssrWrapped):
+                                data.update({'srcLat': float(ssrWrapped['srcLat']), 'srcLon': float(ssrWrapped['srcLon']), 'srcPosMeta': ssrWrapped['srcPosMeta']})
                             
                             # For airborne aircraft
                             if ((ssrWrapped['df'] == 17) or (ssrWrapped['df'] == 18)) and (ssrWrapped['fmt'] == 19):
@@ -462,10 +466,41 @@ class SubListener(threading.Thread):
                                         
                                         fmt = ssrWrapped['evenOdd']
                                         
+                                        locData = None
+                                        
                                         # Decode location
                                         try:
-                                            # Original version:
-                                            locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
+                                            # If we have data source location data set its position.
+                                            if 'srcLat' in data:
+                                                # See if we know where our data source is located...
+                                                myPos = [data['srcLat'], data['srcLon']]
+                                            
+                                            # If we have CPR Global position data...
+                                            if (ssrWrapped['fmt'] >= 9) and (ssrWrapped['fmt'] <= 18) or ((ssrWrapped['fmt'] >= 20) and (ssrWrapped['fmt'] <= 22)):
+                                                # Flag the type of position we got.
+                                                locMeta = "CPRGlobal"
+                                                
+                                                # Decode global position
+                                                locData = cprProc.cprResolveGlobal(evenData, oddData, fmt)
+                                            
+                                            # If we know where we are and have our current location.
+                                            elif (ssrWrapped['fmt'] >= 5) and (ssrWrapped['fmt'] <= 8) and ('srcLat' in data):
+                                                
+                                                # Flag the type of position we got.
+                                                locMeta = "CPRRelative"
+                                                
+                                                # Figure out if we last got ever or odd data and use it.
+                                                if evenAge >= oddAge:
+                                                    # Use the even data.
+                                                    lastEOData = [data['evenLat'], data['evenLon']]
+                                                    thisTgt = 0
+                                                else:
+                                                    # Use the odd data.
+                                                    lastEOData = [data['oddLat'], data['oddLon']]
+                                                    thisTgt = 1
+                                                
+                                                # Decode local position.
+                                                locData = cprProc.cprResolveLocal(myPos, evenData, 0, True)
                                             
                                             # Location data
                                             if type(locData) == list:
@@ -493,9 +528,9 @@ class SubListener(threading.Thread):
                                                             newHeading = self.asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
                                                             # Add the heading to the traffic data
                                                             data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
-                                                
+                                                    
                                                 # Set location data.
-                                                data.update({"lat": locData[0], "lon": locData[1], "locationMeta": "CPRGlobal"})
+                                                data.update({"lat": locData[0], "lon": locData[1], "locationMeta": locMeta})
                                         
                                         except:
                                             # Log exception when trying to get ADS-B data.

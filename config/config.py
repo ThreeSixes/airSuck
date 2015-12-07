@@ -32,30 +32,22 @@ airSuckClientSettings = {
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connSrvHost': "<hostname or IP>", # Remote connector server to submit data to.
+    'myName': "<name of this data source>", # A descriptive name for this data source.
     'connSrvPort': 8091, # Dump 1900 connect incoming port when running as a server.
-    'serverPingInterval': 10.0, # This is how often we want to "ping" a server so if it doesn't get a ping it knows to reconnect (in seconds).
+    'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
     
     # Dump1090 data source settings.
-    'dump1090Enabled': False, # Enable if you want to submit dump1090 data.
+    'dump1090Enabled': True, # Enable if you want to submit dump1090 data.
     'dump1090Path': "/opt/dump1090/dump1090", # Path to the dump1090 executable.
-    'dump1090Args': "--aggressive --gain 40 --raw", # Dump1090 arguments
+    'dump1090Args': "--aggressive --gain 40 --raw", # Dump1090 arguments. See dump1090 --help for all possible options.
+    'dump1090Timeout': 60.0, # How long should we wait in seconds before considering the dump1090 dead?
+    'dump1090Delay': 5.0, # How long should we wait intially before restarting dump1090 after an error?
     
     # AIS source(s)
     'aisEnabled': False, # Do we want to connect to the AIS servers in the list?
     'aisSrvList': { # Dictionary of host(s) to connect to when running the AIS connector.
         "<source name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 300} # Server name, host address, port, reconnect delay (if disconnected), and timeout before reconnecting to AIS source if we don't have data.
     }
-};
-
-# Dump1090Client settings (Depricated by airSuckClient)
-d1090ClientSettings = {
-    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
-    'enabled': True, # Do we want to run the dump1090 client? True = yes, False = no
-    'host': "<insert hostname here>", # Hostname for dump1090ConnSrv host.
-    'port': 8091, # dump1090ConnSrv port number.
-    'name': "<insert name here>", # Name for this client instance.
-    'dump1090Timeout': 30, # How long do we wait in seconds to restart dump1090 if there's no output?
-    'serverTimerout': 30 # How long do we wait to reconnect to the server if not heartbeats are recieved?
 };
 
 
@@ -71,7 +63,8 @@ d1090ConnSettings = {
     'connListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
     'connClientList': { # Array of hosts to connect to when running client connector script.
-        "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
+        "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30}, # This can contain additional dictionaries.
+        "<another source name>":  { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 120, "srcPos": [33.944128, -118.402787, "manual"]} # Same as above, but we have source position info that enabled CPR local decoding. The srcPos directive is optional.
     },
     'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
     'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.

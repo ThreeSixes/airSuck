@@ -73,15 +73,15 @@ class cprMath():
         return tmp / nlCalc
     
     def __decodeLat(self, encLat, cType, myLat, surface):
-        tmp1 = dlat(cType, surface)
+        tmp1 = self.__dlat(cType, surface)
         tmp2 = float(encLat) / (2 ** 17)
         j = math.floor(myLat / tmp1) + math.floor(0.5 + ((myLat % tmp1) / tmp1) - tmp2)
         
         return tmp1 * (j + tmp2)
 
     def __decodeLon(self, decLat, encLon, cType, myLon, surface):
-        tmp1 = dlon(decLat, cType, surface)
-        tmp2 = float(enclon) / (2 ** 17)
+        tmp1 = self.__dlon(decLat, cType, surface)
+        tmp2 = float(encLon) / (2 ** 17)
         m = math.floor(myLon / tmp1) + math.floor(0.5 + ((myLon % tmp1) / tmp1) - tmp2)
         
         return tmp1 * (m + tmp2)
@@ -157,7 +157,7 @@ class cprMath():
             if wat < 0:
                 wat += 360
                 zone = lambda lon: 90 * (int(lon) / 90)
-                rLon += (self.__zone(wat) - self.__zone(rlon))
+                rLon += (zone(wat) - zone(rLon))
         
         #limit to (-180, 180)
         if rLon > 180:

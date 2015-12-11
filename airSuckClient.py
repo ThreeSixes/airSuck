@@ -30,25 +30,39 @@ from subprocess import Popen, PIPE, STDOUT
 from pprint import pprint
 
 
-##########################
-# airSuckConnector class #
-##########################
+#########################
+# dump1090Handler class #
+#########################
 
-class airSuckComms():
+class dump1090Handler():
+    
+    # Class consructor
     def __init__(self):
         """
-        airSuckComms handles connecting to the airSuck server to submit recieved frames.
+        dump1090Handler handles the dump1090 executable to grab ADS-B, and makes sure it's running. If the process jams it's restarted.
         """
+        # Init message.
+        logger.log("Init airSuckClient...")
         
-        logger.log("Init airSuckComms...")
+        # Build the command we need to run dump1090 in a fashion Popen can understand.
+        self.popenCmd = [asConfig['dump1090Path']] + asConfig['dump1090Args'].split(" ")
         
-        # Setup watchdogs.
+        # Pre-compiled regex used to verify dump1090 ADS-B data.
+        self.__re1090 = re.compile("[@*]([a-fA-F0-9])+;")
+        
+        # Watchdog setup.
+        self.__myWatchdog1090 = None
         self.__myWatchdogRX = None
         self.__myWatchdogTX = None
+        self.__lastADSB = 0
+        self.__watchdog1090Restart = False
         self.__lastSrvKeepalive = 0
         self.__maxTimeSrv = 2.0 * asConfig['keepaliveInterval']
-        self.__backoffSrv = 1.0
         self.__keepaliveJSON = "{\"keepalive\": \"abcdef\"}\n"
+        
+        # Backoff counters
+        self.__backoff1090 = 1.0
+        self.__backoffSrv = 1.0
         
         # Networking.
         self.__serverSock = None
@@ -161,243 +175,7 @@ class airSuckComms():
                 else:
                     tb = traceback.format_exc()
                     logger.log("Exception in airSuck comms rxWatcher:\n%s" %tb)
-    
-    def __handleBackoff(self, reset=False):
-        """
-        Handle the backoff algorithm for reconnect delay. Accepts one optional argument, reset which is a boolean value. When reset is true, the backoff value is set back to 1. Returns no data.
-        """
-        
-        # If we're resetting the backoff set it to 1.0.
-        if reset:
-            self.__backoff = 1.0
-        else:
-            # backoff ^ 2 for each iteration, ending at 4.0.
-            if self.__backoff == 1.0:
-                self.__backoff = 2.0
-            
-            elif self.__backoff == 2.0:
-                self.__backoff = 4.0
-        
-        return
-    
-    def __connectServer(self):
-        """
-        Connects to our host.
-        """
-        
-        # Create a new socket object.
-        self.__serverSock = socket.socket()
-        
-        # We're not connected so set the flag.
-        notConnected = True
-        
-        # Keep trying to connect until it works.
-        while notConnected:
-            # Print message
-            logger.log("airSuck comms connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
-            
-            # Attempt to connect.
-            try:
-                # Connect up
-                self.__serverSock.connect((asConfig['connSrvHost'], asConfig['connSrvPort']))
-                logger.log("airSuck comms connected.")
-                
-                # We're connected now.
-                self.__serverConnected = True
-                notConnected = False
-                
-                # Reset the last keepalive counter.
-                self.__lastSrvKeepalive = 0
-                
-                # Reset the watchdog state.
-                self.__watchdogFail = False
-                
-                # Reset the backoff value
-                self.__handleBackoff(True)
-                
-                # Set 1 second timeout for blocking operations.
-                self.__serverSock.settimeout(1.0)
-                
-                # The TX and RX watchdogs should be run every second.
-                self.__lastSrvKeepalive = 0
-                
-                self.__myTXWatchdog = threading.Timer(1.0, self.__watchdogTX)
-                self.__myTXWatchdog.start()
-                
-                self.__myRXWatchdog = threading.Timer(1.0, self.__watchdogRX)
-                self.__myRXWatchdog.start()
-                
-                # RX watcher...
-                rxListener = threading.Thread(target=self.__rxWatcher)
-                rxListener.daemon = True
-                rxListener.start()
-                
-                # Just loop until death or taxes.
-                while self.__serverConnected:
-                    time.sleep(0.1)
-                
-            except KeyboardInterrupt:
-                # Pass it up the stack.
-                raise KeyboardInterrupt
-            
-            except Exception as e:
-                if 'errno' in e:
-                    # If we weren't able to connect, dump a message
-                    if e.errno == errno.ECONNREFUSED:
-                        #Print some messages
-                        logger.log("airSuck comms failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
-                    
-                    else:
-                        # Dafuhq happened!?
-                        tb = traceback.format_exc()
-                        logger.log("airSuck comms went boom connecting:\n%s" %tb)
-                
-                # Set backoff delay.
-                boDelay = asConfig['reconnectDelay'] * self.__backoff
-                
-                # In the event our connect fails, try again after the configured delay
-                logger.log("airSuck comms sleeping %s sec." %boDelay)
-                time.sleep(boDelay)
-                
-                # Handle backoff.
-                self.__handleBackoff()
-    
-    # Disconnect the source and re-create the socket object.
-    def __disconnectSouce(self):
-        """
-        Disconnect from our host.
-        """
-        
-        logger.log("airSuck comms disconnecting.")
-        
-        # Clear the server connected flag.
-        self.__serverConnected = False
-        
-        try:
-            # Close the connection.
-            self.__serverSock.close()
-            
-        except:
-            tb = traceback.format_exc()
-            logger.log("airSuck comms threw exception disconnecting.\n%s" %tb)
-        
-        # Reset the last keepalive counter.
-        self.__lastSrvKeepalive = 0
-            
-        try:
-            # Stop the watchdogs.
-            self.__myTXWatchdog.cancel()
-            self.__myRXWatchdog.cancel()
-            
-        except:
-            # Don't do anything.
-            None
-    
-    def __send(self, data):
-        """
-        Sends specified data to the airSuck destination server.
-        """
-        
-        # If we think we're connected try to send the infos. If not, do nothing.
-        if self.__serverConnected:
-            try:
-                self.__serverSock.send("%s\n" %data)
-            
-            except:
-                tb = traceback.format_exc()
-                logger.log("airSuck comms send exception:\n%s" %tb)
-                
-                # Disconnect.
-                self.__disconnectSource()
-    
-    def __queueWorker(self):
-        """
-        Sends data on the queue to the remote server.
-        """
-        
-        while True:
-            try:
-                # Grab the JSON put on the queue
-                someJSON = clientQ.get()
-                
-                # And then send it over the network.
-                self.__send(someJSON)
-            
-            except:
-                tb = traceback.format_exc()
-                logger.log("airSuck comms caught exception reading from queue:\n%s" %tb)
-    
-    def __worker(self):
-        """
-        Principal workhorse of the class.
-        """
-        
-        try:
-            queueThread = threading.Thread(target=self.__queueWorker)
-            queueThread.daemon = True
-            queueThread.start()
-            
-            # While we 'want' to keep running...
-            while self.__keepRunning:
-                self.__connectServer()
-        
-        except KeyboardInterrupt:
-            # Pass it on...
-            raise KeyboardInterrupt
-        
-        except:
-            tb = traceback.format_exc()
-            print("airSuckComms worker blew up:\n%s" %tb)
-            
-            self.__disconnectSouce()
-    
-    def run(self):
-        """
-        Run the airSuck client.
-        """
-        
-        logger.log("Starting airSuck comms worker.")
-        
-        try:
-            self.__worker()
-        
-        except KeyboardInterrupt:
-            # Pass the keyboard interrupt up the chain to our main execution
-            raise KeyboardInterrupt
 
-
-#########################
-# dump1090Handler class #
-#########################
-
-class dump1090Handler():
-    
-    # Class consructor
-    def __init__(self):
-        """
-        dump1090Handler handles the dump1090 executable to grab ADS-B, and makes sure it's running. If the process jams it's restarted.
-        """
-        # Init message.
-        logger.log("Init dump1090Handler...")
-        
-        # Build the command we need to run dump1090 in a fashion Popen can understand.
-        self.popenCmd = [asConfig['dump1090Path']] + asConfig['dump1090Args'].split(" ")
-        
-        # Pre-compiled regex used to verify dump1090 ADS-B data.
-        self.__re1090 = re.compile("[@*]([a-fA-F0-9])+;")
-        
-        # Watchdog setup.
-        self.__myWatchdog1090 = None
-        self.__lastADSB = 0
-        self.__watchdog1090Restart = False
-        
-        # Backoff counter
-        self.__backoff1090 = 1.0
-        
-        # Keepalive sentence.
-        self.__keepAliveDat = "{\"ping\": \"abcdef\"}\n"
-    
-    # Make sure we have data. If we don't throw an exception.
     def __watchdog1090(self):
         """
         Check to make sure dump1090 is still giving us data. If not this should be called to stop it.
@@ -437,6 +215,24 @@ class dump1090Handler():
             
             # Stop the watchdog.
             self.__myWatchdog1090.cancel()
+
+    def __handleBackoffSrv(self, reset=False):
+        """
+        Handle the backoff algorithm for reconnect delay. Accepts one optional argument, reset which is a boolean value. When reset is true, the backoff value is set back to 1. Returns no data.
+        """
+        
+        # If we're resetting the backoff set it to 1.0.
+        if reset:
+            self.__backoffSrv = 1.0
+        else:
+            # backoff ^ 2 for each iteration, ending at 4.0.
+            if self.__backoffSrv == 1.0:
+                self.__backoffSrv = 2.0
+            
+            elif self.__backoffSrv == 2.0:
+                self.__backoffSrv = 4.0
+        
+        return
     
     def __handleBackoff1090(self, reset=False):
         """
@@ -583,6 +379,152 @@ class dump1090Handler():
         except IOError:
             # Just die nicely.
             None
+
+    def __connectServer(self):
+        """
+        Connects to our host.
+        """
+        
+        # Create a new socket object.
+        self.__serverSock = socket.socket()
+        
+        # We're not connected so set the flag.
+        notConnected = True
+        
+        # Keep trying to connect until it works.
+        while notConnected:
+            # Print message
+            logger.log("airSuck comms connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+            
+            # Attempt to connect.
+            try:
+                # Connect up
+                self.__serverSock.connect((asConfig['connSrvHost'], asConfig['connSrvPort']))
+                logger.log("airSuck comms connected.")
+                
+                # We're connected now.
+                self.__serverConnected = True
+                notConnected = False
+                
+                # Reset the last keepalive counter.
+                self.__lastSrvKeepalive = 0
+                
+                # Reset the watchdog state.
+                self.__watchdogFail = False
+                
+                # Reset the backoff value
+                self.__handleBackoffSrv(True)
+                
+                # Set 1 second timeout for blocking operations.
+                self.__serverSock.settimeout(1.0)
+                
+                # The TX and RX watchdogs should be run every second.
+                self.__lastSrvKeepalive = 0
+                
+                self.__myTXWatchdog = threading.Timer(1.0, self.__watchdogTX)
+                self.__myTXWatchdog.start()
+                
+                self.__myRXWatchdog = threading.Timer(1.0, self.__watchdogRX)
+                self.__myRXWatchdog.start()
+                
+                # RX watcher...
+                rxListener = threading.Thread(target=self.__rxWatcher)
+                rxListener.daemon = True
+                rxListener.start()
+                
+                # Just loop until death or taxes.
+                #while self.__serverConnected:
+                #    time.sleep(0.1)
+                
+            except KeyboardInterrupt:
+                # Pass it up the stack.
+                raise KeyboardInterrupt
+            
+            except Exception as e:
+                if 'errno' in e:
+                    # If we weren't able to connect, dump a message
+                    if e.errno == errno.ECONNREFUSED:
+                        #Print some messages
+                        logger.log("airSuck comms failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+                    
+                    else:
+                        # Dafuhq happened!?
+                        tb = traceback.format_exc()
+                        logger.log("airSuck comms went boom connecting:\n%s" %tb)
+                
+                # Set backoff delay.
+                boDelay = asConfig['reconnectDelay'] * self.__backoffSrv
+                
+                # In the event our connect fails, try again after the configured delay
+                logger.log("airSuck comms sleeping %s sec." %boDelay)
+                time.sleep(boDelay)
+                
+                # Handle backoff.
+                self.__handleBackoffSrv()
+    
+    def __disconnectSouce(self):
+        """
+        Disconnect from our host.
+        """
+        
+        logger.log("airSuck comms disconnecting.")
+        
+        # Clear the server connected flag.
+        self.__serverConnected = False
+        
+        try:
+            # Close the connection.
+            self.__serverSock.close()
+            
+        except:
+            tb = traceback.format_exc()
+            logger.log("airSuck comms threw exception disconnecting.\n%s" %tb)
+        
+        # Reset the last keepalive counter.
+        self.__lastSrvKeepalive = 0
+            
+        try:
+            # Stop the watchdogs.
+            self.__myTXWatchdog.cancel()
+            self.__myRXWatchdog.cancel()
+            
+        except:
+            # Don't do anything.
+            None
+
+    def __send(self, data):
+        """
+        Sends specified data to the airSuck destination server.
+        """
+        
+        # If we think we're connected try to send the infos. If not, do nothing.
+        if self.__serverConnected:
+            try:
+                self.__serverSock.send("%s\n" %data)
+            
+            except:
+                tb = traceback.format_exc()
+                logger.log("airSuck comms send exception:\n%s" %tb)
+                
+                # Disconnect.
+                self.__disconnectSource()
+    
+    def __queueWorker(self):
+        """
+        Sends data on the queue to the remote server.
+        """
+        
+        while True:
+            try:
+                # Grab the JSON put on the queue
+                someJSON = clientQ.get()
+                
+                # And then send it over the network.
+                self.__send(someJSON)
+            
+            except:
+                tb = traceback.format_exc()
+                logger.log("airSuck comms caught exception reading from queue:\n%s" %tb)
     
     def __worker(self):
         """
@@ -595,6 +537,24 @@ class dump1090Handler():
         # Keep running and restarting dump1090 unless the program is killed.
         while keepRunning:
             try:
+                self.__connectServer()
+            
+            except KeyboardInterrupt:
+                # Pass it on...
+                    KeyboardInterrupt
+            
+            except:
+                tb = traceback.format_exc()
+                print("airSuckComms worker blew up:\n%s" %tb)
+                
+                self.__disconnectSouce()
+            
+            try:
+                # Start our queue handler.
+                queueThread = threading.Thread(target=self.__queueWorker)
+                queueThread.daemon = True
+                queueThread.start()
+                
                 # Start dump1090.
                 self.__proc1090 = Popen(self.popenCmd, stdout=PIPE, stderr=PIPE)
                 
@@ -691,7 +651,6 @@ if __name__ == "__main__":
     
     # Set up our global objects.
     instance1090 = dump1090Handler()
-    instanceAS = airSuckComms()
     clientQ = Queue.Queue()
     
     # Do we have at least one data source configured?
@@ -711,10 +670,7 @@ if __name__ == "__main__":
         
         # Start our comms thread.
         thread1090 = threading.Thread(target=instance1090.run())
-        #threadComms = threading.Thread(target=instanceAS.run())
         thread1090.daemon = True
-        #threadComms.daemon = True
-        #threadComms.start()
         thread1090.start()
         
     except KeyboardInterrupt:

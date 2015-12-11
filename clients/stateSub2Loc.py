@@ -95,7 +95,7 @@ class SubListener(threading.Thread):
 						    else:
 						        ssExtra = ""
 					
-					locStr = locStr + ", %s%s kt (%s)" %(ssExtra, stateWrapped['velo'], stateWrapped['veloType'])
+						locStr = locStr + ", %s%s kt (%s)" %(ssExtra, stateWrapped['velo'], stateWrapped['veloType'])
 					
 					# Put in the heading if we know it.
 					if 'heading' in stateWrapped:

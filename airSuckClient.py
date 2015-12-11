@@ -24,6 +24,7 @@ import socket
 import time
 import threading
 import traceback
+import Queue
 from libAirSuck import asLog
 from subprocess import Popen, PIPE, STDOUT
 from pprint import pprint
@@ -33,25 +34,29 @@ from pprint import pprint
 # airSuckConnector class #
 ##########################
 
-class airSuckClient():
+class airSuckComms():
     def __init__(self):
         """
-        airSuckClient handles connecting to the airSuck server to submit recieved frames.
+        airSuckComms handles connecting to the airSuck server to submit recieved frames.
         """
         
-        logger.log("Init airSuckClient...")
+        logger.log("Init airSuckComms...")
         
         # Setup watchdogs.
         self.__myWatchdogRX = None
         self.__myWatchdogTX = None
         self.__lastKeepalive = 0
         self.__maxTime = 2.0 * asConfig['keepaliveInterval']
-        
-        # Server socket.
-        self.__serverSock = None
-        
-        # Keepalive string. Used to send and verify keepalive data sent to or from the server.
+        self.__backoff = 1.0
         self.__keepaliveJSON = "{\"keepalive\": \"abcdef\"}\n"
+        
+        # Networking.
+        self.__serverSock = None
+        self.__serverConnected = False
+        self.__rxBuffSz = 128
+        
+        # Should we keep going?
+        self.__keepRunning = True
     
     def __watchdogRX(self):
         """
@@ -60,7 +65,7 @@ class airSuckClient():
         
         try:
             # Check to see if we got data from dump1090.
-            if self.__lastRX >= self.__maxTime:
+            if self.__lastKeepalive >= self.__maxTime:
                 
                 # Raise an exception.
                 raise IOError()
@@ -75,16 +80,19 @@ class airSuckClient():
             
         except IOError:
             # Print the error message
-            logger.log("airSuck RX watchdog: No keepalive %s sec." %self.__maxTime)
-            # Stop the watchdog.
+            logger.log("airSuck comms RX watchdog: No keepalive for %s sec." %self.__maxTime)
+            
+            # Stop the watchdogs.
             self.__myWatchdogRX.cancel()
+            self.__myWatchdogTX.cancel()
+            self.__disconnectSouce()
         
         except:
             tb = traceback.format_exc()
-            logger.log("airSuck RX watchdog threw exception:\n%s" %tb)
+            logger.log("airSuck comms RX watchdog threw exception:\n%s" %tb)
             
-            # Stop the watchdog.
-            self.__myWatchdogRX.cancel()
+            # Disconnect.
+            self.__disconnectSouce()
     
     def __watchdogTX(self):
         """
@@ -97,55 +105,62 @@ class airSuckClient():
             # Restart our watchdog.
             self.__myWatchdogTX = threading.Timer(asConfig['keepaliveInterval'], self.__watchdogTX)
             self.__myWatchdogTX.start()
+            
+            if self.__serverConnected:
+                # Send the ping.
+                self.__serverSock.send(self.__keepaliveJSON)
+        
+        except KeyboardInterrupt:
+            # Pass the keyboard interrupt exception up the stack.
+            raise KeyboardInterrupt
         
         except:
             tb = traceback.format_exc()
-            logger.log("airSuck client RX watchdog threw exception:\n%s" %tb)
+            logger.log("airSuck comms TX watchdog threw exception:\n%s" %tb)
             
-            # Stop the watchdog.
-            self.__myWatchdogTX.cancel()
+            # Disconnect.
+            self.__disconnectSouce()
     
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # REFACTOR THIS ENTIRE THING TO BE __watchdogTX, and use the server connection objects to send the ping.
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    def __sendPing(self): 
+    def __rxWatcher(self):
         """
-        Send a ping to all connected hosts.
+        Handle data recieved from our connected socket.
         """
         
-        # For each client we have send the ping JSON sentence.
-        for thisSock in self.__conns:
+        # Empty buffer string.
+        buff = ""
         
-            # If we're not the listener send data.
-            if thisSock != self.__listenSock:
-                # We have something from a client so let's try to handle it.
-                try:
-                    # Get the incoming data from our socket.
-                    self.__serverSock.send(self.__keepaliveJSON)
-                    
-                except KeyboardInterrupt:
-                    self.__keepRunning = False
-                    self.__myPinger.cancel()
-                    
-                    # Send the KeyboardInterrupt back up the stack.
-                    raise KeyboardInterrupt
-                    
-                except:
-                    # Kill the socket so the main loop will throw an exception.
-                    thisSock.close()
-                    self.__conns.remove(thisSock)
-                    killedClient = self.__connAddrs.pop(thisSock)
-                    
-                    # Log
-                    logger.log("Can't ping %s:%s. Disconnecting them." %(killedClient[0], str(killedClient[1])))
+        try:
+            
+            # While we're connected
+            while True:
+                # Get data.
+                buff = buff + self.__serverSock.recv(self.__rxBuffSz)
                 
-                try:
-                    # Respawn the pinger.
-                    self.__myPinger = threading.Timer(config.d1090ConnSettings['clientPingInterval'], self.__sendPing)
-                    self.__myPinger.start()
+                # If we have a newline check of our string and clear the buffer.
+                if buff.find("\n"):
+                    # If we got our JSON sentence reset the counter.
+                    if buff == self.__keepaliveJSON:
+                        self.__lastKeepalive = 0
+                    
+                    # Reset data stuff.
+                    buff = ""
+                    
+                    self.__serverSock.send("")
+        
+        except socket.timeout:
+            # If we time out do nothing. This is intentional.
+            None
+        
+        except Exception as e:
+            if 'errno' in e:
+                # If something goes wrong...
+                if e.errno == 32:
+                    # We expect this to break this way sometimes.
+                    raise IOError
                 
-                except KeyboardInterrupt:
-                    self.__keepRunning = False
+                else:
+                    tb = traceback.format_exc()
+                    logger.log("Exception in airSuck comms rxWatcher:\n%s" %tb)
     
     def __handleBackoff(self, reset=False):
         """
@@ -179,16 +194,17 @@ class airSuckClient():
         # Keep trying to connect until it works.
         while notConnected:
             # Print message
-            logger.log("airSuck client connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+            logger.log("airSuck comms connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
             
             # Attempt to connect.
             try:
                 # Connect up
                 self.__serverSock.connect((asConfig['connSrvHost'], asConfig['connSrvPort']))
-                logger.log("airSuck client connected.")
+                logger.log("airSuck comms connected.")
                 
                 # We're connected now.
-                serverConnected = True
+                self.__serverConnected = True
+                notConnected = False
                 
                 # Reset the last keepalive counter.
                 self.__lastKeepalive = 0
@@ -199,76 +215,148 @@ class airSuckClient():
                 # Reset the backoff value
                 self.__handleBackoff(True)
                 
+                # Set 1 second timeout for blocking operations.
+                self.__serverSock.settimeout(1.0)
+                
+                # The TX and RX watchdogs should be run every second.
+                self.__lastKeepalive = 0
+                
+                self.__myTXWatchdog = threading.Timer(1.0, self.__watchdogTX)
+                self.__myTXWatchdog.start()
+                
+                self.__myRXWatchdog = threading.Timer(1.0, self.__watchdogRX)
+                self.__myRXWatchdog.start()
+                
+                # RX watcher...
+                rxListener = threading.Thread(target=self.__rxWatcher)
+                rxListener.daemon = True
+                rxListener.start()
+                
+                # Just loop until death or taxes.
+                while self.__serverConnected:
+                    time.sleep(0.1)
+                
+            except KeyboardInterrupt:
+                # Pass it up the stack.
+                raise KeyboardInterrupt
+            
             except Exception as e:
                 if 'errno' in e:
                     # If we weren't able to connect, dump a message
                     if e.errno == errno.ECONNREFUSED:
                         #Print some messages
-                        logger.log("airSuck client failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+                        logger.log("airSuck comms failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
                     
                     else:
                         # Dafuhq happened!?
                         tb = traceback.format_exc()
-                        logger.log("airSuck client went boom connecting:\n%s" %tb)
-                        
-                        # Set backoff delay.
-                        boDelay = asConfig['reconnectDelay'] * self.__backoff
-                        
-                        # In the event our connect fails, try again after the configured delay
-                        logger.log("aiSuck client sleeping %s sec." %boDelay)
-                        time.sleep(boDelay)
-                        
-                        # Handle backoff.
-                        self.__handleBackoff()
+                        logger.log("airSuck comms went boom connecting:\n%s" %tb)
                 
-            # Set 1 second timeout for blocking operations.
-            self.__serverSock.settimeout(1.0)
-            
-            # The watchdog should be run every second.
-            self.__lastKeepalive = 0
-            self.__myTXWatchdog = threading.Timer(1.0, self.__myWatchdogTX)
-            self.__myTXWatchdog.start()
+                # Set backoff delay.
+                boDelay = asConfig['reconnectDelay'] * self.__backoff
+                
+                # In the event our connect fails, try again after the configured delay
+                logger.log("airSuck comms sleeping %s sec." %boDelay)
+                time.sleep(boDelay)
+                
+                # Handle backoff.
+                self.__handleBackoff()
+    
+    # Disconnect the source and re-create the socket object.
+    def __disconnectSouce(self):
+        """
+        Disconnect from our host.
+        """
         
-        # Disconnect the source and re-create the socket object.
-        def __disconnectSouce(self):
-            """
-            Disconnect from our host.
-            """
+        logger.log("airSuck comms disconnecting.")
+        
+        # Clear the server connected flag.
+        self.__serverConnected = False
+        
+        try:
+            # Close the connection.
+            self.__serverSock.close()
             
-            logger.log("airSuck client disconnecting.")
+        except:
+            tb = traceback.format_exc()
+            logger.log("airSuck comms threw exception disconnecting.\n%s" %tb)
+        
+        # Reset the last keepalive counter.
+        self.__lastKeepalive = 0
             
+        try:
+            # Stop the watchdogs.
+            self.__myTXWatchdog.cancel()
+            self.__myRXWatchdog.cancel()
+            
+        except:
+            # Don't do anything.
+            None
+    
+    def __send(self, data):
+        """
+        Sends specified data to the airSuck destination server.
+        """
+        
+        # If we think we're connected try to send the infos. If not, do nothing.
+        if self.__serverConnected:
             try:
-                # Close the connection.
-                self.__serverSock.close()
+                self.__serverSock.send("%s\n" %data)
             
             except:
                 tb = traceback.format_exc()
-                logger.log("airSuck client threw exception disconnecting.\n%s" %tb)
+                logger.log("airSuck comms send exception:\n%s" %tb)
                 
-            # Reset the last keepalive counter.
-            self.__lastKeepalive = 0
-            
+                # Disconnect.
+                self.__disconnectSource()
+    
+    def __queueWorker(self):
+        """
+        Sends data on the queue to the remote server.
+        """
+        
+        while True:
             try:
-                # Stop the watchdog.
-                self.__myWatchdog.cancel()
+                # Grab the JSON put on the queue
+                someJSON = clientQ.get()
+                
+                # And then send it over the network.
+                self.__send(someJSON)
             
             except:
-                # Don't do anything.
-                None
+                tb = traceback.format_exc()
+                logger.log("airSuck comms caught exception reading from queue:\n%s" %tb)
     
     def __worker(self):
         """
         Principal workhorse of the class.
         """
         
-        None
+        try:
+            queueThread = threading.Thread(target=self.__queueWorker)
+            queueThread.daemon = True
+            queueThread.start()
+            
+            # While we 'want' to keep running...
+            while self.__keepRunning:
+                self.__connectServer()
+        
+        except KeyboardInterrupt:
+            # Pass it on...
+            raise KeyboardInterrupt
+        
+        except:
+            tb = traceback.format_exc()
+            print("airSuckComms worker blew up:\n%s" %tb)
+            
+            self.__disconnectSouce()
     
     def run(self):
         """
         Run the airSuck client.
         """
         
-        logger.log("Starting airSuck client worker.")
+        logger.log("Starting airSuck comms worker.")
         
         try:
             self.__worker()
@@ -402,7 +490,14 @@ class dump1090Handler():
         
         # Log for now.
         logger.log("Send -> %s" %adsbJSON)
-
+        
+        try:
+            # Put it on the queue.
+            clientQ.put(adsbJSON)
+        except:
+            tb = traceback.format_exc()
+            logger.log("dump1090 exception putting data on queue:\n%s" %tb)
+    
     def killMe(self):
         """
         Kill the dump1090 process.
@@ -517,11 +612,15 @@ class dump1090Handler():
                     # Set up some threads to listen to the dump1090 output.
                     stdErrListener = threading.Thread(target=self.__stderrWorker)
                     stdOutListener = threading.Thread(target=self.__stdoutWorker)
+                    stdErrListener.daemon = True
+                    stdOutListener.daemon = True
                     stdErrListener.start()
                     stdOutListener.start()
-                    stdErrListener.join()
-                    stdOutListener.join()
-                
+                    
+                    # Go into a loop while our threads run.
+                    while True:
+                        time.sleep(10)
+            
             except KeyboardInterrupt:
                 # We don't want to keep running since we were killed.
                 keepRunning = False
@@ -535,13 +634,19 @@ class dump1090Handler():
                 
                 # Flag the thread for death.
                 keepRunning = False
+                
+                # Attempt to kill dump1090
+                self.killMe()
+                
+                # Try to stop the watchdog.
+                if self.__myWatchdog1090 is not None:
+                    self.__myWatchdog1090.cancel()
             
             except:
                 # Something else unknown happened.
                 tb = traceback.format_exc()
                 logger.log("dump1090 worker threw exception:\n%s" %tb)
-            
-            finally:
+                
                 # Attempt to kill dump1090
                 self.killMe()
                 
@@ -584,56 +689,40 @@ if __name__ == "__main__":
     # Log startup message.
     logger.log("Starting the airSuck client...")
     
-    # Set up our dump1090 handler instance.
+    # Set up our global objects.
     instance1090 = dump1090Handler()
-    instanceAS = airSuckClient()
-    
-    # We'll store our threads here:
-    threadList = []
+    instanceAS = airSuckComms()
+    clientQ = Queue.Queue()
     
     # Do we have at least one data source configured?
     noDS = True
     
-    # Master connected flag...
-    serverConnected = False
-    
     try:
-        # Start the main connector.
-        threadList.append(threading.Thread(target=instanceAS.run()))
-        
         # If we are configured to run the dump1090 client add it to our thread list.
         if asConfig['dump1090Enabled']:
             # Set the data source config flag.
             noDS = False
             
-            # Add the dump1090 thread.
-            threadList.append(threading.Thread(target=instance1090.run()))
         
         # If we are configured to run the dump1090 client add it to our thread list.
         if asConfig['aisEnabled']:
             # Set the data source config flag.
             noDS = False
-            
-            # Add the AIS thread.
-            #threadList.append(threading.Thread(target=instance1090.run()))
-    
+        
+        # Start our comms thread.
+        #thread1090 = threading.Thread(target=instance1090.run())
+        threadComms = threading.Thread(target=instanceAS.run())
+        #thread1090.daemon = True
+        threadComms.daemon = True
+        threadComms.start()
+        #thread1090.start()
+        
     except KeyboardInterrupt:
         logger.log("Keyboard interrupt.")
-    
-    # If we're configured to run at least one client start our threads.
-    if len(threadList) > 0:
-        try:
-            # Start each thread.
-            for thisThread in threadList:
-                thisThread.start()
-                
-            # Join each thread.
-            for thisThread in threadList:
-                thisThread.join()
         
-        except:
-            tb = traceback.format_exc()
-            logger.log("Unhandled exception in airSuck client:\n%s" %tb)
+    except:
+        tb = traceback.format_exc()
+        logger.log("Unhandled exception in airSuck client:\n%s" %tb)
     
     # If we didn't have a configured data source dump a helpful message.
     if noDS:

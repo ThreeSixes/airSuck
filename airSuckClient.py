@@ -45,9 +45,9 @@ class airSuckComms():
         # Setup watchdogs.
         self.__myWatchdogRX = None
         self.__myWatchdogTX = None
-        self.__lastKeepalive = 0
-        self.__maxTime = 2.0 * asConfig['keepaliveInterval']
-        self.__backoff = 1.0
+        self.__lastSrvKeepalive = 0
+        self.__maxTimeSrv = 2.0 * asConfig['keepaliveInterval']
+        self.__backoffSrv = 1.0
         self.__keepaliveJSON = "{\"keepalive\": \"abcdef\"}\n"
         
         # Networking.
@@ -65,14 +65,14 @@ class airSuckComms():
         
         try:
             # Check to see if we got data from dump1090.
-            if self.__lastKeepalive >= self.__maxTime:
+            if self.__lastSrvKeepalive >= self.__maxTimeSrv:
                 
                 # Raise an exception.
                 raise IOError()
             
             else:        
                 # Increment our last entry.
-                self.__lastKeepalive += 1
+                self.__lastSrvKeepalive += 1
                 
                 # Restart our watchdog.
                 self.__myWatchdogRX = threading.Timer(1.0, self.__watchdogRX)
@@ -80,7 +80,7 @@ class airSuckComms():
             
         except IOError:
             # Print the error message
-            logger.log("airSuck comms RX watchdog: No keepalive for %s sec." %self.__maxTime)
+            logger.log("airSuck comms RX watchdog: No keepalive for %s sec." %self.__maxTimeSrv)
             
             # Stop the watchdogs.
             self.__myWatchdogRX.cancel()
@@ -140,7 +140,7 @@ class airSuckComms():
                 if buff.find("\n"):
                     # If we got our JSON sentence reset the counter.
                     if buff == self.__keepaliveJSON:
-                        self.__lastKeepalive = 0
+                        self.__lastSrvKeepalive = 0
                     
                     # Reset data stuff.
                     buff = ""
@@ -207,7 +207,7 @@ class airSuckComms():
                 notConnected = False
                 
                 # Reset the last keepalive counter.
-                self.__lastKeepalive = 0
+                self.__lastSrvKeepalive = 0
                 
                 # Reset the watchdog state.
                 self.__watchdogFail = False
@@ -219,7 +219,7 @@ class airSuckComms():
                 self.__serverSock.settimeout(1.0)
                 
                 # The TX and RX watchdogs should be run every second.
-                self.__lastKeepalive = 0
+                self.__lastSrvKeepalive = 0
                 
                 self.__myTXWatchdog = threading.Timer(1.0, self.__watchdogTX)
                 self.__myTXWatchdog.start()
@@ -282,7 +282,7 @@ class airSuckComms():
             logger.log("airSuck comms threw exception disconnecting.\n%s" %tb)
         
         # Reset the last keepalive counter.
-        self.__lastKeepalive = 0
+        self.__lastSrvKeepalive = 0
             
         try:
             # Stop the watchdogs.
@@ -710,12 +710,12 @@ if __name__ == "__main__":
             noDS = False
         
         # Start our comms thread.
-        #thread1090 = threading.Thread(target=instance1090.run())
-        threadComms = threading.Thread(target=instanceAS.run())
-        #thread1090.daemon = True
-        threadComms.daemon = True
-        threadComms.start()
-        #thread1090.start()
+        thread1090 = threading.Thread(target=instance1090.run())
+        #threadComms = threading.Thread(target=instanceAS.run())
+        thread1090.daemon = True
+        #threadComms.daemon = True
+        #threadComms.start()
+        thread1090.start()
         
     except KeyboardInterrupt:
         logger.log("Keyboard interrupt.")

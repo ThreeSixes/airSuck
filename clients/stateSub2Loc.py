@@ -84,8 +84,8 @@ class SubListener(threading.Thread):
 						if stateWrapped['vertRate'] > 0:
 					    		signExtra = "+"
 					
-					# Add sign and unit to string.
-					locStr = locStr + " (%s%s ft/min)" %(signExtra, stateWrapped['vertRate'])
+						# Add sign and unit to string.
+						locStr = locStr + " (%s%s ft/min)" %(signExtra, stateWrapped['vertRate'])
 					
 					if 'velo' in stateWrapped:
 					

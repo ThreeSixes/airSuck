@@ -12,6 +12,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 
 import math
 import traceback
+import asLog
 
 #########################
 # AirSuck Utility class #
@@ -830,9 +831,14 @@ class airSuckUtil:
             # Set the country data.
             retVal.update({'mmsiCountry': midCtry['country']})
             retVal.update({'mmsiCC': midCtry['isoCC']})
-        except:
-            tb = traceback.format_exc()
-            print("Failed to derive country data from MID:\n%s" %tb)
+        
+        except KeyError:
+            # Do nothing since sometimes we just don't have a country code.
+            pass
+        
+        except Exception as e:
+            # Pass the exception up the stack.
+            raise e
         
         # Send the data back along.
         return retVal

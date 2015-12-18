@@ -170,18 +170,25 @@ class SubListener(threading.Thread):
             
             # Set the first seen data, and get MMSI metadata
             if self.__redHash.hsetnx(fullName, 'firstSeen', thisTime):
-                # Get the metatdata from the MMSI
-                mmsiMeta = self.asu.getMMSIMeta(cacheData['addr'])
                 
-                # if we have good data from the metadata processor
-                if type(mmsiMeta) == dict:
-                    # If we have a country code, set it.
-                    if 'mmsiCC' in mmsiMeta:
-                        cacheData.update({'mmsiCC': mmsiMeta['mmsiCC']})
+                try:
+                    # Get the metatdata from the MMSI
+                    mmsiMeta = self.asu.getMMSIMeta(cacheData['addr'])
                     
-                    # If we have a country code, set it.
-                    if 'mmsiType' in mmsiMeta:
-                        cacheData.update({'mmsiType': mmsiMeta['mmsiType']})
+                    # if we have good data from the metadata processor
+                    if type(mmsiMeta) == dict:
+                        # If we have a country code, set it.
+                        if 'mmsiCC' in mmsiMeta:
+                            cacheData.update({'mmsiCC': mmsiMeta['mmsiCC']})
+                        
+                        # If we have a country code, set it.
+                        if 'mmsiType' in mmsiMeta:
+                            cacheData.update({'mmsiType': mmsiMeta['mmsiType']})
+                
+                except:
+                    # Log our exceptoin.
+                    tb = traceback.format_exc()
+                    logger.log("Exception getting MMSI metadata.\n%s" %tb)
             
             # Update or create cached data, if we have more than just a name
             if type(cacheData) == dict:

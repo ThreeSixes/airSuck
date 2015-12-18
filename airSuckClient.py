@@ -71,6 +71,9 @@ class dump1090Handler():
         
         # Should we keep going?
         self.__keepRunning = True
+        
+        # Queue worker running?
+        self.__queueWorkerRunning = False
     
     def __watchdogRX(self):
         """
@@ -147,25 +150,29 @@ class dump1090Handler():
             
             # While we're connected
             while True:
-                # Get data.
-                buff = buff + self.__serverSock.recv(self.__rxBuffSz)
-                
-                # If we have a newline check of our string and clear the buffer.
-                if buff.find("\n"):
-                    # If we got our JSON sentence reset the counter.
-                    if buff == self.__keepaliveJSON:
-                        self.__lastSrvKeepalive = 0
+                if self.__serverConnected == True:
+                    # Get data.
+                    buff = buff + self.__serverSock.recv(self.__rxBuffSz)
                     
-                    # Reset data stuff.
-                    buff = ""
-                    
-                    self.__serverSock.send("")
+                    # If we have a newline check of our string and clear the buffer.
+                    if buff.find("\n"):
+                        # If we got our JSON sentence reset the counter.
+                        if buff == self.__keepaliveJSON:
+                            self.__lastSrvKeepalive = 0
+                        
+                        # Reset data stuff.
+                        buff = ""
+                        
+                        self.__serverSock.send("")
         
         except socket.timeout:
             # If we time out do nothing. This is intentional.
             None
         
         except Exception as e:
+            # We probably disconnected.
+            self.__serverConnected = False
+            
             if 'errno' in e:
                 # If something goes wrong...
                 if e.errno == 32:
@@ -388,79 +395,68 @@ class dump1090Handler():
         # Create a new socket object.
         self.__serverSock = socket.socket()
         
-        # We're not connected so set the flag.
-        notConnected = True
+        # Print message
+        logger.log("airSuck comms connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
         
-        # Keep trying to connect until it works.
-        while notConnected:
-            # Print message
-            logger.log("airSuck comms connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+        # Attempt to connect.
+        try:
+            # Connect up
+            self.__serverSock.connect((asConfig['connSrvHost'], asConfig['connSrvPort']))
+            logger.log("airSuck comms connected.")
             
-            # Attempt to connect.
-            try:
-                # Connect up
-                self.__serverSock.connect((asConfig['connSrvHost'], asConfig['connSrvPort']))
-                logger.log("airSuck comms connected.")
-                
-                # We're connected now.
-                self.__serverConnected = True
-                notConnected = False
-                
-                # Reset the last keepalive counter.
-                self.__lastSrvKeepalive = 0
-                
-                # Reset the watchdog state.
-                self.__watchdogFail = False
-                
-                # Reset the backoff value
-                self.__handleBackoffSrv(True)
-                
-                # Set 1 second timeout for blocking operations.
-                self.__serverSock.settimeout(1.0)
-                
-                # The TX and RX watchdogs should be run every second.
-                self.__lastSrvKeepalive = 0
-                
-                self.__myTXWatchdog = threading.Timer(1.0, self.__watchdogTX)
-                self.__myTXWatchdog.start()
-                
-                self.__myRXWatchdog = threading.Timer(1.0, self.__watchdogRX)
-                self.__myRXWatchdog.start()
-                
-                # RX watcher...
-                rxListener = threading.Thread(target=self.__rxWatcher)
-                rxListener.daemon = True
-                rxListener.start()
-                
-                # Just loop until death or taxes.
-                #while self.__serverConnected:
-                #    time.sleep(0.1)
-                
-            except KeyboardInterrupt:
-                # Pass it up the stack.
-                raise KeyboardInterrupt
+            # We're connected now.
+            self.__serverConnected = True
             
-            except Exception as e:
-                if 'errno' in e:
-                    # If we weren't able to connect, dump a message
-                    if e.errno == errno.ECONNREFUSED:
-                        #Print some messages
-                        logger.log("airSuck comms failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
-                    
-                    else:
-                        # Dafuhq happened!?
-                        tb = traceback.format_exc()
-                        logger.log("airSuck comms went boom connecting:\n%s" %tb)
+            # Reset the last keepalive counter.
+            self.__lastSrvKeepalive = 0
+            
+            # Reset the watchdog state.
+            self.__watchdogFail = False
+            
+            # Reset the backoff value
+            self.__handleBackoffSrv(True)
+            
+            # Set 1 second timeout for blocking operations.
+            self.__serverSock.settimeout(1.0)
+            
+            # The TX and RX watchdogs should be run every second.
+            self.__lastSrvKeepalive = 0
+            
+            self.__myTXWatchdog = threading.Timer(1.0, self.__watchdogTX)
+            self.__myTXWatchdog.start()
+            
+            self.__myRXWatchdog = threading.Timer(1.0, self.__watchdogRX)
+            self.__myRXWatchdog.start()
+            
+            # Just loop until death or taxes.
+            #while self.__serverConnected:
+            #    time.sleep(0.1)
+            
+        except KeyboardInterrupt:
+            # Pass it up the stack.
+            raise KeyboardInterrupt
+        
+        except Exception as e:
+            if 'errno' in e:
+                # If we weren't able to connect, dump a message
+                if e.errno == errno.ECONNREFUSED:
+                    #Print some messages
+                    logger.log("airSuck comms failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
                 
-                # Set backoff delay.
-                boDelay = asConfig['reconnectDelay'] * self.__backoffSrv
+                else:
+                    # Dafuhq happened!?
+                    tb = traceback.format_exc()
+                    logger.log("airSuck comms went boom connecting:\n%s" %tb)
                 
-                # In the event our connect fails, try again after the configured delay
-                logger.log("airSuck comms sleeping %s sec." %boDelay)
-                time.sleep(boDelay)
-                
-                # Handle backoff.
-                self.__handleBackoffSrv()
+            # Set backoff delay.
+            boDelay = asConfig['reconnectDelay'] * self.__backoffSrv
+            
+            # In the event our connect fails, try again after the configured delay
+            logger.log("airSuck comms sleeping %s sec." %boDelay)
+            time.sleep(boDelay)
+            
+            # Handle backoff.
+            self.__handleBackoffSrv()
     
     def __disconnectSouce(self):
         """
@@ -507,12 +503,16 @@ class dump1090Handler():
                 logger.log("airSuck comms send exception:\n%s" %tb)
                 
                 # Disconnect.
-                self.__disconnectSource()
+                self.__disconnectSouce()
     
     def __queueWorker(self):
         """
         Sends data on the queue to the remote server.
         """
+        
+        self.__queueWorkerRunning = True
+        
+        logger.log("airSuck queue worker starting...")
         
         while True:
             try:
@@ -524,7 +524,10 @@ class dump1090Handler():
             
             except:
                 tb = traceback.format_exc()
-                logger.log("airSuck comms caught exception reading from queue:\n%s" %tb)
+                logger.log("airSuck queue worker caught exception reading from queue:\n%s" %tb)
+                
+                # Flag the queue worker as down.
+                self.__queueWorkerRunning = False
     
     def __worker(self):
         """
@@ -536,8 +539,10 @@ class dump1090Handler():
         
         # Keep running and restarting dump1090 unless the program is killed.
         while keepRunning:
+            logger.log("At the top of __worker() loop.")
             try:
-                self.__connectServer()
+                if keepRunning and (not self.__serverConnected):
+                    self.__connectServer()
             
             except KeyboardInterrupt:
                 # Pass it on...
@@ -545,15 +550,26 @@ class dump1090Handler():
             
             except:
                 tb = traceback.format_exc()
-                print("airSuckComms worker blew up:\n%s" %tb)
+                logger.log("airSuckComms worker blew up:\n%s" %tb)
                 
                 self.__disconnectSouce()
             
             try:
-                # Start our queue handler.
-                queueThread = threading.Thread(target=self.__queueWorker)
-                queueThread.daemon = True
-                queueThread.start()
+                # RX watcher...
+                rxListener = threading.Thread(target=self.__rxWatcher)
+                rxListener.daemon = True
+                rxListener.start()
+            
+            except:
+                tb = traceback.format_exc()
+                logger.log("rxListener blew up:\n%s" %tb)
+            
+            try:
+                if (not self.__queueWorkerRunning):
+                    # Start our queue handler.
+                    queueThread = threading.Thread(target=self.__queueWorker)
+                    queueThread.daemon = True
+                    queueThread.start()
                 
                 # Start dump1090.
                 self.__proc1090 = Popen(self.popenCmd, stdout=PIPE, stderr=PIPE)

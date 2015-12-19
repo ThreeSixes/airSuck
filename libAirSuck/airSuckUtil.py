@@ -12,7 +12,6 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 
 import math
 import traceback
-import asLog
 
 #########################
 # AirSuck Utility class #
@@ -324,7 +323,7 @@ class airSuckUtil:
         Returns a string.
         """
         
-        # Empty return value...
+        # Set a blank return value.
         retVal = ""
         
         # Ship types...
@@ -430,14 +429,15 @@ class airSuckUtil:
             "Other"]
         
         try:
+            # Attempt to set ship type.
             retVal = shipTypes[shipType]
         
         except IndexError:
-            # Do nothing since someitmes we have a bad value.
+            # Do nothing because sometimes we lack valid data.
             pass
         
         except Exception as e:
-            # Pass the explostion on.
+            # Pass any other exceptoins back up the chain.
             raise e
         
         return retVal
@@ -847,11 +847,11 @@ class airSuckUtil:
             retVal.update({'mmsiCC': midCtry['isoCC']})
         
         except KeyError:
-            # Do nothing since sometimes we just don't have a country code.
+            # Do nothing because sometimes there's a bad value.
             pass
         
         except Exception as e:
-            # Pass the exception up the stack.
+            # Pass the exception back up the stack.
             raise e
         
         # Send the data back along.

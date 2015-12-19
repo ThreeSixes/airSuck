@@ -181,7 +181,7 @@ class SubListener(threading.Thread):
                         if 'mmsiCC' in mmsiMeta:
                             cacheData.update({'mmsiCC': mmsiMeta['mmsiCC']})
                         
-                        # If we have a country code, set it.
+                        # Set MMSI type if we have it.
                         if 'mmsiType' in mmsiMeta:
                             cacheData.update({'mmsiType': mmsiMeta['mmsiType']})
                 

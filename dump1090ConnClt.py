@@ -165,12 +165,20 @@ class dataSource(threading.Thread):
 				self.handleBackoff(True)
 				
 			except Exception as e:
-				if 'errno' in e:
+				if type(e) == socket.error:
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:
 						#Print some messages
-						logger.log("%s failed to connect to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
-				
+						logger.log("%s refused connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
+					
+					elif e.errno == errno.ECONNRESET:
+						#Print some messages
+						logger.log("%s reset connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
+					
+					else:
+						# Dafuhq happened!?
+						tb = traceback.format_exc()
+						logger.log("%s socket error.\n%s" %(self.myName, tb))
 				else:
 					# Dafuhq happened!?
 					tb = traceback.format_exc()
@@ -405,18 +413,40 @@ class dataSource(threading.Thread):
 				continue
 			
 			except Exception as e:
+				pprint(e)
+				print(type(e))
+				
+				if type(e) == socket.error:
+					print("Got it.")
+				
 				# If we had a disconnect event drop out of the loop.
-				if 'errno' in e:
-					if e.errno == 9:
-						logger.log("%s disconnected." %self.myName)
+				
+				
+				if type(e) == socket.error:
+					# If we weren't able to connect, dump a message
+					if e.errno == errno.ECONNREFUSED:
+						#Print some messages
+						logger.log("%s refused connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
 						data = False
+						line = ""
+						
+						raise e
+					
+					elif e.errno == errno.ECONNRESET:
+						#Print some messages
+						logger.log("%s reset connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
+						data = False
+						line = ""
+						
 						raise e
 					
 					else:
+						# Dafuhq happened!?
 						tb = traceback.format_exc()
-						logger.log("%s choked reading buffer.\n%s" %(self.myName, tb))
+						logger.log("%s choked reading buffer with socket error.\n%s" %(self.myName, tb))
 						data = False
 						line = ""
+				
 				else:
 					tb = traceback.format_exc()
 					logger.log("%s choked reading buffer.\n%s" %(self.myName, tb))

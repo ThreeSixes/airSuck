@@ -324,6 +324,9 @@ class airSuckUtil:
         Returns a string.
         """
         
+        # Empty return value...
+        retVal = ""
+        
         # Ship types...
         shipTypes = ["Not available",
             "Reserved",
@@ -426,7 +429,18 @@ class airSuckUtil:
             "Other, Reserved",
             "Other"]
         
-        return shipTypes[shipType]
+        try:
+            retVal = shipTypes[shipType]
+        
+        except IndexError:
+            # Do nothing since someitmes we have a bad value.
+            pass
+        
+        except Exception as e:
+            # Pass the explostion on.
+            raise e
+        
+        return retVal
     
     def getEPFDMeta(self, epfd):
         """

@@ -10,6 +10,7 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSuck)
 import sys
 import datetime
 import syslog
+import traceback
 
 # Main class
 class asLog():
@@ -65,15 +66,24 @@ class asLog():
         Log a message.
         """
         
-        # If we don't want to do anything...
-        if self.mode == "stdout":
-            # Log to stdout.
-            self.__logStdout(message)
+        try:
+            # If we don't want to do anything...
+            if self.mode == "stdout":
+                # Log to stdout.
+                self.__logStdout(message)
+            
+            elif self.mode == "syslog":
+                # Log to syslog. Not fully implemented yet.
+                self.__logSyslog(message)
+            
+            elif self.mode == "none":
+                # This logs absolutely nothing.
+                None
         
-        elif self.mode == "syslog":
-            # Log to syslog. Not fully implemented yet.
-            self.__logSyslog(message)
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
         
-        elif self.mode == "none":
-            # This logs absolutely nothing.
-            None
+        except:
+            tb = traceback.format_exc()
+            print("airSuck logger failure:\n%s" %tb)
+        

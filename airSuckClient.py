@@ -74,6 +74,9 @@ class dump1090Handler():
         # Queue worker running?
         self.__queueWorkerRunning = False
         
+        # Flag the RX watcher as not running
+        self.__rxWatcherRunning = False
+        
         # Global dump1090 process holder.
         self.__proc1090 = None
     
@@ -160,8 +163,13 @@ class dump1090Handler():
                 # Set watchdog restart flag.
                 self.__watchdog1090Restart = True
                 
-                # Kill dump1090
-                self.__proc1090.kill()
+                try:
+                    # Kill dump1090
+                    self.__proc1090.kill()
+                
+                except:
+                    # Do nothing in the event it fails.
+                    pass
                 
                 # Raise an exception.
                 raise IOError()
@@ -190,13 +198,18 @@ class dump1090Handler():
         Handle data recieved from our connected socket.
         """
         
+        # Flag the RX watcher as running
+        self.__rxWatcherRunning = True
+        
+        # Loop guard
+        keepRunning = True
+        
         # Empty buffer string.
         buff = ""
         
-        try:
-            
-            # While we're connected
-            while True:
+        # While we're connected
+        while keepRunning:
+            try:
                 if self.__serverConnected == True:
                     # Get data.
                     buff = buff + self.__serverSock.recv(self.__rxBuffSz)
@@ -204,35 +217,52 @@ class dump1090Handler():
                     # If we have a newline check of our string and clear the buffer.
                     if buff.find("\n"):
                         # If we got our JSON sentence reset the counter.
-                        if buff == self.__keepaliveJSON:
+                        if buff == self.__keepaliveJSON + "\n":
                             self.__lastSrvKeepalive = 0
+                            
+                            # If we're debugging log the things.
+                            if asConfig['debug']:
+                                logger.log("RX Keepalive: %s" %buff.strip())
                         
                         # Reset data stuff.
                         buff = ""
                         
-                        self.__serverSock.send("")
-        
-        except KeyboardInterrupt:
-            # Pass the exception up the chain.
-            raise KeyboardInterrupt
-        
-        except socket.timeout:
-            # If we time out do nothing. This is intentional.
-            None
-        
-        except Exception as e:
-            # We probably disconnected.
-            self.__serverConnected = False
+                        # Attempt to send another keepalive.
+                        self.__send(self.__keepaliveJSON)
             
-            if 'errno' in e:
-                # If something goes wrong...
-                if e.errno == 32:
-                    # We expect this to break this way sometimes.
-                    raise IOError
+            except KeyboardInterrupt:
+                # We don't want to keep running.
+                keepRunning = False
                 
-                else:
-                    tb = traceback.format_exc()
-                    logger.log("Exception in airSuck client rxWatcher:\n%s" %tb)
+                # Flag the RX watcher as not running
+                self.__rxWatcherRunning = False
+                
+                # Pass the exception up the chain.
+                raise KeyboardInterrupt
+            
+            except socket.timeout:
+                # If we time out do nothing. This is intentional.
+                None
+            
+            except Exception as e:
+                # We don't want to keep running.
+                keepRunning = False
+                
+                # Flag the RX watcher as not running
+                self.__rxWatcherRunning = False
+                
+                # We probably disconnected.
+                self.__serverConnected = False
+                
+                if 'errno' in e:
+                    # If something goes wrong...
+                    if e.errno == 32:
+                        # We expect this to break this way sometimes.
+                        raise IOError
+                    
+                    else:
+                        tb = traceback.format_exc()
+                        logger.log("Exception in airSuck client rxWatcher:\n%s" %tb)
     
     def __handleBackoffSrv(self, reset=False):
         """
@@ -569,25 +599,35 @@ class dump1090Handler():
                 self.__disconnectSouce()
             
             try:
-                # RX watcher...
-                rxListener = threading.Thread(target=self.__rxWatcher)
-                rxListener.daemon = True
-                rxListener.start()
+                # If the RX watcher is not running
+                if (not self.__rxWatcherRunning):
+                    # Start the RX watcher...
+                    rxListener = threading.Thread(target=self.__rxWatcher)
+                    rxListener.daemon = True
+                    rxListener.start()
             
             except KeyboardInterrupt:
                 # Stop looping.
                 keepRunning = False
                 
+                # Flag the RX watcher as not running
+                self.rxWatcherRunning = False
+                
                 # Raise the keyboard interrupt.
                 raise KeyboardInterrupt
             
             except:
+                # Log the exception
                 tb = traceback.format_exc()
                 logger.log("airSuck client rxListener blew up:\n%s" %tb)
+                
+                # Flag the RX watcher as not running
+                self.rxWatcherRunning = False
             
             try:
+                # If the queue worker isn't running...
                 if (not self.__queueWorkerRunning):
-                    # Start our queue handler.
+                    # Start our queue worker.
                     queueThread = threading.Thread(target=self.__queueWorker)
                     queueThread.daemon = True
                     queueThread.start()

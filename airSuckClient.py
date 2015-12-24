@@ -74,8 +74,11 @@ class dump1090Handler():
         # Queue worker running?
         self.__queueWorkerRunning = False
         
-        # Flag the RX watcher as not running
+        # RX watcher running?
         self.__rxWatcherRunning = False
+        
+        # Dump1090 running?
+        self.__dump1090Running = False
         
         # Global dump1090 process holder.
         self.__proc1090 = None
@@ -98,7 +101,6 @@ class dump1090Handler():
                 else:        
                     # Increment our last entry.
                     self.__lastSrvKeepalive += 1
-                    
             
             except IOError:
                 # Print the error message
@@ -182,8 +184,18 @@ class dump1090Handler():
             # Print the error message
             logger.log("airSuck client watchdog: No data from dump1090 in %s sec." %asConfig['dump1090Timeout'])
             
-            # Stop dump1090.
-            self.__proc1090.kill()
+            try:
+                # Stop dump1090.
+                self.__proc1090.kill()
+            
+            except:
+                # Do nothing, since it won't die nicely in some cases.
+                pass
+            
+            finally:
+                # Flag dump1090 as down.
+                self.__dump1090Running = False
+                self.__proc1090 = None
         
         except:
             tb = traceback.format_exc()
@@ -344,29 +356,6 @@ class dump1090Handler():
             tb = traceback.format_exc()
             logger.log("dump1090 exception putting data on queue:\n%s" %tb)
     
-    def killMe(self):
-        """
-        Kill the dump1090 process.
-        """
-        logger.log("Attempting to kill dump1090...")
-        
-        try:
-            if self.__proc1090.poll() is None:
-                self.__proc1090.kill()
-                logger.log("dump1090 killed.")
-        
-        except AttributeError:
-            # The process is already dead.
-            logger.log("dump1090 not running.")
-        
-        except:
-            # Unhandled exception.
-            tb = traceback.format_exc()
-            logger.log("Exception thrown while killing dump1090:\n%s" %tb)
-        
-        # Blank the object.
-        self.__proc1090 = None
-    
     def __stdoutWorker(self):
         """
         Handle STDOUT output from dump1090.
@@ -393,9 +382,9 @@ class dump1090Handler():
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         
-        except ValueError:
+        except AttributeError:
             # Just die nicely.
-            None
+            pass
         
         except IOError:
             # Just die nicely.
@@ -414,20 +403,20 @@ class dump1090Handler():
                 
                 # If there's something on the line print it.
                 if output.strip() != "":
-                    logger.log("dump1090: %s" %output)
+                    logger.log("dump1090 stderr: %s" %output)
             
             # See if there's any data that wasn't picked up by our loop and print it, too.
             output = self.__proc1090.communicate()[1].replace("\n", "")
             
             if output.strip() != "":
-                logger.log("dump1090: %s" %output)
+                logger.log("dump1090 stderr: %s" %output)
         
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         
-        except ValueError:
+        except AttributeError:
             # Just die nicely.
-            None
+            pass
             
         except IOError:
             # Just die nicely.
@@ -631,50 +620,81 @@ class dump1090Handler():
                     queueThread = threading.Thread(target=self.__queueWorker)
                     queueThread.daemon = True
                     queueThread.start()
+            
+            except KeyboardInterrupt:
                 
-                # We have don't have dump1090 started.
-                if self.__proc1090 == None:
-                    # Start dump1090.
-                    self.__proc1090 = Popen(self.popenCmd, stdout=PIPE, stderr=PIPE)
+                # Pass the exception up the chain to our runner.
+                raise KeyboardInterrupt
+            
+            except:
+                # Something else unknown happened.
+                tb = traceback.format_exc()
+                logger.log("dump1090 worker threw exception:\n%s" %tb)
+            
+            try:
+                if not self.__dump1090Running:
                     
-                    # If we have dump1090 working
-                    if self.__proc1090 is not None:
-                        logger.log("dump1090 started with PID %s." %self.__proc1090.pid)
+                    # We have don't have dump1090 started.
+                    if self.__proc1090 == None:
+                        # Start dump1090.
+                        self.__proc1090 = Popen(self.popenCmd, stdout=PIPE, stderr=PIPE)
                         
-                        # Reset the backoff since we manged to start.
-                        self.__handleBackoff1090(True)
+                        # If we have dump1090 working
+                        if self.__proc1090 is not None:
+                            logger.log("dump1090 started with PID %s." %self.__proc1090.pid)
+                            
+                            # Flag dump1090 as runningo.
+                            self.__dump1090Running = True
+                            
+                            # Reset the backoff since we manged to start.
+                            self.__handleBackoff1090(True)
+                            
+                            # Start the watchdog after resetting lastADSB.
+                            self.__lastADSB = 0
+                            
+                            # Set up some threads to listen to the dump1090 output.
+                            stdErrListener = threading.Thread(target=self.__stderrWorker)
+                            stdOutListener = threading.Thread(target=self.__stdoutWorker)
+                            stdErrListener.daemon = True
+                            stdOutListener.daemon = True
+                            stdErrListener.start()
+                            stdOutListener.start()
                         
-                        # Start the watchdog after resetting lastADSB.
-                        self.__lastADSB = 0
-                        
-                        # Set up some threads to listen to the dump1090 output.
-                        stdErrListener = threading.Thread(target=self.__stderrWorker)
-                        stdOutListener = threading.Thread(target=self.__stdoutWorker)
-                        stdErrListener.daemon = True
-                        stdOutListener.daemon = True
-                        stdErrListener.start()
-                        stdOutListener.start()
-                    
-                    # If we intend to restart dump1090 and we didn't kill dump1090 because of the watchdog...
-                    if (not self.__watchdog1090Restart):
-                        # Handle backoff algorithm before it restarts.
-                        boDly = self.__backoff1090 * asConfig['dump1090Delay']
-                        logger.log("dump1090 sleeping %s sec before restart." %boDly)
-                        time.sleep(boDly)
-                        
-                        # Run the backoff handler.
-                        self.__handleBackoff1090()
+                        # If we intend to restart dump1090 and we didn't kill dump1090 because of the watchdog...
+                        if (not self.__dump1090Running) and (not self.__watchdog1090Restart):
+                            
+                            # Handle backoff algorithm before it restarts.
+                            boDly = self.__backoff1090 * asConfig['dump1090Delay']
+                            logger.log("dump1090 sleeping %s sec before restart." %boDly)
+                            time.sleep(boDly)
+                            
+                            # Flag dump1090 as down.
+                            self.__dump1090Running = False
+                            self.__proc1090 = None
+                            
+                            # Run the backoff handler.
+                            self.__handleBackoff1090()
             
             except KeyboardInterrupt:
                 # We don't want to keep running since we were killed.
                 keepRunning = False
-               
+                
+                
+                # Flag dump1090 as down.
+                self.__dump1090Running = False
+                self.__proc1090 = None
+                
                 # Pass the exception up the chain to our runner.
                 raise KeyboardInterrupt
             
             except OSError:
                 # Dump an error since the OS reported dump1090 can't run.
                 logger.log("Unable to start dump1090. Please ensure dump1090 is at %s." %asConfig['dump1090Path'])
+                
+                
+                # Flag dump1090 as down.
+                self.__dump1090Running = False
+                self.__proc1090 = None
                 
                 # Flag the thread for death.
                 keepRunning = False
@@ -687,12 +707,43 @@ class dump1090Handler():
                 tb = traceback.format_exc()
                 logger.log("dump1090 worker threw exception:\n%s" %tb)
                 
+                
+                # Flag dump1090 as down.
+                self.__dump1090Running = False
+                self.__proc1090 = None
+                
                 # Attempt to kill dump1090
                 self.killMe()
         
         # Wait 0.1 seconds before looping.
         time.sleep(0.1)
-
+    
+    def killMe(self):
+        """
+        Kill the dump1090 process.
+        """
+        logger.log("Attempting to kill dump1090...")
+        
+        try:
+            if self.__proc1090.poll() is None:
+                self.__proc1090.kill()
+                logger.log("dump1090 killed.")
+        
+        except AttributeError:
+            # The process is already dead.
+            logger.log("dump1090 not running.")
+        
+        except:
+            # Unhandled exception.
+            tb = traceback.format_exc()
+            logger.log("Exception thrown while killing dump1090:\n%s" %tb)
+        
+        # Flag dump1090 as down.
+        self.__dump1090Running = False
+        
+        # Blank the object.
+        self.__proc1090 = None
+    
     def run(self):
         logger.log("Starting dump1090 worker.")
         

@@ -19,6 +19,7 @@ Support for ACARS data and using the FAA downloadable aircraft database to provi
 File list:
 
 "Daemons":
+  - airSuckClient.py - A client script that submits information to dump1090ConnSrv.py.
   - aisConnector.py - Handles connections to one or more AIS NMEA TCP source to recieve AIS data.
   - dump1090ConnClt.py - Handles connections to one or more dump1090 instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
   - dump1090ConnSrv.py - Recieves JSON data from dump1090 client connector instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
@@ -51,6 +52,7 @@ Test files:
   - aisParseTest.py - Tests decoding of AIS sentences.
 
 Support config files:
+  - supervisor/airSuck-airSuckClient.conf - Supervisor config file to keep airSuckClient.py running as a daemon.
   - supervisor/airSuck-aisConnector.conf - Supervisor config file to keep aisConector.py running as a daemon.
   - supervisor/airSuck-dump1090ConnClt.conf - Supversior config file to keep dump1090ConnClt.py running as a daemon.
   - supervisor/airSuck-dump1090ConnSrv.conf - Supversior config file to keep dump1090ConnSrv.py running as a daemon.

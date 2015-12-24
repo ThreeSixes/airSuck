@@ -48,6 +48,9 @@ class d1090Connector():
 		self.__conns = []
 		self.__connAddrs = {}
 		
+		# Keepalive stuff
+		self.__keepaliveJSON = "{\"keepalive\": \"abcdef\"}"
+		
 		# Buffer size settings.
 		self.__buffSz = 4096 # 4K
 		
@@ -77,6 +80,8 @@ class d1090Connector():
 			if thisSock != self.__listenSock:
 				# We have something from a client so let's try to handle it.
 				try:
+					logger.log("Send keepalive.")
+					
 					# Get the incoming data from our socket.
 					thisSock.send("{\"ping\": \"abcdef\"}\n")
 				
@@ -192,12 +197,14 @@ class d1090Connector():
 			# Set the key and insert lame value.
 			self.__dedeupe.setex(dHash, config.d1090ConnSettings['dedupeTTLSec'], "X")
 			
+			logger.log("Submit -> %s" %jsonMsg.strip())
+			
 			# If we are configured to use the connector mongoDB forward the traffic to it.
-			if config.connMongo['enabled'] == True:
-				self.__rQ.rpush(config.connRel['qName'], jsonMsg)
+			#if config.connMongo['enabled'] == True:
+			#	self.__rQ.rpush(config.connRel['qName'], jsonMsg)
 			
 			# Put data on the pub/sub queue.
-			self.__psQ.publish(config.connPub['qName'], jsonMsg)
+			#self.__psQ.publish(config.connPub['qName'], jsonMsg)
 			
 		return
 
@@ -353,7 +360,8 @@ class d1090Connector():
 				if type(data) is str:
 					for thisLine in self.__splitLines(data):
 						if thisLine !="":
-							self.__handleIncoming(thisLine)
+							logger.log("Incoming -> %s" %data.strip())
+							#self.__handleIncoming(thisLine)
 		
 		# Shut down our listener socket.
 		self.__listenSock.close()

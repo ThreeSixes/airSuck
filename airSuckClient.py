@@ -34,7 +34,7 @@ from pprint import pprint
 # dump1090Handler class #
 #########################
 
-class dump1090Handler():
+class airSuckClient():
     
     # Class consructor
     def __init__(self):
@@ -49,6 +49,7 @@ class dump1090Handler():
         
         # Pre-compiled regex used to verify dump1090 ADS-B data.
         self.__re1090 = re.compile("[@*]([a-fA-F0-9])+;")
+        #self.__re1090Mlat = re.compile("[@*]([a-fA-F0-9])+;")
         
         # Watchdog setup.
         self.__myWatchdog = None
@@ -158,48 +159,50 @@ class dump1090Handler():
                 # Set flag indicating whether we restarted because of the watchdog.
                 self.__watchdog1090Restart = False
         
-        try:
-            # Check to see if we got data from dump1090.
-            if self.__lastADSB >= asConfig['dump1090Timeout']:
+        # If we're running dump1090 handle timing it out.
+        if asConfig['dump1090Enabled']:
+            try:
+                # Check to see if we got data from dump1090.
+                if self.__lastADSB >= asConfig['dump1090Timeout']:
+                    
+                    # Set watchdog restart flag.
+                    self.__watchdog1090Restart = True
+                    
+                    try:
+                        # Kill dump1090
+                        self.__proc1090.kill()
+                    
+                    except:
+                        # Do nothing in the event it fails.
+                        pass
+                    
+                    # Raise an exception.
+                    raise IOError()
                 
-                # Set watchdog restart flag.
-                self.__watchdog1090Restart = True
+                else:        
+                    # Increment our last entry.
+                    self.__lastADSB += 1
+            
+            except IOError:
+                # Print the error message
+                logger.log("airSuck client watchdog: No data from dump1090 in %s sec." %asConfig['dump1090Timeout'])
                 
                 try:
-                    # Kill dump1090
+                    # Stop dump1090.
                     self.__proc1090.kill()
                 
                 except:
-                    # Do nothing in the event it fails.
+                    # Do nothing, since it won't die nicely in some cases.
                     pass
                 
-                # Raise an exception.
-                raise IOError()
-            
-            else:        
-                # Increment our last entry.
-                self.__lastADSB += 1
-        
-        except IOError:
-            # Print the error message
-            logger.log("airSuck client watchdog: No data from dump1090 in %s sec." %asConfig['dump1090Timeout'])
-            
-            try:
-                # Stop dump1090.
-                self.__proc1090.kill()
+                finally:
+                    # Flag dump1090 as down.
+                    self.__dump1090Running = False
+                    self.__proc1090 = None
             
             except:
-                # Do nothing, since it won't die nicely in some cases.
-                pass
-            
-            finally:
-                # Flag dump1090 as down.
-                self.__dump1090Running = False
-                self.__proc1090 = None
-        
-        except:
-            tb = traceback.format_exc()
-            logger.log("airSuck client watchdog threw exception:\n%s" %tb)
+                tb = traceback.format_exc()
+                logger.log("airSuck client watchdog threw exception:\n%s" %tb)
         
         # Restart our watchdog.
         self.__myWatchdog = threading.Timer(1.0, self.__clientWatchdog)
@@ -314,6 +317,33 @@ class dump1090Handler():
         
         return
 
+    def __createBaseJSON(self):
+        """
+        Creates a base JSON dictionary with information generic to all output.
+        """
+        
+        # Get the timestamp data.
+        dtsStr = str(datetime.datetime.utcnow())
+        
+        # Create basic JSON dictionary.
+        retVal = {"clientName": asConfig['myName'], "dataOrigin": "airSuckClient", "dts": dtsStr}
+        
+        # Handle GPS and related config data here.
+        if asConfig['reportPos']:
+            try:
+                # Extract the position from our configuration. We will later add support for GPSD here.
+                clientLat = float(asConfig['myPos'][0])
+                clientLon = float(asConfig['myPos'][1])
+                clientPosMeta = asConfig['myPos'][2]
+            
+            except:
+                logger.log("Improperly formatted position data from config.py.")
+            
+            # Update dictionary with GPS-related data.
+            retVal.update({"srcLat": clientLat, "srcLon": clientLon, "srcPosMeta": clientPosMeta})
+        
+        return retVal
+
     def __verifyADSB(self, line):
         """
         Verifies the formattting of the potential ADS-B frame. If the incoming data doesn't match the regex the method returns False. If it matches it will return True.
@@ -325,6 +355,10 @@ class dump1090Handler():
         # If we get a match...
         if self.__re1090.match(line) is not None:
             retVal = True
+            
+            # If we're debugging log the things.
+            if asConfig['debug']:
+                logger.log("%s appears to be valid ADS-B." %line.strip())
         
         # And return...
         return retVal
@@ -334,16 +368,21 @@ class dump1090Handler():
         Place holder method that should result in the data being JSON wrapped and sent over the network.
         """
         
+        
         # Reset watchdog value.
         self.__lastADSB = 0
         
         # Build a dictionary with minimal information to send.
-        dtsStr = str(datetime.datetime.utcnow())
-        adsbDict = {"dataOrigin": "dump1090Clt", "dts": dtsStr, "type": "airSSR", "data": adsb.replace("\n", "")}
+        adsbDict = {"type": "airSSR", "data": adsb.strip()}
+        adsbDict.update(self.__createBaseJSON())
         
-        # JSONify the dictionary.
-        adsbJSON = json.dumps(adsbDict)
+        try:
+            # JSONify the dictionary.
+            adsbJSON = json.dumps(adsbDict)
         
+        except:
+            tb = traceback.format_exc()
+            logger.log("Exception occured creating JSON dictionary:\n%s" %tb)
         
         # If we're debugging log the things.
         if asConfig['debug']:
@@ -352,9 +391,12 @@ class dump1090Handler():
         try:
             # Put it on the queue.
             clientQ.put(adsbJSON)
+        
         except:
             tb = traceback.format_exc()
             logger.log("dump1090 exception putting data on queue:\n%s" %tb)
+        
+        return
     
     def __stdoutWorker(self):
         """
@@ -368,12 +410,21 @@ class dump1090Handler():
                 # Grab the current line from STDOUT.
                 output = self.__proc1090.stdout.readline()
                 
+                # If we're debugging dump the raw data
+                if asConfig['debug']:
+                    logger.log("dump1090 stdout: %s" %output.strip())
+                
                 # If it seems to be valid ADS-B then use it.
                 if self.__verifyADSB(output):
+                    logger.log("Passing %s to __handleADSB." %output.strip())
                     self.__handleADSB(output)
             
             # Get any 'straggling' output.
             output = self.__proc1090.communicate()[0]
+            
+            # If we're debugging dump the raw data
+            if asConfig['debug']:
+                logger.log("dump1090 stdout: %s" %output.strip())
             
             # If it seems to be valid ADS-B then use it.
             if self.__verifyADSB(output):
@@ -431,7 +482,7 @@ class dump1090Handler():
         self.__serverSock = socket.socket()
         
         # Print message
-        logger.log("airSuck client connecting to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+        logger.log("airSuck client connecting to %s:%s..." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
         
         # Attempt to connect.
         try:
@@ -496,7 +547,7 @@ class dump1090Handler():
         try:
             # Close the connection.
             self.__serverSock.close()
-            
+        
         except:
             tb = traceback.format_exc()
             logger.log("airSuck client threw exception disconnecting.\n%s" %tb)
@@ -632,7 +683,8 @@ class dump1090Handler():
                 logger.log("dump1090 worker threw exception:\n%s" %tb)
             
             try:
-                if not self.__dump1090Running:
+                # Make sure Dump1090 is supposed to start, and that we're supposed to keep it running.
+                if (asConfig['dump1090Enabled']) and (not self.__dump1090Running):
                     
                     # We have don't have dump1090 started.
                     if self.__proc1090 == None:
@@ -700,25 +752,32 @@ class dump1090Handler():
                 keepRunning = False
                 
                 # Attempt to kill dump1090
-                self.killMe()
+                self.__kill1090()
             
             except:
                 # Something else unknown happened.
                 tb = traceback.format_exc()
                 logger.log("dump1090 worker threw exception:\n%s" %tb)
                 
-                
                 # Flag dump1090 as down.
                 self.__dump1090Running = False
                 self.__proc1090 = None
                 
                 # Attempt to kill dump1090
-                self.killMe()
+                self.__kill1090()
         
-        # Wait 0.1 seconds before looping.
-        time.sleep(0.1)
+        try:
+            # Wait 0.1 seconds before looping.
+            time.sleep(0.1)
+        
+        except KeyboardInterrupt:
+            # We don't want to keep running since we were killed.
+            keepRunning = False
+            
+            # Raise the exception again.
+            raise KeyboardInterrupt
     
-    def killMe(self):
+    def __kill1090(self):
         """
         Kill the dump1090 process.
         """
@@ -738,7 +797,7 @@ class dump1090Handler():
             tb = traceback.format_exc()
             logger.log("Exception thrown while killing dump1090:\n%s" %tb)
         
-        # Flag dump1090 as down.
+        # Flag dumpairSuckClient1090 as down.
         self.__dump1090Running = False
         
         # Blank the object.
@@ -770,8 +829,10 @@ if __name__ == "__main__":
     # Log startup message.
     logger.log("Starting the airSuck client...")
     
+    pprint(asConfig)
+    
     # Set up our global objects.
-    instance1090 = dump1090Handler()
+    asc = airSuckClient()
     clientQ = Queue.Queue()
     
     # Do we have at least one data source configured?
@@ -790,9 +851,9 @@ if __name__ == "__main__":
             noDS = False
         
         # Start our comms thread.
-        thread1090 = threading.Thread(target=instance1090.run())
-        thread1090.daemon = True
-        thread1090.start()
+        threadClient = threading.Thread(target=asc.run())
+        threadClient.daemon = True
+        threadClient.start()
         
     except KeyboardInterrupt:
         logger.log("Keyboard interrupt.")

@@ -413,15 +413,7 @@ class dataSource(threading.Thread):
 				continue
 			
 			except Exception as e:
-				pprint(e)
-				print(type(e))
-				
-				if type(e) == socket.error:
-					print("Got it.")
-				
-				# If we had a disconnect event drop out of the loop.
-				
-				
+				# See if we have a socket error...
 				if type(e) == socket.error:
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:

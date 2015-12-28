@@ -38,7 +38,7 @@ airSuckClientSettings = {
     'connSrvHost': "<hostname or IP>", # Remote connector server to submit data to.
     'connSrvPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
-    'debug': True, # Debug?
+    'debug': False, # Debug?
     
     # Dump1090 data source settings.
     'dump1090Enabled': True, # Enable if you want to submit dump1090 data.
@@ -62,7 +62,7 @@ airSuckSrvSettings = {
     'srvListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
     'srvListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
-    'debug': True, # Debug?
+    'debug': False, # Debug?
 }
 
 

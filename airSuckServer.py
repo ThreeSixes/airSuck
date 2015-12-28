@@ -173,15 +173,13 @@ class airSuckServer():
 
 	def __handleIncoming(self, data):
 		"""
-		__handleIncoming(data)
-		
 		Try to do something useful with incoming data from our TCP socket. Accepts one argument: the incoming data. Returns nothing.
 		"""
 		
 		# Create a holder for our entry which is none by default.
 		thisEntry = self.__jsonStr2Dict(data)
 		
-		thisEntry.update({'entryPoint': 'dump1090ConnClt'})
+		thisEntry.update({'entryPoint': 'airSuckServer', 'src': config.airSuckSrvSettings['myName']})
 		
 		# If we're supposed to debug...
 		if config.airSuckSrvSettings['debug']:
@@ -198,8 +196,7 @@ class airSuckServer():
 	
 	# This is the prinicipal method that handles data.
 	def run(self):
-		"""run()
-		
+		"""
 		This method is the main method that runs for the connector.
 		"""
 		

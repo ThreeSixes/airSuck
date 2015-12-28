@@ -12,6 +12,9 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Quick-and-dirty setup section. #
 ##################################
 
+# The name of this machine.
+genName = "<name of this data source>" # This is a string that identifies the local machine.
+
 # Most setups can use a single Redis and MongoDB host. Set these here. If you need separate host names, just remove the variables from the config below.
 genRedisHost = "<insert host/IP here>" # This machine hosts all the redis instances used by all connetors and servers.
 genRedisPort = 6379 # Redis server port default is 6379
@@ -29,10 +32,10 @@ genLogMode   = "stdout" # Set the default logging mode to standard out. You can 
 
 # airSuck client - for submitting AIS or SSR data to a remote server running the Dump 1090 Connector Server.
 airSuckClientSettings = {
+    'myName': genName, # A descriptive name for this data source.
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connSrvHost': "<hostname or IP>", # Remote connector server to submit data to.
-    'myName': "<name of this data source>", # A descriptive name for this data source.
     'connSrvPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
     'debug': True, # Debug?
@@ -51,6 +54,17 @@ airSuckClientSettings = {
     }
 }
 
+# airSuck server settings
+airSuckSrvSettings = {
+    'myName': genName, # A descriptive name for this data source.
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
+    'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
+    'srvListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
+    'srvListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
+    'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
+    'debug': True, # Debug?
+}
+
 
 ########################################
 # Connector and state engine settings. #
@@ -58,6 +72,7 @@ airSuckClientSettings = {
 
 # Dump1090Connector settings
 d1090ConnSettings = {
+    'myName': genName, # A descriptive name for this data source.
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
@@ -66,11 +81,13 @@ d1090ConnSettings = {
     'connClientList': { # Array of hosts to connect to when running client connector script.
         "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30}, # This can contain additional dictionaries.
         "<another source name>":  { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 120, "srcPos": [33.944128, -118.402787, "manual"]} # Same as above, but we have source position info that enabled CPR local decoding. The srcPos directive is optional.
-    }
+    },
+    'debug': False # Debug?
 }
 
 # aisConnector settings
 aisConnSettings = {
+    'myName': genName, # A descriptive name for this data source.
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connClientList': { # Array of hosts to connect to when running client connector script.

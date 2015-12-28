@@ -315,25 +315,12 @@ class dataSource(threading.Thread):
 				continue
 			
 			except Exception as e:
-<<<<<<< HEAD
-				pprint(e)
-				print(type(e))
-				
-				if type(e) == socket.error:
-					print("Got it.")
-				
-				# If we had a disconnect event drop out of the loop.
-				
-				
-=======
 				# See if we have a socket error...
->>>>>>> airSuckClient
 				if type(e) == socket.error:
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:
 						#Print some messages
 						logger.log("%s refused connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
-<<<<<<< HEAD
 						data = False
 						line = ""
 						
@@ -345,19 +332,6 @@ class dataSource(threading.Thread):
 						data = False
 						line = ""
 						
-=======
-						data = False
-						line = ""
-						
-						raise e
-					
-					elif e.errno == errno.ECONNRESET:
-						#Print some messages
-						logger.log("%s reset connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
-						data = False
-						line = ""
-						
->>>>>>> airSuckClient
 						raise e
 					
 					else:

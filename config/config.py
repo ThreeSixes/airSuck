@@ -40,7 +40,7 @@ airSuckClientSettings = {
     'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
     'reportPos': False, # Do we report the client position data specified below?
     'myPos': [0.0, 0.0, "manual"], # Position data of the client formatted as such: [lat, lon, "position type"].
-    'debug': True, # Debug?
+    'debug': False, # Debug?
     
     # Dump1090 data source settings.
     'dump1090Enabled': True, # Enable if you want to submit dump1090 data.

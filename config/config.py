@@ -49,7 +49,7 @@ airSuckClientSettings = {
     'aisSrvList': { # Dictionary of host(s) to connect to when running the AIS connector.
         "<source name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 300} # Server name, host address, port, reconnect delay (if disconnected), and timeout before reconnecting to AIS source if we don't have data.
     }
-};
+}
 
 
 ########################################
@@ -66,11 +66,8 @@ d1090ConnSettings = {
     'connClientList': { # Array of hosts to connect to when running client connector script.
         "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30}, # This can contain additional dictionaries.
         "<another source name>":  { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 120, "srcPos": [33.944128, -118.402787, "manual"]} # Same as above, but we have source position info that enabled CPR local decoding. The srcPos directive is optional.
-    },
-    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
-    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.
-    'dedupePort': genRedisPort # Redis port number for dedupe.
-};
+    }
+}
 
 # aisConnector settings
 aisConnSettings = {
@@ -85,7 +82,7 @@ aisConnSettings = {
     'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
     'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate AIS payloads.
     'dedupePort': genRedisPort # Redis port number for dedupe.
-};
+}
 
 # SSR State engine settings
 ssrStateEngine = {
@@ -95,7 +92,7 @@ ssrStateEngine = {
     'cprExpireSec': 20, # This specifies how old CPR data can be before we reject it as too old to be valid in sec. Default is 20.
     'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
     'hashPort': genRedisPort # The port for the above redis instance.
-};
+}
 
 # AIS State engine settings
 aisStateEngine = {
@@ -104,7 +101,20 @@ aisStateEngine = {
     'hashTTL': 1200, # Expire vehicles that we haven't seen in this number of seconds. Default is 1200 sec (20 min)
     'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
     'hashPort': genRedisPort # The port for the above redis instance.
-};
+}
+
+
+############################
+# Shared library settings. #
+############################
+
+# Generic settings for the dump1090 handler. These settings control how the shared dump1090 handler used by the dump1090 connector client and airSuck server work.
+d1090Settings = {
+    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
+    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.
+    'dedupePort': genRedisPort # Redis port number for dedupe.
+}
+
 
 #########################################
 # Settings for MongoDB storage engines. #
@@ -119,7 +129,7 @@ connMongo = {
     'dbName': "airSuck", # Database name.
     'coll': "airConn", # Collection name for connector data.
     'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data.
-};
+}
 
 # State data MongoDB storage engine settings
 stateMongo = {
@@ -130,7 +140,7 @@ stateMongo = {
     'dbName': "airSuck", # Database name.
     'coll': "airState", # Collection name for connector data.
     'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data. 
-};
+}
 
 ##########################################################################################################################
 # The Redis services can be on a single server or multiple servers. The queues are broken out like this for flexibility. #
@@ -141,25 +151,25 @@ connRel = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckConnRel" # Queue name.
-};
+}
 
 # Connector pub/sub redis queue settings - used by multiple scripts.
 connPub = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckConnPub" # Queue name.
-};
+}
 
 # State engine reliable Redis queue settings - used by multiple scripts.
 stateRel = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckStateRel" # Queue name.
-};
+}
 
 # state engine pub/sub redis queue settings - used by multiple scripts.
 statePub = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckStatePub" # Queue name.
-};
+}

@@ -32,6 +32,7 @@ import hashlib
 import traceback
 from libAirSuck import ssrParse
 from libAirSuck import asLog
+from libAirSuck import handler1090
 from pprint import pprint
 
 ########################
@@ -60,8 +61,6 @@ class airSuckServer():
 	# Send a "ping" to connected hosts.
 	def __sendPing(self):
 		"""
-		__sendPing()
-		
 		Send a ping to all connected hosts.
 		"""
 		
@@ -135,8 +134,7 @@ class airSuckServer():
 	
 	# Convert the message to JSON format
 	def __jsonify(self, dataDict):
-		""" __jsonify(dataDict)
-		
+		"""
 		Convert a given dictionary to a JSON string.
 		"""
 		
@@ -145,8 +143,7 @@ class airSuckServer():
 	
 	# Convert JSON string to a dict.
 	def __jsonStr2Dict(self, thisStr):
-		"""__jsonStr2Dict(thisStr)
-		
+		"""
 		Convert a given JSON string to a dict. If the conversion fails this function returns null, otherwise it returns a dict.
 		"""
 		
@@ -165,8 +162,7 @@ class airSuckServer():
 	# Get one line from TCP output, from:
 	# http://synack.me/blog/using-python-tcp-sockets
 	def __splitLines(self, dataStr):
-		"""__splitLines(dataStr)
-		
+		"""
 		Split JSON data into lines for individual processing
 		"""
 		
@@ -185,9 +181,18 @@ class airSuckServer():
 		# Create a holder for our entry which is none by default.
 		thisEntry = self.__jsonStr2Dict(data)
 		
+		thisEntry.update({'entryPoint': 'dump1090ConnClt'})
+		
 		# If we're supposed to debug...
 		if config.airSuckSrvSettings['debug']:
 			logger.log("Handling: %s" %thisEntry)
+		
+		# Handle the entry dictionary and set our flag.
+		d1090Status = h1090.handleADSBDict(thisEntry)
+		
+		# If it worked reset the lastADSB counter.
+		if (not d1090Status) and config.airSuckSrvSettings['debug']:
+			logger.log("Failed to queue %s." %thisEntry)
 		
 		return
 	
@@ -316,8 +321,17 @@ if __name__ == "__main__":
 	# Set up the logger.
 	logger = asLog(config.airSuckSrvSettings['logMode'])
 	
+	# Log our startup.
+	logger.log("Starting the airSuck server...")
+	
 	# If the dump1090 connector should be run
 	if config.airSuckSrvSettings['enabled']:
+		# Set up the dump1090 handler.
+		h1090 = handler1090(config.airSuckSrvSettings['logMode'])
+		
+		# Configure the dump1090 handler's debug mode based on our configured mode.
+		h1090.setDebug(config.airSuckSrvSettings['debug'])
+		
 		# Create our connector object.
 		airSuckSrv = airSuckServer()
 		

@@ -12,6 +12,9 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Quick-and-dirty setup section. #
 ##################################
 
+# The name of this machine.
+genName = "<name of this data source>" # This is a string that identifies the local machine.
+
 # Most setups can use a single Redis and MongoDB host. Set these here. If you need separate host names, just remove the variables from the config below.
 genRedisHost = "<insert host/IP here>" # This machine hosts all the redis instances used by all connetors and servers.
 genRedisPort = 6379 # Redis server port default is 6379
@@ -29,13 +32,13 @@ genLogMode   = "stdout" # Set the default logging mode to standard out. You can 
 
 # airSuck client - for submitting AIS or SSR data to a remote server running the Dump 1090 Connector Server.
 airSuckClientSettings = {
+    'myName': genName, # A descriptive name for this data source.
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connSrvHost': "<hostname or IP>", # Remote connector server to submit data to.
-    'myName': "<name of this data source>", # A descriptive name for this data source.
     'connSrvPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
-    'debug': False, # Debug?
+    'debug': True, # Debug?
     
     # Dump1090 data source settings.
     'dump1090Enabled': True, # Enable if you want to submit dump1090 data.
@@ -49,7 +52,18 @@ airSuckClientSettings = {
     'aisSrvList': { # Dictionary of host(s) to connect to when running the AIS connector.
         "<source name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 300} # Server name, host address, port, reconnect delay (if disconnected), and timeout before reconnecting to AIS source if we don't have data.
     }
-};
+}
+
+# airSuck server settings
+airSuckSrvSettings = {
+    'myName': genName, # A descriptive name for this data source.
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
+    'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
+    'srvListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
+    'srvListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
+    'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
+    'debug': True, # Debug?
+}
 
 
 ########################################
@@ -58,6 +72,7 @@ airSuckClientSettings = {
 
 # Dump1090Connector settings
 d1090ConnSettings = {
+    'myName': genName, # A descriptive name for this data source.
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connListenHost': "0.0.0.0", # Listen on this address for incoming connections when a connector server. Default is all addresses: "0.0.0.0"
@@ -67,13 +82,12 @@ d1090ConnSettings = {
         "<source name>": { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 30}, # This can contain additional dictionaries.
         "<another source name>":  { "host": "<hostname or IP>", "port": 30002, "reconnectDelay": 5, "threadTimeout": 120, "srcPos": [33.944128, -118.402787, "manual"]} # Same as above, but we have source position info that enabled CPR local decoding. The srcPos directive is optional.
     },
-    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
-    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.
-    'dedupePort': genRedisPort # Redis port number for dedupe.
-};
+    'debug': False # Debug?
+}
 
 # aisConnector settings
 aisConnSettings = {
+    'myName': genName, # A descriptive name for this data source.
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connClientList': { # Array of hosts to connect to when running client connector script.
@@ -85,7 +99,7 @@ aisConnSettings = {
     'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
     'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate AIS payloads.
     'dedupePort': genRedisPort # Redis port number for dedupe.
-};
+}
 
 # SSR State engine settings
 ssrStateEngine = {
@@ -95,7 +109,7 @@ ssrStateEngine = {
     'cprExpireSec': 20, # This specifies how old CPR data can be before we reject it as too old to be valid in sec. Default is 20.
     'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
     'hashPort': genRedisPort # The port for the above redis instance.
-};
+}
 
 # AIS State engine settings
 aisStateEngine = {
@@ -104,7 +118,20 @@ aisStateEngine = {
     'hashTTL': 1200, # Expire vehicles that we haven't seen in this number of seconds. Default is 1200 sec (20 min)
     'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
     'hashPort': genRedisPort # The port for the above redis instance.
-};
+}
+
+
+############################
+# Shared library settings. #
+############################
+
+# Generic settings for the dump1090 handler. These settings control how the shared dump1090 handler used by the dump1090 connector client and airSuck server work.
+d1090Settings = {
+    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
+    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate frames.
+    'dedupePort': genRedisPort # Redis port number for dedupe.
+}
+
 
 #########################################
 # Settings for MongoDB storage engines. #
@@ -119,7 +146,7 @@ connMongo = {
     'dbName': "airSuck", # Database name.
     'coll': "airConn", # Collection name for connector data.
     'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data.
-};
+}
 
 # State data MongoDB storage engine settings
 stateMongo = {
@@ -130,7 +157,7 @@ stateMongo = {
     'dbName': "airSuck", # Database name.
     'coll': "airState", # Collection name for connector data.
     'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data. 
-};
+}
 
 ##########################################################################################################################
 # The Redis services can be on a single server or multiple servers. The queues are broken out like this for flexibility. #
@@ -141,25 +168,25 @@ connRel = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckConnRel" # Queue name.
-};
+}
 
 # Connector pub/sub redis queue settings - used by multiple scripts.
 connPub = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckConnPub" # Queue name.
-};
+}
 
 # State engine reliable Redis queue settings - used by multiple scripts.
 stateRel = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckStateRel" # Queue name.
-};
+}
 
 # state engine pub/sub redis queue settings - used by multiple scripts.
 statePub = {
     'host': genRedisHost, # This host hosts the queue.
     'port': genRedisPort, # This is the port number for the instance hodling the queue.
     'qName': "airSuckStatePub" # Queue name.
-};
+}

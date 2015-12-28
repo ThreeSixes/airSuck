@@ -59,7 +59,7 @@ function handleMessage(msg){
         geodesic: false,
         strokeOpacity: 0.8,
         strokeWeight: 2.0,
-        visible: false,
+        visible: true,
         zIndex: 1000,
         path: new google.maps.MVCArray()
       })

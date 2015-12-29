@@ -416,7 +416,10 @@ class airSuckClient():
                 
                 # If it seems to be valid ADS-B then use it.
                 if self.__verifyADSB(output):
-                    logger.log("Passing %s to __handleADSB." %output.strip())
+                    # If we're debugging...
+                    if asConfig['debug']:
+                        logger.log("Passing %s to __handleADSB." %output.strip())
+                    
                     self.__handleADSB(output)
             
             # Get any 'straggling' output.

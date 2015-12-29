@@ -2,10 +2,192 @@ import sys
 sys.path.append("..")
 
 try:
-	import config
+    import config
 except:
-	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+    raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
+
+import hashlib
+import datetime
+import redis
+import traceback
+import binascii
+import json
+import asLog
+import aisParse
 
 class handlerAIS:
-    def __init__(self):
-        pass
+    def __init__(self, logMode, enqueOn = True):
+        # Set up logger.
+        self.__logger = asLog.asLog(logMode)
+        
+        # Redis queues and entities
+        self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
+        self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
+        self.__frag = redis.StrictRedis(host=config.aisSettings['fragHost'], port=config.aisSettings['fragPort'])
+        self.__dedupe = redis.StrictRedis(host=config.aisSettings['dedupeHost'], port=config.aisSettings['dedupePort'])
+        
+        # Load AIS parser.
+        self.__aisParser = aisParse.aisParse()
+        
+        # Debug flag.
+        self.__debugOn = False
+        
+        # Do we want to actually enqueue data?
+        self.__enqueueOn = enqueOn
+    
+    
+    # Strip metachars.
+    def metaStrip(self, subject):
+        """
+        Strip metacharacters from a string.
+        
+        Returns stripped string.
+        """
+        
+        # Take any metachars off the end of the string.
+        subject = subject.lstrip()
+        return subject.rstrip()
+    
+    # Convert the message to JSON format
+    def jsonify(self, dataDict):
+        """
+        Convert a given dictionary to a JSON string.
+        """
+        
+        retVal = json.dumps(dataDict)
+        return retVal
+    
+    # Convert the data we want to send to JSON format.
+    def queueAIS(self, msg):
+        """
+        Drop the msg on the appropriate redis connector queue(s) as a JSON string.
+        """
+        
+        # Create a new dict to enqueue so the original doesn't get manipulated.
+        enqueueMe = {}
+        enqueueMe.update(msg)
+        
+        # If we have a payload specified drop it.
+        if 'payload' in msg:
+            enqueueMe.pop('payload')
+        
+        # Build a JSON string.
+        jsonMsg = self.jsonify(enqueueMe)
+        
+        # Should we actually enqueue the data?
+        if self.enqueue:
+            # Set up a hashed version of our data.
+            dHash = "ais-" + hashlib.md5(enqueueMe['data']).hexdigest()
+            
+            # If we dont' already have a frame like this one OR the frame is a fragment...
+            if (self.__dedupe.exists(dHash) == False) or (enqueueMe['isFrag'] == True):
+            
+                # Make sure we're not handling a fragment. Since some fragments can be short there's a good chance of collision.
+                if enqueueMe['isFrag'] == False:
+                    # Set the key and insert lame value.
+                    self.__dedupe.setex(dHash, config.aisConnSettings['dedupeTTLSec'], "X")
+                    
+                    # If we are configured to use the connector mongoDB forward the traffic to it.
+                    if config.connMongo['enabled'] == True:
+                        self.__rQ.rpush(config.connRel['qName'], jsonMsg)
+                        
+                        # Put data on the pub/sub queue.
+                        self.__psQ.publish(config.connPub['qName'], jsonMsg)
+                        
+                        # Debug
+                        #logger.log("Q: %s" %enqueueMe['data'])
+            else:
+                # Just dump the JSON data as a string.
+                logger.log(jsonMsg)
+                
+        return
+
+        # Defragment AIS messages.
+        def defragAIS(self, fragment):
+            """
+            Attempt to assemble AIS data from a number of fragments. Fragment is a decapsulated AIS message fragment.
+            """
+            
+            # By default assume we don't have an assembled payload
+            isAssembled = False
+            
+            # Set up a hashed version of our data given the host the data arrived on, the fragment count, and the message ID.
+            fHash = "aisFrag-" + hashlib.md5(fragment['src'] + "-" + str(fragment['fragCount']) + '-' + str(fragment['messageID'])).hexdigest()
+            
+            # Create a fragment name.
+            fragName = str(fragment['fragNumber'])
+            
+            # Attempt to get data from our hash table.
+            hashDat = self.__frag.hgetall(fHash)
+            hashDatLen = len(hashDat)
+            
+            # If we already have a fragment...
+            if hashDatLen > 0:
+                
+                # If we have all the fragments we need...
+                if hashDatLen == (fragment['fragCount'] - 1):
+                    # Create a holder for our payload
+                    payload = ""
+                    
+                    # Push our new fragment into the dict.
+                    hashDat.update({fragName: fragment['payload']})
+                    
+                    # Assemble the stored fragments in order.
+                    for i in range(1, fragment['fragCount'] + 1):
+                        payload = payload + hashDat[str(i)]
+                    
+                    # Make sure we properly reassign the payload to be the full payload.
+                    fragment.update({'payload': payload})
+                    
+                    # Set assembled flag.
+                    isAssembled = True
+                
+                else:
+                    # Since we don't have all the fragments we need add the latest fragment to the list.
+                    self.__frag.hset(fHash, fragName, fragment['payload'])
+            
+            else:
+                # Create our new hash object.
+                self.__frag.hset(fHash, fragName, fragment['payload'])
+            
+            # If we have an assembled payload clean up some info and queue it.
+            if isAssembled:
+                # Nuke the hash object.
+                self.__frag.expire(fHash, -1)
+                
+                # Update the fragment data.
+                fragment.update({'isAssembled': True, 'isFrag': False, 'data': payload})
+                
+                # Set the fragment to include parsed data.
+                fragment = self.__aisParser.aisParse(fragment)
+                
+                # The fragment number is no longer valid since the count tells us how many we had.
+                fragment.pop('fragNumber')
+                
+                # Enqueue our assembled payload.
+                self.queueAIS(fragment)
+            else:
+                # Set the expiration time on the fragmoent hash.
+                self.__frag.expire(fHash, config.aisConnSettings['fragTTLSec'])    
+    
+    def setDebug(self, debugOn):
+        """
+        Turn debugging on or off.
+        """
+        
+        if debugOn == True:
+            self.__debugOn = True
+        else:
+            self.__debugOn = False
+    
+    def handleAISDict(self, aisData):
+        """
+        Handle an incoming AIS dictionary. Returns true if that data was handled, if not false. A return value of true does not indicate the data was queued because it may have been dropped by deduplication.
+        """
+        
+        # Set up return value.
+        retVal = False
+        
+        # Return success
+        return retVal
+    

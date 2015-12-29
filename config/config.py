@@ -38,6 +38,7 @@ airSuckClientSettings = {
     'connSrvHost': "<hostname or IP>", # Remote connector server to submit data to.
     'connSrvPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
+    'reconnectDelay': 30.0, # This is the amount of time we want to wait initially before reconnecting.
     'reportPos': False, # Do we report the client position data specified below?
     'myPos': [0.0, 0.0, "manual"], # Position data of the client formatted as such: [lat, lon, "position type"].
     'debug': False, # Debug?

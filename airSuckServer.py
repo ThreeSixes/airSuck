@@ -156,12 +156,14 @@ class airSuckServer():
 		try:
 			# Get a dict from the incoming JSON string.
 			retVal = json.loads(thisStr)
-		except:
+		except Exception as e:
 			# If it doesn't work just set retVal to none.
 			retVal = None
 			
 			tb = traceback.format_exc()
 			logger.log("Failed to parse JSON data.\nString: %s\n%s" %(thisStr, tb))
+			
+			raise e
 		
 		return retVal
 
@@ -182,23 +184,28 @@ class airSuckServer():
 		Try to do something useful with incoming data from our TCP socket. Accepts one argument: the incoming data. Returns nothing.
 		"""
 		
-		# Create a holder for our entry which is none by default.
-		thisEntry = self.__jsonStr2Dict(data)
+		try:
+			# Create a holder for our entry which is none by default.
+			thisEntry = self.__jsonStr2Dict(data)
+			
+			# If we got a blank string back __jsonStr2Dict() blew up.
+			if thisEntry != "":
+				thisEntry.update({'entryPoint': 'airSuckServer', 'src': config.airSuckSrvSettings['myName']})
+				
+				# If we're supposed to debug...
+				if config.airSuckSrvSettings['debug']:
+					logger.log("Handling: %s" %thisEntry)
+				
+				# Handle the entry dictionary and set our flag.
+				d1090Status = h1090.handleADSBDict(thisEntry)
+				
+				# If it worked reset the lastADSB counter.
+				if (not d1090Status) and config.airSuckSrvSettings['debug']:
+					logger.log("Failed to queue %s." %thisEntry)
 		
-		# If we got a blank string back __jsonStr2Dict() blew up.
-		if thisEntry != "":
-			thisEntry.update({'entryPoint': 'airSuckServer', 'src': config.airSuckSrvSettings['myName']})
-			
-			# If we're supposed to debug...
-			if config.airSuckSrvSettings['debug']:
-				logger.log("Handling: %s" %thisEntry)
-			
-			# Handle the entry dictionary and set our flag.
-			d1090Status = h1090.handleADSBDict(thisEntry)
-			
-			# If it worked reset the lastADSB counter.
-			if (not d1090Status) and config.airSuckSrvSettings['debug']:
-				logger.log("Failed to queue %s." %thisEntry)
+		except:
+			tb = traceback.format_exc()
+			logger.log("Failed to handle incoming data: %s\n%s" %(data, tb))
 		
 		return
 	

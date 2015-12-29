@@ -63,7 +63,6 @@ class dataSource(threading.Thread):
 		self.myName = myName
 		self.AISSrc = AISSrc
 		self.enqueue = enqueue
-		self.__aisParser = aisParse()
 		self.__watchdogFail = False
 		self.__backoff = 1.0
 		
@@ -82,8 +81,6 @@ class dataSource(threading.Thread):
 	# Make sure we don't have a dead connection.
 	def watchdog(self):
 		"""
-		watchdog()
-		
 		Check this thread to see if it has not recieved data in the given thread timeout.
 		"""
 		
@@ -116,8 +113,6 @@ class dataSource(threading.Thread):
 	# Handle backoff data.
 	def handleBackoff(self, reset=False):
 		"""
-		handleBackoff([reset])
-		
 		Handle the backoff algorithm for reconnect delay. Accepts one optional argument, reset which is a boolean value. When reset is true, the backoff value is set back to 1. Returns no data.
 		"""
 		
@@ -136,8 +131,6 @@ class dataSource(threading.Thread):
 	# Connect to our data source.
 	def connectSource(self):
 		"""
-		connectSource()
-		
 		Connects to our host.
 		"""
 		
@@ -200,8 +193,6 @@ class dataSource(threading.Thread):
 	# Disconnect the source and re-create the socket object.
 	def disconnectSouce(self):
 		"""
-		disconnectSource()
-		
 		Disconnect from our host.
 		"""
 		
@@ -227,8 +218,6 @@ class dataSource(threading.Thread):
 	# Strip metachars.
 	def metaStrip(self, subject):
 		"""
-		metaStrip(subject)
-		
 		Strip metacharacters from a string.
 		
 		Returns stripped string.
@@ -240,8 +229,7 @@ class dataSource(threading.Thread):
 	
 	# Convert the message to JSON format
 	def jsonify(self, dataDict):
-		""" jsonify(dataDict)
-		
+		"""
 		Convert a given dictionary to a JSON string.
 		"""
 		
@@ -251,8 +239,7 @@ class dataSource(threading.Thread):
 	# Get one line from TCP output, from:
 	# http://synack.me/blog/using-python-tcp-sockets
 	def readLines(self, sock, recvBuffer = 4096, delim = '\n'):
-		"""readLines(sock)
-		
+		"""
 		Read a TCP stream, looking for individual lines of text delimited by \n.
 		"""
 		buffer = ''
@@ -297,8 +284,7 @@ class dataSource(threading.Thread):
 
 	# Convert the data we want to send to JSON format.
 	def queueAIS(self, msg):
-		"""queueADSB(msg)
-		
+		"""
 		Drop the msg on the appropriate redis connector queue(s) as a JSON string.
 		"""
 		
@@ -344,8 +330,6 @@ class dataSource(threading.Thread):
 	# Defragment AIS messages.
 	def defragAIS(self, fragment):
 		"""
-		defrag(fragment)
-		
 		Attempt to assemble AIS data from a number of fragments. Fragment is a decapsulated AIS message fragment.
 		"""
 		
@@ -411,8 +395,6 @@ class dataSource(threading.Thread):
 	
 	def handleLine(self, thisLine):
 		"""
-		handleLine(thisLine)
-		
 		Handle a line of text representing a single AIS sentence.
 		"""
 		# Remove whitespace.
@@ -473,8 +455,7 @@ class dataSource(threading.Thread):
 		self.__lastEntry = 0
 	
 	def run(self):
-		"""run
-		
+		"""
 		dataSource worker.
 		"""
 		

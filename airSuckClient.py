@@ -461,7 +461,7 @@ class airSuckClient():
             
             if output.strip() != "":
                 logger.log("dump1090 stderr: %s" %output)
-        
+            
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         
@@ -765,17 +765,17 @@ class airSuckClient():
                 
                 # Attempt to kill dump1090
                 self.__kill1090()
-        
-        try:
-            # Wait 0.1 seconds before looping.
-            time.sleep(0.1)
-        
-        except KeyboardInterrupt:
-            # We don't want to keep running since we were killed.
-            keepRunning = False
             
-            # Raise the exception again.
-            raise KeyboardInterrupt
+            try:
+                # Wait 0.1 seconds before looping.
+                time.sleep(0.1)
+            
+            except KeyboardInterrupt:
+                # We don't want to keep running since we were killed.
+                keepRunning = False
+                
+                # Raise the exception again.
+                raise KeyboardInterrupt
     
     def __kill1090(self):
         """

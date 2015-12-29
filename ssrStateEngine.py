@@ -379,6 +379,10 @@ class SubListener(threading.Thread):
                             if 'idInfo' in ssrWrapped:
                                 data.update({"idInfo": ssrWrapped['idInfo']})
                             
+                            # Client name data
+                            if 'clientName' in ssrWrapped:
+                                data.update({"lastClientName": ssrWrapped['clientName']})
+                            
                             # Check for emergency conditions.
                             data.update(self.getEmergencyInfo(ssrWrapped))
                             

@@ -832,7 +832,10 @@ if __name__ == "__main__":
     # Log startup message.
     logger.log("Starting the airSuck client...")
     
-    pprint(asConfig)
+    # If we're debugging...
+    if asConfig['debug']:
+        # Dump our config.
+        pprint(asConfig)
     
     # Set up our global objects.
     asc = airSuckClient()
@@ -846,7 +849,6 @@ if __name__ == "__main__":
         if asConfig['dump1090Enabled']:
             # Set the data source config flag.
             noDS = False
-            
         
         # If we are configured to run the dump1090 client add it to our thread list.
         if asConfig['aisEnabled']:
@@ -870,4 +872,3 @@ if __name__ == "__main__":
         logger.log("No data sources enabled for the airSuck client. Please enable at least one source in config.py by setting dump1090Enabled and/or aisEnabled to True.")
     
     logger.log("Shutting down the airSuck client.")
-    

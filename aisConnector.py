@@ -17,7 +17,6 @@ try:
 except:
 	raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
 
-import redis
 import time
 import json
 import datetime
@@ -30,7 +29,7 @@ import socket
 from pprint import pprint
 from libAirSuck import aisParse
 from libAirSuck import asLog
-
+from libAirSuck import handlerAIS
 
 ##########
 # Config #
@@ -38,9 +37,6 @@ from libAirSuck import asLog
 
 # Keep track of if we're running.
 alive = True
-
-# Should we enqueue data?
-enqueueOn = True
 
 
 ####################
@@ -59,10 +55,13 @@ class dataSource(threading.Thread):
 		logger.log("Init thread for %s." %myName)
 		threading.Thread.__init__(self)
 		
+		# AIS Parser.
+		self.__aisParser = aisParse()
+		
 		# Extend properties to be class-wide.
-		self.myName = myName
-		self.AISSrc = AISSrc
-		self.enqueue = enqueue
+		self.__myName = myName
+		self.__AISSrc = AISSrc
+		self.__enqueue = enqueue
 		self.__watchdogFail = False
 		self.__backoff = 1.0
 		
@@ -71,27 +70,21 @@ class dataSource(threading.Thread):
 		
 		# This keeps track of the number of seconds since our last connection.
 		self.__lastEntry = 0
-		
-		# Redis queues and entities
-		self.__rQ = redis.StrictRedis(host=config.connRel['host'], port=config.connRel['port'])
-		self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
-		self.__frag = redis.StrictRedis(host=config.aisConnSettings['fragHost'], port=config.aisConnSettings['fragPort'])
-		self.__dedupe = redis.StrictRedis(host=config.aisConnSettings['dedupeHost'], port=config.aisConnSettings['dedupePort'])
-
+	
 	# Make sure we don't have a dead connection.
-	def watchdog(self):
+	def __watchdog(self):
 		"""
 		Check this thread to see if it has not recieved data in the given thread timeout.
 		"""
 		
 		try:
 			# Check to see if our last entry was inside the timeout window.
-			if self.__lastEntry >= self.AISSrc['threadTimeout']:
+			if self.__lastEntry >= self.__AISSrc['threadTimeout']:
 				# Puke if we have been running for too long without data.
 				raise IOError()
 			else:
 				# Restart our watchdog.
-				self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+				self.__myWatchdog = threading.Timer(1.0, self.__watchdog)
 				self.__myWatchdog.start()
 		
 		except Exception as e:
@@ -102,7 +95,7 @@ class dataSource(threading.Thread):
 			self.__myWatchdog.cancel()
 			
 			# Prion the error message
-			logger.log("%s watchdog: No data recieved in %s sec." %(self.myName, self.AISSrc['threadTimeout']))
+			logger.log("%s watchdog: No data recieved in %s sec." %(self.__myName, self.__AISSrc['threadTimeout']))
 			
 			# Close the connection.
 			self.__aisSock.close()
@@ -111,7 +104,7 @@ class dataSource(threading.Thread):
 		self.__lastEntry += 1
 	
 	# Handle backoff data.
-	def handleBackoff(self, reset=False):
+	def __handleBackoff(self, reset=False):
 		"""
 		Handle the backoff algorithm for reconnect delay. Accepts one optional argument, reset which is a boolean value. When reset is true, the backoff value is set back to 1. Returns no data.
 		"""
@@ -129,7 +122,7 @@ class dataSource(threading.Thread):
 		return
 	
 	# Connect to our data source.
-	def connectSource(self):
+	def __connectSource(self):
 		"""
 		Connects to our host.
 		"""
@@ -143,13 +136,13 @@ class dataSource(threading.Thread):
 		# Keep trying to connect until it works.
 		while notConnected:
 			# Print message
-			logger.log("%s connecting to %s:%s" %(self.myName, self.AISSrc["host"], self.AISSrc["port"]))
+			logger.log("%s connecting to %s:%s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 			
 			# Attempt to connect.
 			try:
 				# Connect up
-				self.__aisSock.connect((self.AISSrc["host"], self.AISSrc["port"]))
-				logger.log("%s connected." %self.myName)
+				self.__aisSock.connect((self.__AISSrc["host"], self.__AISSrc["port"]))
+				logger.log("%s connected." %self.__myName)
 				
 				# We connected so now we can move on.
 				notConnected = False
@@ -161,49 +154,49 @@ class dataSource(threading.Thread):
 				self.__watchdogFail = False
 				
 				# Reset the backoff value
-				self.handleBackoff(True)
+				self.__handleBackoff(True)
 				
 			except Exception as e:
 				if 'errno' in e:
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:
 						#Print some messages
-						logger.log("%s failed to connect to %s:%s" %(self.myName, self.AISSrc["host"], self.AISSrc["port"]))
+						logger.log("%s failed to connect to %s:%s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				
 				else:
 					# Dafuhq happened!?
 					tb = traceback.format_exc()
-					logger.log("%s went boom connecting.\n%s" %(self.myName, tb))
+					logger.log("%s went boom connecting.\n%s" %(self.__myName, tb))
 				
 				# In the event our connect fails, try again after the configured delay
-				logger.log("%s sleeping %s sec." %(self.myName, (self.AISSrc["reconnectDelay"] * self.__backoff)))
-				time.sleep(self.AISSrc["reconnectDelay"] * self.__backoff)
+				logger.log("%s sleeping %s sec." %(self.__myName, (self.__AISSrc["reconnectDelay"] * self.__backoff)))
+				time.sleep(self.__AISSrc["reconnectDelay"] * self.__backoff)
 				
 				# Handle backoff.
-				self.handleBackoff()
+				self.__handleBackoff()
 		
 		# Set 1 second timeout for blocking operations.
 		self.__aisSock.settimeout(1.0)
 		
 		# The watchdog should be run every second.
 		self.__lastEntry = 0
-		self.__myWatchdog = threading.Timer(1.0, self.watchdog)
+		self.__myWatchdog = threading.Timer(1.0, self.__watchdog)
 		self.__myWatchdog.start()
 	
 	# Disconnect the source and re-create the socket object.
-	def disconnectSouce(self):
+	def __disconnectSource(self):
 		"""
 		Disconnect from our host.
 		"""
 		
-		logger.log("%s disconnecting." %self.myName)
+		logger.log("%s disconnecting." %self.__myName)
 		
 		try:	
 			# Close the connection.
 			self.__aisSock.close()
 		except:
 			tb = traceback.format_exc()
-			logger.log("%s threw exception disconnecting.\n%s" %(self.myName, tb))
+			logger.log("%s threw exception disconnecting.\n%s" %(self.__myName, tb))
 		
 		# Reset the lastEntry counter.
 		self.__lastEntry = 0
@@ -216,7 +209,7 @@ class dataSource(threading.Thread):
 			None
 	
 	# Strip metachars.
-	def metaStrip(self, subject):
+	def __metaStrip(self, subject):
 		"""
 		Strip metacharacters from a string.
 		
@@ -227,18 +220,10 @@ class dataSource(threading.Thread):
 		subject = subject.lstrip()
 		return subject.rstrip()
 	
-	# Convert the message to JSON format
-	def jsonify(self, dataDict):
-		"""
-		Convert a given dictionary to a JSON string.
-		"""
-		
-		retVal = json.dumps(dataDict)
-		return retVal
 	
 	# Get one line from TCP output, from:
 	# http://synack.me/blog/using-python-tcp-sockets
-	def readLines(self, sock, recvBuffer = 4096, delim = '\n'):
+	def __readLines(self, sock, recvBuffer = 4096, delim = '\n'):
 		"""
 		Read a TCP stream, looking for individual lines of text delimited by \n.
 		"""
@@ -261,144 +246,37 @@ class dataSource(threading.Thread):
 				# If we had a disconnect event drop out of the loop.
 				if 'errno' in e:
 					if e.errno == 9:
-						logger.log("%s disconnected." %self.myName)
+						logger.log("%s disconnected." %self.__myName)
 						data = False
 						raise e
 					
 					else:
 						tb = traceback.format_exc()
-						logger.log("%s choked reading buffer.\n%s" %(self.myName, tb))
+						logger.log("%s choked reading buffer.\n%s" %(self.__myName, tb))
 						data = False
 						line = ""
 				else:
 					tb = traceback.format_exc()
-					logger.log("%s choked reading buffer.\n%s" %(self.myName, tb))
+					logger.log("%s choked reading buffer.\n%s" %(self.__myName, tb))
 					data = False
 					line = ""
 			
 			# See if our watchdog is working.
 			if self.__watchdogFail:
-				logger.log("%s watchdog terminating readLines." %self.myName)
+				logger.log("%s watchdog terminating readLines." %self.__myName)
 				data = False
 				break
-
-	# Convert the data we want to send to JSON format.
-	def queueAIS(self, msg):
-		"""
-		Drop the msg on the appropriate redis connector queue(s) as a JSON string.
-		"""
-		
-		# Create a new dict to enqueue so the original doesn't get manipulated.
-		enqueueMe = {}
-		enqueueMe.update(msg)
-		
-		# If we have a payload specified drop it.
-		if 'payload' in msg:
-			enqueueMe.pop('payload')
-		
-		# Build a JSON string.
-		jsonMsg = self.jsonify(enqueueMe)
-		
-		# Should we actually enqueue the data?
-		if self.enqueue:
-			# Set up a hashed version of our data.
-			dHash = "ais-" + hashlib.md5(enqueueMe['data']).hexdigest()
-			
-			# If we dont' already have a frame like this one OR the frame is a fragment...
-			if (self.__dedupe.exists(dHash) == False) or (enqueueMe['isFrag'] == True):
-				
-				# Make sure we're not handling a fragment. Since some fragments can be short there's a good chance of collision.
-				if enqueueMe['isFrag'] == False:
-					# Set the key and insert lame value.
-					self.__dedupe.setex(dHash, config.aisConnSettings['dedupeTTLSec'], "X")
-				
-				# If we are configured to use the connector mongoDB forward the traffic to it.
-				if config.connMongo['enabled'] == True:
-					self.__rQ.rpush(config.connRel['qName'], jsonMsg)
-				
-				# Put data on the pub/sub queue.
-				self.__psQ.publish(config.connPub['qName'], jsonMsg)
-				
-				# Debug
-				#logger.log("Q: %s" %enqueueMe['data'])
-		else:
-			# Just dump the JSON data as a string.
-			logger.log(jsonMsg)
-		
-		return
-
-	# Defragment AIS messages.
-	def defragAIS(self, fragment):
-		"""
-		Attempt to assemble AIS data from a number of fragments. Fragment is a decapsulated AIS message fragment.
-		"""
-		
-		# By default assume we don't have an assembled payload
-		isAssembled = False
-		
-		# Set up a hashed version of our data given the host the data arrived on, the fragment count, and the message ID.
-		fHash = "aisFrag-" + hashlib.md5(fragment['src'] + "-" + str(fragment['fragCount']) + '-' + str(fragment['messageID'])).hexdigest()
-		
-		# Create a fragment name.
-		fragName = str(fragment['fragNumber'])
-		
-		# Attempt to get data from our hash table.
-		hashDat = self.__frag.hgetall(fHash)
-		hashDatLen = len(hashDat)
-		
-		# If we already have a fragment...
-		if hashDatLen > 0:
-			
-			# If we have all the fragments we need...
-			if hashDatLen == (fragment['fragCount'] - 1):
-				# Create a holder for our payload
-				payload = ""
-				
-				# Push our new fragment into the dict.
-				hashDat.update({fragName: fragment['payload']})
-				
-				# Assemble the stored fragments in order.
-				for i in range(1, fragment['fragCount'] + 1):
-					payload = payload + hashDat[str(i)]
-				
-				# Make sure we properly reassign the payload to be the full payload.
-				fragment.update({'payload': payload})
-				
-				# Set assembled flag.
-				isAssembled = True
-			else:
-				# Since we don't have all the fragments we need add the latest fragment to the list.
-				self.__frag.hset(fHash, fragName, fragment['payload'])
-		else:
-			# Create our new hash object.
-			self.__frag.hset(fHash, fragName, fragment['payload'])
-		
-		# If we have an assembled payload clean up some info and queue it.
-		if isAssembled:
-			# Nuke the hash object.
-			self.__frag.expire(fHash, -1)
-			
-			# Update the fragment data.
-			fragment.update({'isAssembled': True, 'isFrag': False, 'data': payload})
-			
-			# Set the fragment to include parsed data.
-			fragment = self.__aisParser.aisParse(fragment)
-			
-			# The fragment number is no longer valid since the count tells us how many we had.
-			fragment.pop('fragNumber')
-			
-			# Enqueue our assembled payload.
-			self.queueAIS(fragment)
-		else:
-			# Set the expiration time on the fragmoent hash.
-			self.__frag.expire(fHash, config.aisConnSettings['fragTTLSec'])
 	
-	def handleLine(self, thisLine):
+	def __handleLine(self, thisLine):
 		"""
 		Handle a line of text representing a single AIS sentence.
 		"""
 		# Remove whitespace.
-		thisLine = self.metaStrip(thisLine)
+		thisLine = self.__metaStrip(thisLine)
+		
+		# Make sure they're defined but not equal.
+		frameCRC = "X"
+		cmpCRC = "Y"
 		
 		try:
 			# Compute the CRC value of the frame.
@@ -406,7 +284,7 @@ class dataSource(threading.Thread):
 			cmpCRC = self.__aisParser.getCRC(thisLine)
 		except:
 			tb = traceback.format_exc()
-			logger.log("%s choked getting CRC.\n%s" %(self.myName, tb))
+			logger.log("%s choked getting CRC.\n%s" %(self.__myName, tb))
 		
 		# If we have a good CRC checksum keep moving.
 		if frameCRC == cmpCRC:
@@ -418,63 +296,45 @@ class dataSource(threading.Thread):
 				dtsStr = dtsStr + ".000000"
 			
 			# Set this entry up with some initial data.
-			thisEntry = {'entryPoint': 'aisConnector', 'dataOrigin': 'aisConn', 'type': 'airAIS', 'dts': dtsStr, 'src': self.myName, 'data': thisLine, 'isFrag': False, 'isAssembled': False}
+			thisEntry = {'entryPoint': 'aisConnector', 'dataOrigin': 'aisConn', 'type': 'airAIS', 'dts': dtsStr, 'src': self.__myName, 'data': thisLine, 'isFrag': False, 'isAssembled': False}
 			
 			try:
 				# Decapsulate the AIS payload and get relevant data.
 				thisEntry.update(self.__aisParser.nmeaDecapsulate(thisLine))
 			except:
 				tb = traceback.format_exc()
-				logger.log("%s choked decapsulating frame %s\n%s" %(self.myName, thisLine, tb))
+				logger.log("%s choked decapsulating frame %s\n%s" %(self.__myName, thisLine, tb))
 			
-			# If we have an unfragmented frame process it. If not, handle the fragment.
-			if (thisEntry['fragCount'] == 1) and (thisEntry['fragNumber'] == 1):
-				try:
-					# Parse our AIS data and add it to the stream.
-					thisEntry.update(self.__aisParser.aisParse(thisEntry))
-				except:
-					tb = traceback.format_exc()
-					logger.log("%s choked decapsulating frame %s\n%s" %(self.myName, thisLine, tb))
-					
-				# Enqueue our data.
-				self.queueAIS(thisEntry)
-			else:
-				# Enqueue our fragment.
-				self.queueAIS(thisEntry)
-				
-				# Since we aren't frame 1 of 1 for a given message we're a fragment.
-				thisEntry['isFrag'] = True
-				try:
-					# Handle fragments.
-					self.defragAIS(thisEntry)
-				except:
-					tb = traceback.format_exc()
-					logger.log("%s error defragmenting data.\n%s" %(self.myName, tb))
-		
-		# Reset our lastEntry seconds.
-		self.__lastEntry = 0
+			try:
+				# Attempt to handle the frames.
+				if hAIS.handleAISDict(thisEntry):
+					self.__lastEntry = 0
+			
+			except:
+				tb = traceback.format_exc()
+				logger.log("%s error handling AIS frame:\n%s" %(self.__myName, tb))	
 	
 	def run(self):
 		"""
 		dataSource worker.
 		"""
 		
-		logger.log("%s running." %self.myName)
+		logger.log("%s running." %self.__myName)
 		
 		# Do stuff.
 		while (True):
 			# Attempt to connect.
-			self.connectSource()
+			self.__connectSource()
 			
 			# Try to read a lone from our established socket.
 			try:				
 				# Get lines of data from dump1090
-				for thisLine in self.readLines(self.__aisSock):
+				for thisLine in self.__readLines(self.__aisSock):
 					# Do our thing.
-					self.handleLine(thisLine)
+					self.__handleLine(thisLine)
 				
 				# Close the connection.
-				self.disconnectSouce()
+				self.__disconnectSource()
 				
 			# Try to catch what blew up. This needs to be significantly improved and should result in a delay and another connection attempt.
 			except Exception as e:
@@ -484,17 +344,17 @@ class dataSource(threading.Thread):
 					else:
 						# Dafuhq happened!?
 						tb = traceback.format_exc()
-						logger.log("%s went boom processing data.\n%s" %(self.myName, tb))
+						logger.log("%s went boom processing data.\n%s" %(self.__myName, tb))
 						
 						# Close the connection.
-						self.disconnectSouce()
+						self.__disconnectSource()
 				else:
 					# Dafuhq happened!?
 					tb = traceback.format_exc()
-					logger.log("%s went boom processing data.\n%s" %(self.myName, tb))
+					logger.log("%s went boom processing data.\n%s" %(self.__myName, tb))
 					
 					# Close the connection.
-					self.disconnectSouce()
+					self.__disconnectSource()
 
 #######################
 # Main execution body #
@@ -502,6 +362,9 @@ class dataSource(threading.Thread):
 
 # If I've been called for execution...
 if __name__ == "__main__":
+	# Should we enqueue data?
+	enqueueOn = False
+	
 	# Set up the logger.
 	logger = asLog(config.aisConnSettings['logMode'])
 	
@@ -510,12 +373,13 @@ if __name__ == "__main__":
 		# ... and go.
 		logger.log("AIS connector starting...")
 		
+		# Set up our AIS handler object.
+		hAIS = handlerAIS(config.aisConnSettings['logMode'], enqueueOn)
+		hAIS.setDebug(config.aisConnSettings['debug'])
+		
 		# Threading setup
 		threadLock = threading.Lock()
 		threadList = []
-		
-		# Create a shared redis instance
-		r = redis.StrictRedis()
 		
 		# Spin up our client threads.
 		for thisName, connData in config.aisConnSettings['connClientList'].iteritems():

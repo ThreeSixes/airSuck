@@ -96,12 +96,7 @@ aisConnSettings = {
     'connClientList': { # Array of hosts to connect to when running client connector script.
         "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
     },
-    'fragTTLSec': 1, # Time to live for frame fragments. This clears fragmented frames no recieved within n sec of each other.
-    'fragHost': genRedisHost, # This host contains the objects used to assemble fragemented frames.
-    'fragPort': genRedisPort, # Redis port number for hash object redis instance.
-    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
-    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate AIS payloads.
-    'dedupePort': genRedisPort # Redis port number for dedupe.
+    'debug': True # Debug?
 }
 
 # SSR State engine settings
@@ -135,6 +130,15 @@ d1090Settings = {
     'dedupePort': genRedisPort # Redis port number for dedupe.
 }
 
+# Generic settings for the AIS handler. These settings control how the shared AIS handler used by the AIS connector client and airSuck server work.
+aisSettings = {
+    'fragTTLSec': 1, # Time to live for frame fragments. This clears fragmented frames no recieved within n sec of each other.
+    'fragHost': genRedisHost, # This host contains the objects used to assemble fragemented frames.
+    'fragPort': genRedisPort, # Redis port number for hash object redis instance.
+    'dedupeTTLSec': 3, # Time to live for deduplicated frames. This rejects duplicate frames recieved within 3 sec of each other.
+    'dedupeHost': genRedisHost, # This host contains the objects used to deduplicate AIS payloads.
+    'dedupePort': genRedisPort # Redis port number for dedupe.
+}
 
 #########################################
 # Settings for MongoDB storage engines. #

@@ -299,6 +299,28 @@ class dataSource(threading.Thread):
 			# Set this entry up with some initial data.
 			thisEntry = {'entryPoint': 'aisConnector', 'dataOrigin': 'aisConn', 'type': 'airAIS', 'dts': dtsStr, 'src': self.__myName, 'data': thisLine, 'isFrag': False, 'isAssembled': False}
 			
+			# If we have position data for this source...
+			if 'srcPos' in self.__AISSrc:
+				# Create a blank dictionary to hold position data.
+				posData = {}
+				
+				try:
+					# If we have a list...
+					if type(self.__AISSrc['srcPos']) == list:
+					
+						# If our list has two elements...
+						if len(self.__AISSrc['srcPos']) == 3:
+						
+							# If we have good position data add it to any outgoing data.
+							posData.update({"srcLat": self.__AISSrc['srcPos'][0], "srcLon": self.__AISSrc['srcPos'][1], "srcPosMeta": self.__AISSrc['srcPos'][2]})
+					
+					# Add position data to our entry.
+					thisEntry.update(posData)
+				
+				except:
+					tb = traceback.format_exc()
+					logger.log("%s invlaid position data in config.py:\n%s" %(self.__myName, tb))
+			
 			try:
 				# Decapsulate the AIS payload and get relevant data.
 				thisEntry.update(self.__aisParser.nmeaDecapsulate(thisLine))

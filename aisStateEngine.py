@@ -95,7 +95,10 @@ class SubListener(threading.Thread):
             'entryPoint': 'entryPoint',
             'mmsiType': 'mmsiType',
             'mmsiCC': 'mmsiCC',
-            'imoCheck': 'imoCheck'
+            'imoCheck': 'imoCheck',
+            'srcLat': 'srcLat',
+            'srcLon': 'srcLon',
+            'srcPosMeta': 'srcPosMeta'
         }
         
         # Data we don't to end up in the monogoDB
@@ -147,7 +150,9 @@ class SubListener(threading.Thread):
             'etaHour': int,
             'etaMinute': int,
             'draught': float,
-            'imoCheck': bool
+            'imoCheck': bool,
+            'srcLat': float,
+            'srcLon': float
         }
     
     def updateState(self, objName, cacheData):

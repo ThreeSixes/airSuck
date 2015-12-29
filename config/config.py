@@ -95,7 +95,8 @@ aisConnSettings = {
     'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'enabled': True, # Do we want to run the dump1090 connector? True = yes, False = no
     'connClientList': { # Array of hosts to connect to when running client connector script.
-        "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
+        "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30}, # This can contain additional dictionaries.
+        "<another server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30, "srcPos": [0.0, 0.0, "manual"]} # This example contains position data [lat, lon, "location type"].
     },
     'aisEnqueue': True, # For debugging we can enable or disable enqueueing data. Turning this on will prevent the AIS engine from passing data on to the AIS state engine and MongoDB.
     'debug': True # Debug?

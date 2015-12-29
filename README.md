@@ -11,7 +11,7 @@ Features:
  - Real-time data display with Google Maps integration uisng Node.JS
  - The architecture is designed to easily integrate with other software projects using Redis queues or MongoDB queries.
  - The libAirSuck package can be used in part or entirely by other python projects to process telemetry data.
-   - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, and cprMath.py.
+   - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, cprMath.py, handler1090.py, and handlerAIS.py.
 
 Support for ACARS data and using the FAA downloadable aircraft database to provide additional aircraft data are planned in future releases. 
 
@@ -19,10 +19,10 @@ Support for ACARS data and using the FAA downloadable aircraft database to provi
 File list:
 
 "Daemons":
-  - airSuckClient.py - A client script that submits information to dump1090ConnSrv.py.
+  - airSuckClient.py - A client script that submits information to airSuckServer.py. Currently this script pulls data from dump1090 only. AIS support is planned.
+  - airSuckServer.py - A server script that recieves data from airSuckClient.py. 
   - aisConnector.py - Handles connections to one or more AIS NMEA TCP source to recieve AIS data.
   - dump1090ConnClt.py - Handles connections to one or more dump1090 instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
-  - dump1090ConnSrv.py - Recieves JSON data from dump1090 client connector instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
   - mongoDump.py - Stores incoming raw data from sources in a database for storage and reprocessing if necessary.
   - aisStateEngine.py - Handles processing of stateful AIS data to build vessel and station data, locaions, callsigns, IMOs, etc. This process dumps AIS on a pub/sub queue for halding by other processes, and on a reliable queue for storage in MongoDB.
   - ssrStateEngine.py - Handles processing of stateful ADS-B data to build aircraft location data, call signs, etc. This process dumps aircraft state updates on a pub/sub queue for handling by other processes, and on a reliable queue for storage in MongoDB.
@@ -36,6 +36,8 @@ Libraries:
   - libAirSuck/ssrParse.py - Supports decoding of binary ADS-B data into relevant fields.
   - libAirSuck/cprMath.py - Supports handling of Compact Position Reporting data.
   - libAirSuck/airSuckUtil.py - Collection of tools for unit conversion, algorithms and functions for geographic data processing.
+  - libAirSuck/handler1090.py - An abstracted class to handle verifying and queueing dump1090-formatted ADS-B data. This is used by both airSuckServer.py and dump1090Connector.py.
+  - libAirSuck/handlerAIS.py - Will be an abstracted class to handle verifying and queueing AIS data. This is currently a placeholder.
 
 Clients:
   - sub2Dump1090.py - Feeds aggregated SSR data on the pub/sub queue from dump1090Connector.py and other sources back into dump1090 instances for testing purposes.
@@ -53,15 +55,14 @@ Test files:
 
 Support config files:
   - supervisor/airSuck-airSuckClient.conf - Supervisor config file to keep airSuckClient.py running as a daemon.
+  - supervisor/airSuck-airSuckServer.conf - Supervisor config file to keep airSuckServer.py running as a daemon.
   - supervisor/airSuck-aisConnector.conf - Supervisor config file to keep aisConector.py running as a daemon.
   - supervisor/airSuck-dump1090ConnClt.conf - Supversior config file to keep dump1090ConnClt.py running as a daemon.
-  - supervisor/airSuck-dump1090ConnSrv.conf - Supversior config file to keep dump1090ConnSrv.py running as a daemon.
   - supervisor/airSuck-mongoDump.conf - Supervisor config file to keep mongoDump.py running as a daemon.
   - supervisor/airSuck-aisStateEngine.conf - Supervisor config file to keep aisStateEngine.py running as a daemon.
   - supervisor/airSuck-ssrStateEngine.conf - Supervisor config file to keep ssrStateEngine.py running as a daemon.
   - supervisor/airSuck-stateMongoDump.conf - Supervisor config file to keep stateMongoDump.py running as a daemon.
   - supervisor/airSuck-stateNode.conf - Supervisor config file to keep node/stateNode.js running as a daemon.
-  - supervisor/airSuck-dump1090Client.conf - Supervisor config file to keep the dump1090 client node.js script as a daemon.
   - The above files are all split out as individual config files to facilitate running some or all of these files on one or more servers. This makes it easier to split out roles in a multi-host environment.
 
 AirSuck Geospatial viewer web page:

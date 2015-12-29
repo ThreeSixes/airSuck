@@ -321,6 +321,10 @@ if __name__ == "__main__":
 	# Log our startup.
 	logger.log("Starting the airSuck server...")
 	
+	# If we're debugging...
+	if config.airSuckSrvSettings['debug']:
+		pprint(config.airSuckSrvSettings)
+	
 	# If the dump1090 connector should be run
 	if config.airSuckSrvSettings['enabled']:
 		# Set up the dump1090 handler.

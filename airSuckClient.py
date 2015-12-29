@@ -571,7 +571,12 @@ class airSuckClient():
                     logger.log("Netsend: %s" %data)
                 
                 # Send the data to the server.
-                self.__serverSock.send("%s\n" %data)
+                sendRes = self.__serverSock.send("%s\n" %data)
+                
+                # If we weren't able to send anything...
+                if sendRes == 0:
+                    # Cause a small explosion.
+                    raise RuntimeError("Socked failed to send data. The connection is down.")
             
             except:
                 tb = traceback.format_exc()

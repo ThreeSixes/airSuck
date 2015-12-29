@@ -76,7 +76,12 @@ class airSuckServer():
 						logger.log("Send keepalive.")
 					
 					# Get the incoming data from our socket.
-					thisSock.send(self.__keepaliveJSON + "\n")
+					sendRes = thisSock.send(self.__keepaliveJSON + "\n")
+					
+					# If we weren't able to send anything...
+					if sendRes == 0:
+						# Cause a small explosion.
+						raise RuntimeError("Socked failed to send data. The connection is down.")
 				
 				except KeyboardInterrupt:
 					logger.log("Keyboard interrupt. Shutting down.")

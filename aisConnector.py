@@ -35,6 +35,9 @@ from libAirSuck import handlerAIS
 # Config #
 ##########
 
+# Set enqueue flag from the config file.
+enqueueOn = config.aisConnSettings['aisEnqueue']
+
 # Keep track of if we're running.
 alive = True
 
@@ -274,7 +277,7 @@ class dataSource(threading.Thread):
 		# Remove whitespace.
 		thisLine = self.__metaStrip(thisLine)
 		
-		#
+		# Default frame CRC good flag.
 		frameCRCGood = False
 		
 		try:
@@ -360,8 +363,6 @@ class dataSource(threading.Thread):
 
 # If I've been called for execution...
 if __name__ == "__main__":
-	# Should we enqueue data?
-	enqueueOn = False
 	
 	# Set up the logger.
 	logger = asLog(config.aisConnSettings['logMode'])

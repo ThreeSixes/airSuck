@@ -66,6 +66,7 @@ airSuckSrvSettings = {
     'srvListenPort': 8091, # Dump 1900 connect incoming port when running as a server.
     'clientPingInterval': 10.0, # This is how often we want to "ping" a client so if it doesn't get a ping it knows to reconnect (in seconds).
     'debug': False, # Debug?
+    'aisEnqueue': True # For debugging we can enable or disable enqueueing data. Turning this on will prevent the AIS engine from passing data on to the AIS state engine and MongoDB.
 }
 
 
@@ -96,6 +97,7 @@ aisConnSettings = {
     'connClientList': { # Array of hosts to connect to when running client connector script.
         "<server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30} # This can contain additional dictionaries.
     },
+    'aisEnqueue': True, # For debugging we can enable or disable enqueueing data. Turning this on will prevent the AIS engine from passing data on to the AIS state engine and MongoDB.
     'debug': True # Debug?
 }
 

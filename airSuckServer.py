@@ -156,6 +156,7 @@ class airSuckServer():
 		try:
 			# Get a dict from the incoming JSON string.
 			retVal = json.loads(thisStr)
+		
 		except Exception as e:
 			# If it doesn't work just set retVal to none.
 			retVal = None

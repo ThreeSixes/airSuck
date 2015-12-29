@@ -146,6 +146,7 @@ class airSuckServer():
 		"""
 		Convert a given JSON string to a dict. If the conversion fails this function returns null, otherwise it returns a dict.
 		"""
+		retVal = ""
 		
 		try:
 			# Get a dict from the incoming JSON string.
@@ -179,18 +180,20 @@ class airSuckServer():
 		# Create a holder for our entry which is none by default.
 		thisEntry = self.__jsonStr2Dict(data)
 		
-		thisEntry.update({'entryPoint': 'airSuckServer', 'src': config.airSuckSrvSettings['myName']})
-		
-		# If we're supposed to debug...
-		if config.airSuckSrvSettings['debug']:
-			logger.log("Handling: %s" %thisEntry)
-		
-		# Handle the entry dictionary and set our flag.
-		d1090Status = h1090.handleADSBDict(thisEntry)
-		
-		# If it worked reset the lastADSB counter.
-		if (not d1090Status) and config.airSuckSrvSettings['debug']:
-			logger.log("Failed to queue %s." %thisEntry)
+		# If we got a blank string back __jsonStr2Dict() blew up.
+		if thisEntry == "":
+			thisEntry.update({'entryPoint': 'airSuckServer', 'src': config.airSuckSrvSettings['myName']})
+			
+			# If we're supposed to debug...
+			if config.airSuckSrvSettings['debug']:
+				logger.log("Handling: %s" %thisEntry)
+			
+			# Handle the entry dictionary and set our flag.
+			d1090Status = h1090.handleADSBDict(thisEntry)
+			
+			# If it worked reset the lastADSB counter.
+			if (not d1090Status) and config.airSuckSrvSettings['debug']:
+				logger.log("Failed to queue %s." %thisEntry)
 		
 		return
 	

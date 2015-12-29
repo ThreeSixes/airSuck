@@ -274,20 +274,18 @@ class dataSource(threading.Thread):
 		# Remove whitespace.
 		thisLine = self.__metaStrip(thisLine)
 		
-		# Make sure they're defined but not equal.
-		frameCRC = "X"
-		cmpCRC = "Y"
+		#
+		frameCRCGood = False
 		
 		try:
-			# Compute the CRC value of the frame.
-			frameCRC = self.__aisParser.getFrameCRC(thisLine)
-			cmpCRC = self.__aisParser.getCRC(thisLine)
+			# See if we got a valid CRC for this frame.
+			frameCRCGood = self.__aisParser.checkFrameCRC(thisLine)
 		except:
 			tb = traceback.format_exc()
-			logger.log("%s choked getting CRC.\n%s" %(self.__myName, tb))
+			logger.log("%s choked verifying frame CRC.\n%s" %(self.__myName, tb))
 		
 		# If we have a good CRC checksum keep moving.
-		if frameCRC == cmpCRC:
+		if frameCRCGood:
 			# Date time string
 			dtsStr = str(datetime.datetime.utcnow())
 			

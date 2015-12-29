@@ -375,6 +375,24 @@ class aisParse:
         
         # Return the last two ASCII-encoded hex bytes of the frame converted to an integer.
         return ord(binascii.unhexlify(frameStr[-2:]))
+
+    def checkFrameCRC(self, aisSentence):
+        """
+        Verify the CRC of a AIS frame.
+        """
+        
+        # Set up our return value.
+        retVal = False
+        
+        # Set get CRC values.
+        frameCRC = self.getFrameCRC(aisSentence)
+        cmpCRC = self.getCRC(aisSentence)
+        
+        # Compare them.
+        if frameCRC == cmpCRC:
+            retVal = True
+        
+        return retVal
     
     def __getImoCheck(self, imo):
         """
@@ -819,3 +837,4 @@ class aisParse:
         
         # Return our data.
         return nmeaData
+

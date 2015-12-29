@@ -181,7 +181,7 @@ class airSuckServer():
 		thisEntry = self.__jsonStr2Dict(data)
 		
 		# If we got a blank string back __jsonStr2Dict() blew up.
-		if thisEntry == "":
+		if thisEntry != "":
 			thisEntry.update({'entryPoint': 'airSuckServer', 'src': config.airSuckSrvSettings['myName']})
 			
 			# If we're supposed to debug...

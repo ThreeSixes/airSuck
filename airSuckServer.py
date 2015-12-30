@@ -117,6 +117,13 @@ class airSuckServer():
 		# Temporary storage for values.
 		accumulator = {}
 		
+		# Constraints for latitude and longitude.
+		latConstraint = {'min': -90, 'max': 90}
+		lonConstraint = {'min': -180, 'max': 180}
+		
+		# See if we have bad data...
+		failboat = False
+		
 		# Attempt to convert these elements to their relevant type...
 		expectedVars = {
 			"clientName": {'mandatory': True, 'type': str}, # Mandatory string with the client's name..
@@ -124,15 +131,57 @@ class airSuckServer():
 			"dts": {'mandatory': True, 'type': str}, # Mandatory date time indicating when the message was recieved.
 			"type": {'mandatory': True, 'type': str, 'possVals': ['airSSR', 'airAIS']}, # Mandatory string with specific possible values.
 			"data": {'mandatory': True, 'type': str}, # Mandatory string containing the data.
-			"clientLat": {'mandatory': False, 'type': float}, # Optoinal float containing the client's latitude.
-			"clientLon": {'mandatory': False, 'type': float}, # Optional float containing the client's longitude.
-			"clientPosMeta": {'mandatory': False, 'type': str} # Optional string containg metadata about the client's posistion data.
+			"clientLat": {'mandatory': False, 'type': float, 'constraints': latConstraint}, # Optoinal float containing the client's latitude.
+			"clientLon": {'mandatory': False, 'type': float, 'constraints': lonConstraint}, # Optional float containing the client's longitude.
+			"clientPosMeta": {'mandatory': False, 'type': str, 'possVals': ['manual']} # Optional string containg metadata about the client's posistion data.
 		}
+		
+		try:
+			# Loop through all the data items we get.
+			for entry, entryParams in expectedVars.iteritems():
+				
+				# See if the key is mandatory.
+				if entryParams['mandatory']:
+					# If we have the specified mandatory entry...
+					if entry in dataDict:
+						# Awesome. Keep going.
+						pass
+					else:
+						# Throw an exception.
+						raise RuntimeError("Missing mandatory key %s.")
+				
+				# See if we are type-correct... If this throws an exception we screwed up.
+				accumulator.update({entry: entryParams['type'](dataDict['entry'])})
+				
+				# Check for possible values.
+				
+				
+				# Check for constraints
+		
+		except RuntimeError:
+			# If we're debuggging.
+			# Do debugging things.
+			
+			# Dump our exception.
+			tb = traceback.format_exc()
+			logger.log("Unable to verify JSON data:\n%s" %tb)
+			
+			# Flag failure.
+			failboat = True
+		
+		except:
+			# Get traceback and display it.
+			tb = traceback
+			logger.log("Unhandled exception verifying JSON:\n%s" %tb)
+			
+			# Do some extra debugging stuff if that's our thing.
+			
+			failboat = True
 		
 		# If we have good data return good data.
 		if failboat == False:
 			# Add our accumulated data to the return value.
-			retVal.updated(accumulator)
+			retVal.update(accumulator)
 		
 		# Return our data.
 		return retVal

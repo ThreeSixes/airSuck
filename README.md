@@ -37,7 +37,7 @@ Libraries:
   - libAirSuck/cprMath.py - Supports handling of Compact Position Reporting data.
   - libAirSuck/airSuckUtil.py - Collection of tools for unit conversion, algorithms and functions for geographic data processing.
   - libAirSuck/handler1090.py - An abstracted class to handle verifying and queueing dump1090-formatted ADS-B data. This is used by both airSuckServer.py and dump1090Connector.py.
-  - libAirSuck/handlerAIS.py - Will be an abstracted class to handle verifying and queueing AIS data. This is currently a placeholder.
+  - libAirSuck/handlerAIS.py - An abstracted class to handle verifying and queueing AIS data akin to handler1090.py.
 
 Clients:
   - sub2Dump1090.py - Feeds aggregated SSR data on the pub/sub queue from dump1090Connector.py and other sources back into dump1090 instances for testing purposes.

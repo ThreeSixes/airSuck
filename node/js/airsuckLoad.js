@@ -34,6 +34,7 @@ $.getScript("socket.io/socket.io.js",function(){
  * SETUP AND LOAD MAPS
  **************************************************/
 $(document).ready(function(){
+   // load Vehicles early as the types are prerequisite to other files
     $.getScript("js/vehicles.js",function(){
         // Start the vehcile expiration routine which should be executed at the specified interval.
         window.setInterval(function(){
@@ -63,4 +64,27 @@ $(document).ready(function(){
  **************************************************/
 $(document).ready(function(){
     $.getScript("js/messages.js");
+});
+
+/***************************************************
+ * LOAD SIDEBAR
+ **************************************************/
+$(document).ready(function(){
+         // load sidebar
+         $.getScript("js/sidebar.js",function(){
+            // setup the sidebar on successful load
+            setupSidebar();
+            // load font-awesome for icons
+            $('<link/>', {
+               rel: 'stylesheet',
+               type: 'text/css',
+               href: '/css/font-awesome/css/font-awesome.min.css'
+            }).appendTo('head');
+            // load sidebar CSS
+            $('<link/>', {
+               rel: 'stylesheet',
+               type: 'text/css',
+               href: '/css/sidebar.css'
+            }).appendTo('head');
+         });
 });

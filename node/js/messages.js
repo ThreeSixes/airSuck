@@ -1,3 +1,4 @@
+"use strict";// overcome current Chrome and Firefox issues with ECMA6 stuff like classes
 /***********************************************************
  * Airsuck JS Socket Message Handler
  * v. 0.1
@@ -7,7 +8,7 @@
  *
  * Handles socket.io messages for vehicle data coming from node
  *
- * Deps: jQuery
+ * Deps: jQuery, vehicles.js
  **********************************************************/
 
 /***************************************************
@@ -16,7 +17,7 @@
 
 function handleMessage(msg){
   if (!mapLoaded) {
-    console.log("Maps not loaded. Discarding aircraft data.");
+    if(debug){console.log("Maps not loaded. Discarding aircraft data.");}
     return;
   }
   
@@ -24,7 +25,7 @@ function handleMessage(msg){
   if(debug){$('#' + messageBx).attr('value',msg);}
   
   // JSONify the JSON string.
-  msgJSON = JSON.parse(msg);
+  var msgJSON = JSON.parse(msg);
   
   // Don't continue processing the keepalive.
   if ('keepalive' in msgJSON) {
@@ -32,7 +33,7 @@ function handleMessage(msg){
   }
   
   // Vehicle name
-  vehName = "veh" + msgJSON.addr.toString();
+  var vehName = "veh" + msgJSON.addr.toString();
   
   // See if we have a vehicle in our vehicle data.
   // #### This decides to update an object or create a new one as necessary. Updates to the info window and such should be here.
@@ -45,6 +46,17 @@ function handleMessage(msg){
       // Set the content box.
       vehData[vehName].info.setContent(infoFactory(vehName));
     }
+    
+    // ********** VEHICLE OBJECTS **********
+    // if (vehName in vehicles) { // replace the main IF above
+    // Update vehicle info
+    if (debug){console.log('Vehicle update received for: ' + msgJSON.addr);}
+    // add the new vehicle (constructor should call registered update functions)
+    vehicles[vehName].update(msgJSON);
+    if (debug){console.log('Successfully updated: ' + vehicles[vehName].addr);}
+    
+    // ********** VEHICLE OBJECTS **********
+    
   } else {
     // Add a new vehicle.
     vehData[vehName] = {
@@ -57,19 +69,40 @@ function handleMessage(msg){
         draggable: false,
         editable: false,
         geodesic: false,
-        strokeOpacity: 0.8,
-        strokeWeight: 2.0,
+        strokeOpacity: pathStrokeOpacity,
+        strokeWeight: pathStrokeWeight,
         visible: true,
-        zIndex: 1000,
+        zIndex: pathzIndex,
         path: new google.maps.MVCArray()
       })
     };
+    
+    // ********** VEHICLE OBJECTS **********
+    
+    // Add vehicle to the object array
+    let index;
+    let length = vehicleTypes.length;
+    for (index=0;index<length;++index) {
+      if (msgJSON.type == vehicleTypes[index].protocol) {
+        if (debug){console.log('New vehicle found, type registered: ' + msgJSON.type);}
+        // add the new vehicle (constructor should call registered update functions)
+        vehicles[vehName] = vehicleTypes[index].constructor(msgJSON);
+        if (debug){console.log('Successfully added: ' + vehicles[vehName].addr);}
+        break;
+      } else if (index==length) {
+        // vehicle type not registered, drop data
+        if (debug){console.log('New vehicle found, type not registered: ' + msgJSON.type + ' Dropping data.')}
+      }
+    }
+    // ********** VEHICLE OBJECTS **********
+    
+    
     
     // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
     $.extend(true, vehData[vehName], msgJSON);
     
     // Create our marker.
-    aMarker = new google.maps.Marker({
+    var aMarker = new google.maps.Marker({
       icon: iconFactory(vehName, true),
       map: map,
       vehName: vehName
@@ -112,7 +145,7 @@ function handleMessage(msg){
     $.extend(true, vehData[vehName], {marker: aMarker, info: infowindow});
     
     // Set empty debugging string...
-    debugStr = "";
+    var debugStr = "";
     
     // If we have idInfo...
     if ("idInfo" in vehData[vehName]) {
@@ -158,7 +191,7 @@ function handleMessage(msg){
       }
       
       // Create a new Google Maps LatLng object to use for the next two steps:
-      newPos = new google.maps.LatLng(vehData[vehName].lat, vehData[vehName].lon);
+      var newPos = new google.maps.LatLng(vehData[vehName].lat, vehData[vehName].lon);
       
       // copy the path object
       var pathObject = vehData[vehName].pathPoly.getPath();
@@ -169,6 +202,7 @@ function handleMessage(msg){
       // push back to the polyline
       vehData[vehName].pathPoly.setPath(pathObject);
       
+      var stkColor;
       if (vehData[vehName].type == "airAIS") {
         stkColor = "#00ffff";
       } else if (vehData[vehName].type == "airSSR") {

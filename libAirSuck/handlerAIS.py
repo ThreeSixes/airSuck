@@ -37,7 +37,7 @@ class handlerAIS:
         self.__enqueueOn = enqueOn
         
         # Regex to verify AIS data.
-        self.__regexAIS = "!AIVD[MO]\\,[1-9]{1}\\,[1-9]{1}\\,([0-9]{0,1})\\,[0-3A-B]{1}\\,([0-9\\:\\;\\<\\=\\>\\?\\@A-W\\`a-w]+)\\,[0-5]\\*[A-F0-9]{2}"
+        self.__regexAIS = re.compile("!AIVD[MO]\\,[1-9]{1}\\,[1-9]{1}\\,([0-9]{0,1})\\,[0-3A-B]{1}\\,([0-9\\:\\;\\<\\=\\>\\?\\@A-W\\`a-w]+)\\,[0-5]\\*[A-F0-9]{2}")
     
     # Convert the message to JSON format
     def __jsonify(self, dataDict):

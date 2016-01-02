@@ -153,44 +153,48 @@ class airSuckServer():
 						# Throw an exception.
 						raise RuntimeError("Missing mandatory key %s." %entry)
 				
-				# See if we are type-correct... If this throws an exception we screwed up.
-				thisVal = entryParams['type'](dataDict['entry'])
-				
-				# Check for possible values.
-				if 'possVals' in entryParams:
-					# See if we have a good value.
-					goodVal = False
+				# Check for each value if we pass our 'mandatory' value checks...
+				if entry in dataDict:
+					# See if we are type-correct... If this throws an exception we screwed up.
+					thisVal = entryParams['type'](dataDict[entry]) 
 					
-					# Loop through expected values to see if we a valid entry.
-					for expectedVal in entryParams['possVals']:
-						# If we have a match
-						if thisVal == expectedVal:
-							# Flag this as a good value.
-							goodVal = True
+					# Check for possible values.
+					if 'possVals' in entryParams:
+						# See if we have a good value.
+						goodVal = False
+						
+						# Loop through expected values to see if we a valid entry.
+						for expectedVal in entryParams['possVals']:
+							# If we have a match
+							if thisVal == expectedVal:
+								# Flag this as a good value.
+								goodVal = True
+						
+						# If we don't have good data...
+						if goodVal == False:
+							# Raise an exception.
+							raise RuntimeError("Value for %s not in list of possible values." %entry)
 					
-					# If we don't have good data...
-					if goodVal == False:
-						# Raise an exception.
-						raise RuntimeError("Value for %s not in list of possible values." %entry)
-				
-				# Check for constraints
-				if 'constraints' in entryParams:
+					# Check for constraints
+					if 'constraints' in entryParams:
+						
+						# If we have a minimum.
+						if 'min' in entryParams['constraints']:
+							if thisVal < entryParams['constraints']['min']:
+								raise RuntimeError("Value for %s violated minimum constraint." %entry)
+						
+						# If we have a maximum.
+						if 'max' in entryParams['constraints']:
+							if thisVal > entryParams['constraints']['max']:
+								raise RuntimeError("Value for %s violated maximum constraint." %entry)
 					
-					# If we have a minimum.
-					if 'min' in entryParams['constraints']:
-						if thisVal < entryParams['constraints']['min']:
-							raise RuntimeError("Value for %s violated minimum constraint." %entry)
-					
-					# If we have a maximum.
-					if 'max' in entryParams['constraints']:
-						if thisVal > entryParams['constraints']['max']:
-							raise RuntimeError("Value for %s violated maximum constraint." %entry)
-				
-				# Add our good stuff to the accumulator since we're good.
-				accumulator.update({entry: thisVal})
+					# Add our good stuff to the accumulator since we're good.
+					accumulator.update({entry: thisVal})
 			
-			# Debug stuff.
-			pprint(accumulator)
+			
+			# If we're debugging...
+			if config.airSuckSrvSettings['debug']:
+				logger.log("Type-corrected data: %s" %accumulator)
 			
 		except RuntimeError:
 			# If we're debuggging.
@@ -205,7 +209,7 @@ class airSuckServer():
 		
 		except:
 			# Get traceback and display it.
-			tb = traceback
+			tb = traceback.format_exc()
 			logger.log("Unhandled exception verifying JSON:\n%s" %tb)
 			
 			# Do some extra debugging stuff if that's our thing.
@@ -271,6 +275,14 @@ class airSuckServer():
 		try:
 			# Create a holder for our entry which is none by default.
 			thisEntry = self.__jsonStr2Dict(data)
+			
+			try:
+				# Type-correct our JSON data and make sure it's all there.
+				thisEntry.update(self.__verifyJSON(thisEntry))
+			
+			except:
+				tb = traceback.format_exc()
+				logger.log("AirSuck server blew up verifying JSON:\n%s" %tb)
 			
 			# If we got a blank string back __jsonStr2Dict() blew up.
 			if thisEntry != "":

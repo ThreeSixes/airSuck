@@ -140,6 +140,9 @@ class airSuckServer():
 			# Loop through all the data items we get.
 			for entry, entryParams in expectedVars.iteritems():
 				
+				# Create a holder for our value of the specified type.
+				thisVal = entryParams['type']
+				
 				# See if the key is mandatory.
 				if entryParams['mandatory']:
 					# If we have the specified mandatory entry...
@@ -148,16 +151,47 @@ class airSuckServer():
 						pass
 					else:
 						# Throw an exception.
-						raise RuntimeError("Missing mandatory key %s.")
+						raise RuntimeError("Missing mandatory key %s." %entry)
 				
 				# See if we are type-correct... If this throws an exception we screwed up.
-				accumulator.update({entry: entryParams['type'](dataDict['entry'])})
+				thisVal = entryParams['type'](dataDict['entry'])
 				
 				# Check for possible values.
-				
+				if 'possVals' in entryParams:
+					# See if we have a good value.
+					goodVal = False
+					
+					# Loop through expected values to see if we a valid entry.
+					for expectedVal in entryParams['possVals']:
+						# If we have a match
+						if thisVal == expectedVal:
+							# Flag this as a good value.
+							goodVal = True
+					
+					# If we don't have good data...
+					if goodVal == False:
+						# Raise an exception.
+						raise RuntimeError("Value for %s not in list of possible values." %entry)
 				
 				# Check for constraints
-		
+				if 'constraints' in entryParams:
+					
+					# If we have a minimum.
+					if 'min' in entryParams['constraints']:
+						if thisVal < entryParams['constraints']['min']:
+							raise RuntimeError("Value for %s violated minimum constraint." %entry)
+					
+					# If we have a maximum.
+					if 'max' in entryParams['constraints']:
+						if thisVal > entryParams['constraints']['max']:
+							raise RuntimeError("Value for %s violated maximum constraint." %entry)
+				
+				# Add our good stuff to the accumulator since we're good.
+				accumulator.update({entry: thisVal})
+			
+			# Debug stuff.
+			pprint(accumulator)
+			
 		except RuntimeError:
 			# If we're debuggging.
 			# Do debugging things.

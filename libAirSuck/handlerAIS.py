@@ -14,6 +14,7 @@ import binascii
 import json
 import asLog
 import aisParse
+import re
 
 class handlerAIS:
     def __init__(self, logMode, enqueOn=True):
@@ -34,6 +35,9 @@ class handlerAIS:
         
         # Do we want to actually enqueue data?
         self.__enqueueOn = enqueOn
+        
+        # Regex to verify AIS data.
+        self.__regexAIS = "!AIVD[MO]\\,[1-9]{1}\\,[1-9]{1}\\,([0-9]{0,1})\\,[0-3A-B]{1}\\,([0-9\\:\\;\\<\\=\\>\\?\\@A-W\\`a-w]+)\\,[0-5]\\*[A-F0-9]{2}"
     
     # Convert the message to JSON format
     def __jsonify(self, dataDict):
@@ -178,10 +182,10 @@ class handlerAIS:
         
         if debugOn == True:
             self.__debugOn = True
-            self.__logger.log("handler1090 debugging on.")
+            self.__logger.log("handlerAIS debugging on.")
         else:
             self.__debugOn = False
-            self.__logger.log("handler1090 debugging off.")
+            self.__logger.log("handlerAIS debugging off.")
         
         return
     
@@ -193,47 +197,55 @@ class handlerAIS:
         # Set up return value.
         retVal = False
         
-        # If we have an unfragmented frame process it. If not, handle the fragment.
-        if (aisData['fragCount'] == 1) and (aisData['fragNumber'] == 1):
-            try:
-                # Parse our AIS data and add it to the stream.
-                aisData.update(self.__aisParser.aisParse(aisData))
-                
-                # Enqueue our data.
-                self.__queueAIS(aisData)
-                
-                # Seems to have worked.
-                retVal = True
+        # Check the AIS data to make sure we actually have AIS.
+        if self.__regexAIS.match(aisData['data']):
             
-            except Exception as e:
-                # If we're debugging
-                if self.__debugOn:
-                    tb = traceback.format_exc()
-                    self.__logger.log("Error handling AIS data: %s\n%s" %(aisData, tb))
+            # If we have an unfragmented frame process it. If not, handle the fragment.
+            if (aisData['fragCount'] == 1) and (aisData['fragNumber'] == 1):
+                try:
+                    # Parse our AIS data and add it to the stream.
+                    aisData.update(self.__aisParser.aisParse(aisData))
+                    
+                    # Enqueue our data.
+                    self.__queueAIS(aisData)
+                    
+                    # Seems to have worked.
+                    retVal = True
+                
+                except Exception as e:
+                    # If we're debugging
+                    if self.__debugOn:
+                        tb = traceback.format_exc()
+                        self.__logger.log("Error handling AIS data: %s\n%s" %(aisData, tb))
+                        
+                        raise e
+            
+            else:
+                try:
+                    # Enqueue our fragment.
+                    self.__queueAIS(aisData)
+                    
+                    # Since we aren't frame 1 of 1 for a given message we're a fragment.
+                    aisData['isFrag'] = True
+                    
+                    # Handle fragments.
+                    self.__defragAIS(aisData)
+                    
+                    # Seems to have worked.
+                    retVal = True
+                
+                except Exception as e:
+                    # If we're debugging
+                    if self.__debugOn:
+                        tb = traceback.format_exc()
+                        self.__logger.log("Error handling AIS data: %s\n%s" %(aisData, tb))
                     
                     raise e
         
         else:
-            try:
-                # Enqueue our fragment.
-                self.__queueAIS(aisData)
-                
-                # Since we aren't frame 1 of 1 for a given message we're a fragment.
-                aisData['isFrag'] = True
-                
-                # Handle fragments.
-                self.__defragAIS(aisData)
-                
-                # Seems to have worked.
-                retVal = True
-            
-            except Exception as e:
-                # If we're debugging
-                if self.__debugOn:
-                    tb = traceback.format_exc()
-                    self.__logger.log("Error handling AIS data: %s\n%s" %(aisData, tb))
-                
-                raise e
+            # if we're debugging...
+            if self.__debugOn:
+                logger.log("AIS frame didn't match regex.")
         
         # Return success
         return retVal

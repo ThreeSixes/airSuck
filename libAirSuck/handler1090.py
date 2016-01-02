@@ -1,3 +1,17 @@
+"""
+handler1090.py by ThreeSixes (https://github.com/ThreeSixes)
+
+This project is licensed under GPLv3. See COPYING for dtails.
+
+This is a class used to process and submit dump1090 SSR data to the SSR state engine.
+
+This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
+"""
+
+###########
+# Imports #
+###########
+
 import sys
 sys.path.append("..")
 
@@ -16,8 +30,16 @@ import ssrParse
 import json
 import re
 
+
+#####################
+# handler1090 class #
+#####################
+
 class handler1090:
 	def __init__(self, logMode):
+		"""
+		handler1090 processes and enqueues dump1090 data and also deduplicates the incoming data.
+		"""
 		# Set up the logger.
 		self.__logger = asLog.asLog(logMode)
 		

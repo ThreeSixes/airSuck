@@ -1,3 +1,19 @@
+"""
+handlerAIS.py by ThreeSixes (https://github.com/ThreeSixes)
+
+This project is licensed under GPLv3. See COPYING for dtails.
+
+This is a class used to process and submit AIS data to the AIS state engine.
+
+This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
+
+The AIS regex in this code is from ais-decoder by vlfig https://github.com/vlfig/ais-decoder/blob/master/src/main/java/org/freeais/ais/AISParser.java
+"""
+
+###########
+# Imports #
+###########
+
 import sys
 sys.path.append("..")
 
@@ -16,8 +32,17 @@ import asLog
 import aisParse
 import re
 
+
+####################
+# handlerAIS class #
+####################
+
 class handlerAIS:
     def __init__(self, logMode, enqueOn=True):
+        """
+        handlerAIS processes and enqueues AIS data and also deduplicates the incoming data.
+        """
+        
         # Set up logger.
         self.__logger = asLog.asLog(logMode)
         
@@ -36,7 +61,7 @@ class handlerAIS:
         # Do we want to actually enqueue data?
         self.__enqueueOn = enqueOn
         
-        # Regex to verify AIS data.
+        # Regex to verify AIS data. This regex is from https://github.com/vlfig/ais-decoder/blob/master/src/main/java/org/freeais/ais/AISParser.java
         self.__regexAIS = re.compile("!AIVD[MO]\\,[1-9]{1}\\,[1-9]{1}\\,([0-9]{0,1})\\,[0-3A-B]{1}\\,([0-9\\:\\;\\<\\=\\>\\?\\@A-W\\`a-w]+)\\,[0-5]\\*[A-F0-9]{2}")
     
     # Convert the message to JSON format

@@ -116,17 +116,17 @@ class handler1090:
 			if ((self.__dedeupe.exists(dHash) == False) or (dedupeFlag == False)):
 				# Set the key and insert lame value.
 				self.__dedeupe.setex(dHash, config.d1090Settings['dedupeTTLSec'], "X")
-			
-			# If we are configured to use the connector mongoDB forward the traffic to it.
-			if config.connMongo['enabled'] == True:
-				self.__rQ.rpush(config.connRel['qName'], jsonMsg)
 				
-				# Put data on the pub/sub queue.
-				self.__psQ.publish(config.connPub['qName'], jsonMsg)
-				
-				# If we're debugging
-				if self.__debugOn:
-					self.__logger.log("Enqueued: %s" %str(msg['data']))
+				# If we are configured to use the connector mongoDB forward the traffic to it.
+				if config.connMongo['enabled'] == True:
+					self.__rQ.rpush(config.connRel['qName'], jsonMsg)
+					
+					# Put data on the pub/sub queue.
+					self.__psQ.publish(config.connPub['qName'], jsonMsg)
+					
+					# If we're debugging
+					if self.__debugOn:
+						self.__logger.log("Enqueued: %s" %str(msg['data']))
 			
 			else:
 			# If we're debugging
@@ -144,6 +144,7 @@ class handler1090:
 			self.__debugOn = True
 			self.__logger.log("handler1090 debugging on.")
 		else:
+			self.__debugOn = False
 			self.__logger.log("handler1090 debugging off.")
 		
 		return

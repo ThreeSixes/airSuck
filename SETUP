@@ -17,6 +17,8 @@ Dependencies for components of the dump1090 stack:
   - Copy the necessary supervisor scripts from supervisor/ to /etc/supervisor/conf.d/
     - In order to recieve AIS data you'll need the aisConnector and aisStateEngine scripts.
     - In order to recieve ADS-B data you'll need at least one of the dump1090ConnClt or airSuckServer scripts and the ssrStateEngine.
+    - If you want to get ADS-B using dump1090ConnClt you'll have to have a dump1090 instance with the --net flag set.
+    - If you're running the airSuckClient script you also need to have dump1090 installed on the machine running the script. By default the configuration expects it to be installed in /opt/dump1090.
     - In order to use the Node.JS web server copy the stateNode script to the conf.d folder.
     - If you want to store state or raw data in MongoDB you'll need to add mongoDump and/or stateMongoDump.
   - In /opt/airSuck/config copy config.py to /opt/airSuck. This is a template for the main configuration file.

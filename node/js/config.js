@@ -16,9 +16,14 @@
 var debug = true; // Do we want to have debugging data onscreen and in the console?
 
 /***************************************************
+ * CUSTOM VEHICLES TO INCLUDE - from the js/vehicles directory
+ **************************************************/
+var loadCustomVehicles = ['airAIS.js','airSSR.js'];
+
+/***************************************************
  * VEHICLE CONFIGURATION
  **************************************************/
-// Ships
+// Ships - all are integrated into the AIS constructor and can be removed from global once finished integrating
 var dirShip = "m 0,0 -20,50 40,0 -20,-50"; // Path we want to use for AIS targets that we have direction data for.
 var dirShipScl = 0.15; // Scale of the path.
 var ndShip = "m 0,0 -20,20 20,20 20,-20 -20,-20"; // Path we want to use for AIS targets that we don't have direction data for.
@@ -27,7 +32,7 @@ var shipActive = "#0000ff"; // Color of active ship icons (hex)
 var shipInactive = "#000066"; // Color of nonresponsive ship icons (hex)
 var shipAge = 5 * (60 * 1000); // How long to retain a ship after losing contact (miliseconds)
 
-// Aircraft
+// Aircraft - all are integrated into the SSR constructor and can be removed from global once finished integrating
 var dirAircraft = "m 0,0 -20,50 20,-20 20,20 -20,-50"; // Path we want to use for ADS-B targets we have direction data for.
 var dirAircraftScl = 0.15; // Scale of the path.
 var ndAircraft = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"; // Path we want to sue for ADS-B targets we don't have direction data for.

@@ -29,6 +29,7 @@ function setupSidebar(){
         // setup the sidebar header - 1 button for each vehicle type + search
         let index;
         let length = vehicleTypes.length;
+        if (debug) {console.log('Sidebar found '+length+' vehicle types.');}
         for (index=0;index<length;++index) {
             if (debug) {console.log('Adding vehicle icon to sidebar header: ' + vehicleTypes[index].protocol);}
             $('#sidebar-header').append('<i id="button-list-' + vehicleTypes[index].domName + '" class="fa ' + vehicleTypes[index].faIcon + ' sidebar-button"></i>');
@@ -39,7 +40,7 @@ function setupSidebar(){
         
         // setup the sidebar body containers and related tables - one for each vehicle type + search
         for (index=0;index<length;++index) {
-            if (debug) {console.log('Adding vehicle icon to sidebar header: ' + vehicleTypes[index].protocol);}
+            if (debug) {console.log('Adding vehicle table to sidebar body: ' + vehicleTypes[index].protocol);}
             $('#sidebar-body').append('<div id="container-list-' + vehicleTypes[index].domName + '" class="sidebar-container"></div>');
             // setup the vehicle table
             $('#container-list-' + vehicleTypes[index].domName).append('<table id="table-'+vehicleTypes[index].domName+'" class="vehicleTable">');

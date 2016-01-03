@@ -59,7 +59,15 @@ class Vehicle {
     this.destructorFunction = [];// array to register destructor functions
     this.lastPos = "none";
     this.lastUpdate = new Date().getTime();
-    this.active = true;
+    this.active = true;// set true if the vehicle is currently active
+    // gMap icon stuff
+    this.dirIcoPath = "m 0,0 -20,50 20,-20 20,20 -20,-50"; // Path we want to use for ADS-B targets we have direction data for.
+    this.dirIcoScale = 0.15; // Scale of the path.
+    this.ndIcoPath = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"; // Path we want to sue for ADS-B targets we don't have direction data for.
+    this.ndIcoSacle = 0.24; // Scale of the path.
+    this.vehColorActive = "#ff0000"; // Color of active aircraft icons (hex)
+    this.vehColorInactive = "#660000"; // Color of nonresponsive aircraft icons (hex)
+    // gMap polygon path object
     this.pathPoly = new google.maps.Polyline({
       map: map,
       clickable: false,
@@ -100,156 +108,62 @@ Vehicle.prototype.destroy = function(){
   });
 };
 
-// ********************
-// TO AIS FILE
-
-// AIS object extending Vehicle
-class Ship extends Vehicle {
-  constructor(msgJSON) {
-    // create the generic vehicle object
-    super(msgJSON,'AIS');
-    // extend with AIS specific data
-    $.extend(true, this, msgJSON);
-    // add additional parameters
-    this.domName = 'AIS';
-    // set the name string
-    this.name = this.parseName();
-    // create the table entry
-    this.createTableEntry();
+// icon factory
+Vehicle.prototype.createIcon = function() {
+   // If we have heading data for the vehicle
+  if (this.heading != 'undefined') {
+    // Create our icon for a vehicle with heading data.
+    var newIcon = new google.maps.Marker({
+      path: this.dirIcoPath,
+      scale: this.dirIcoScale,
+      strokeWeight: 1.5,
+      strokeColor: (this.active == true) ? this.vehColorActive : this.vehColorInactive,
+      rotation: this.heading
+    });
+  } else {
+    // Create our icon for a vehicle without heading data.
+    var newIcon = new google.maps.Marker({
+      path: this.ndIcoPath,
+      scale: this.ndIcoScale,
+      strokeWeight: 1.5,
+      strokeColor: (this.active == true) ? this.vehColorActive : this.vehColorInactive
+    });
   }
+  // And return it.
+  return newIcon;
 }
 
-// Register vehicle type
-if(debug){console.log('Registering vehicle type: AIS');}
-//vehicleTypes['airAIS'] = {
-vehicleTypes.push({
-  protocol: 'airAIS',
-  domName: 'AIS',
-  faIcon: 'fa-ship',
-  constructor: function(msgJSON) {
-    if (debug) {console.log('AIS Constructor called with message: ' + msgJSON);}
-    return new Ship(msgJSON);
-    },
-  buildTable: function(container) {
-    $(container).append('<tr><th>ID</th><th>Type</th><th>Flag</th><th>Velocity</th><th>Destination</th><th>Has Pos</th></tr>');
-  }
-});
-
-// Prototype function to create the vehicle name for display
-Ship.prototype.parseName = function() {
-  let idStr='';
-  // If we have a vessel name
-  if (this.vesselName) {idStr += this.vesselName + " ";}
-  // If we have a valid IMO
-  idStr += "(" + this.imo + ((this.imoCheck==false) ? "*" : "") + ") ";
-  if (this.aSquawk) {idStr += "(" + this.aSquawk + ") ";}
-  // We should always have an MMSI address.
-  idStr += "[" + this.addr.toString() + "]";
-  return idStr;
-  /*
-  // If we an IMO that doesn't check out...
-    if ("imoCheck" in vehData[vehName]) {
-      if (vehData[vehName].imoCheck == false) {
-        imoFlagStr = "*";
-      }
-    }
-    // If we have a non-zero IMO...
-    if ("imo" in vehData[vehName]) {
-      if (vehData[vehName].imo > 0) {
-        idStr += "(" + vehData[vehName].imo + imoFlagStr + ") ";
-      }
-    }*/
-};
-
-// Prototype function to add an entry to the ship table
-Ship.prototype.createTableEntry = function() {
-  if (debug) {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
-  let hasPos;
-  if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+this.name+'</td><td>'+((this.shipType==null) ? '' : this.shipType)+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td></tr>');
-};
-// Prototype function to update entry in the ship table
-Ship.prototype.updateTableEntry = function() {
-  if (debug) {console.log('Updating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
-  let hasPos;
-  if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.shipType==null) ? '' : this.shipType)+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td>');
-};
-
-//Ship.prototype.updateIcon = function() {};
-
-// ********************
-// TO SSR FILE
-
-// SSR object extending Vehicle
-class Aircraft extends Vehicle {
-  constructor(msgJSON) {
-    // create the generic vehicle object
-    super(msgJSON,'SSR');
-    // extend with SSR specific data
-    $.extend(true, this, msgJSON);
-    // add additional parameters
-    this.domName = 'SSR';
-    // set the name string
-    this.name = this.parseName();
-    // create the table entry
-    this.createTableEntry();
-  }
-}
-
-// Register vehicle type
-if(debug){console.log('Registering vehicle type: SSR');}
-//vehicleTypes['airSSR'] = {
-vehicleTypes.push({
-  protocol: 'airSSR',
-  domName: 'SSR',
-  faIcon: 'fa-plane',
-  constructor: function(msgJSON) {
-    if (debug) {console.log('SSR Constructor called with message: ' + msgJSON);}
-    return new Aircraft(msgJSON);
-    },
-  buildTable: function(container) {
-    $(container).append('<tr><th>ID</th><th>Type</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Has Pos</th></tr>');
-  }
+/***************************************************
+ * VEHICLE TYPE REGISTRATION
+ **************************************************/
+// Function to register new vehicle types
+function registerVehicleType(newProtocol,newDomName,newFaIcon,newConstructor,newTableHeader) {
+  // TO DO: validate input
+  vehicleTypes.push({
+    protocol: newProtocol,// the name to look for in the type field of incoming data
+    domName: newDomName,// the name used for this vehicle type in the DOM
+    faIcon: newFaIcon,// the icon used for this vehicle type in the sidebar and menus
+    constructor: newConstructor,// constructor function for this vehicle type
+    buildTable: newTableHeader// header row to use for this vehicle type in its' data table
   });
-
-// Prototype function to create the vehicle name for display
-Aircraft.prototype.parseName = function() {
-  let idStr='';
-  // If we have a plane/flight ID
-  if (this.idInfo) {idStr += this.idInfo + " ";}
-  // And if we have a squawk code...
-  if (this.aSquawk) {idStr += "(" + this.aSquawk + ") ";}
-  // We should always have an ICAO address.
-  idStr += "[" + this.addr.toUpperCase() + "]";
-  return idStr;
-};
-
-// Prototype function to add an entry to the aircraft table
-Aircraft.prototype.createTableEntry = function() {
-  if (debug) {console.log('Creating new table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
-  let hasPos;
-  if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+this.name+'</td><td>'+((this.category==null) ? '' : this.category)+'</td><td>'+((this.alt==null) ? '' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '' : this.velo + ' mph')+'</td><td>'+((this.heading==null) ? '' : degreeToCardinal(this.heading))+'</td><td>'+hasPos+'</td></tr>');
-};
-// Prototype function to update an entry in the aircraft table
-Aircraft.prototype.updateTableEntry = function() {
-  if (debug) {console.log('Updating table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
-  let hasPos;
-  if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.category==null) ? '' : this.category)+'</td><td>'+((this.alt==null) ? '' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '' : this.velo + ' mph')+'</td><td>'+((this.heading==null) ? '' : degreeToCardinal(this.heading))+'</td><td>'+hasPos+'</td>');
-  };
-
-//Aircraft.prototype.updateIcon = function() {};
-
-
-
-
+}
 
 
 
 /***************************************************
- * VEHICLE ICON FACTORY
+ *
+ *
+ *
+ *
+ * CODE BELOW TO BE REPLACED IN VEHICLE OBJECTS
+ *
+ *
+ *
+ *
+ **************************************************/
+
+/***************************************************
+ * VEHICLE ICON FACTORY - Has been replaced for Vehicle Objects, can remove once objects are fully integrated
  **************************************************/
 // Create icons for vehicles.
 function iconFactory(vehName) {
@@ -334,7 +248,7 @@ function iconFactory(vehName) {
 }
 
 /***************************************************
- * VEHICLE DESRUCTOR
+ * VEHICLE DESRUCTOR - to be replaced for Vehicle Objects
  **************************************************/
 // Expire vehicles.
 function expireVehicles() {

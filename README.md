@@ -71,7 +71,7 @@ AirSuck Geospatial viewer web page:
   
 Documentation:
   - docs/airSuck data dictionary.ods - Data dictionary for JSON data passed between components of airSuck.
-
+  - docs/README - Description of airSuck's operation and configuration.
 
 Acknowledgements:
   - This project uses code from Bistromath's gr-modes project (https://github.com/bistromath/gr-air-modes), and from MalcomRobb's dump1090 (https://github.com/MalcolmRobb/dump1090).

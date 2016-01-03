@@ -75,4 +75,5 @@ Documentation:
 
 Acknowledgements:
   - This project uses code from Bistromath's gr-modes project (https://github.com/bistromath/gr-air-modes), and from MalcomRobb's dump1090 (https://github.com/MalcolmRobb/dump1090).
+  - The AIS regex in handlerAIS.py is from vlfig's freeais. https://github.com/vlfig/ais-decoder/blob/master/src/main/java/org/freeais/ais/AISParser.java.
   - Matthew Lambert for a lot of work on the Google Maps integration.

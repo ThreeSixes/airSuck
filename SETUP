@@ -9,6 +9,7 @@ Dependencies for components of the dump1090 stack:
     Node.JS: stateNode.js
     npm: Node.JS
     stateNode.js: Node.JS modules socket.io, express, node-syslog
+    dump1090: Can be installed locally or remotely: airSuckClient.py, dump1090ConnClt.py
 
 ++ Instructions to set up airSuck
   - Install prerequisites listed above on the host or hosts that will run each component.

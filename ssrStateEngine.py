@@ -536,6 +536,11 @@ class SubListener(threading.Thread):
                                                 # Set location data.
                                                 data.update({"lat": locData[0], "lon": locData[1], "locationMeta": locMeta})
                                         
+                                        except RuntimeError:
+                                            # CPR boundary exception...
+                                            if config.ssrStateEngine['debug']:
+                                                logger.log("CPR boundary straddle error for %s." %ssrWrapped['icaoAAHx'])
+                                        
                                         except:
                                             # Log exception when trying to get ADS-B data.
                                             tb = traceback.format_exc()

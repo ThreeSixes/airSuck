@@ -99,7 +99,7 @@ aisConnSettings = {
         "<another server name>": { "host": "<hostname or IP>", "port": 1002, "reconnectDelay": 5, "threadTimeout": 30, "srcPos": [0.0, 0.0, "manual"]} # This example contains position data [lat, lon, "location type"].
     },
     'aisEnqueue': True, # For debugging we can enable or disable enqueueing data. Turning this on will prevent the AIS engine from passing data on to the AIS state engine and MongoDB.
-    'debug': True # Debug?
+    'debug': False # Debug?
 }
 
 # SSR State engine settings
@@ -109,7 +109,8 @@ ssrStateEngine = {
     'hashTTL': 300, # Expire vehicles that we haven't seen in this number of seconds. Default is 300 sec (5 min)
     'cprExpireSec': 20, # This specifies how old CPR data can be before we reject it as too old to be valid in sec. Default is 20.
     'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
-    'hashPort': genRedisPort # The port for the above redis instance.
+    'hashPort': genRedisPort, # The port for the above redis instance.
+    'debug': False # Debug?
 }
 
 # AIS State engine settings
@@ -118,7 +119,8 @@ aisStateEngine = {
     'enabled': True, # Do we want to run the state engine? True = yes, False = no
     'hashTTL': 1200, # Expire vehicles that we haven't seen in this number of seconds. Default is 1200 sec (20 min)
     'hashHost': genRedisHost, # This Redis host stores the hash values to keep track of state for SSR data.
-    'hashPort': genRedisPort # The port for the above redis instance.
+    'hashPort': genRedisPort, # The port for the above redis instance.
+    'debug': False # Debug?
 }
 
 

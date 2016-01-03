@@ -12,6 +12,10 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 # Quick-and-dirty setup section. #
 ##################################
 
+###
+### These settings are re-used in various sections of the configuration, but can easily be overridden in any section as needed.
+###
+
 # The name of this machine.
 genName = "<name of this data source>" # This is a string that identifies the local machine.
 

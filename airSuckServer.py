@@ -57,6 +57,22 @@ class airSuckServer():
 		
 		# Should we keep running?
 		self.__keepRunning = True
+		
+		# Constraints for latitude and longitude. Used by expectedVars.
+		latConstraint = {'min': -90, 'max': 90}
+		lonConstraint = {'min': -180, 'max': 180}
+		
+		# Input JSON data check and type conversion happens here. We create this variable in the constructor rather than in __verifyJSON() since it's used over and over again.
+		self.__expectedVars = {
+			"clientName": {'mandatory': True, 'type': str}, # Mandatory string with the client's name..
+			"dataOrigin": {'mandatory': True, 'type': str, 'possVals': ['airSuckClient']}, # Mandatory string describing the data origin.
+			"dts": {'mandatory': True, 'type': str}, # Mandatory date time indicating when the message was recieved.
+			"type": {'mandatory': True, 'type': str, 'possVals': ['airSSR', 'airAIS']}, # Mandatory string with specific possible values.
+			"data": {'mandatory': True, 'type': str}, # Mandatory string containing the data.
+			"clientLat": {'mandatory': False, 'type': float, 'constraints': latConstraint}, # Optoinal float containing the client's latitude.
+			"clientLon": {'mandatory': False, 'type': float, 'constraints': lonConstraint}, # Optional float containing the client's longitude.
+			"clientPosMeta": {'mandatory': False, 'type': str, 'possVals': ['manual']} # Optional string containg metadata about the client's posistion data.
+		}
 	
 	# Send a "ping" to connected hosts.
 	def __sendPing(self):
@@ -117,28 +133,12 @@ class airSuckServer():
 		# Temporary storage for values.
 		accumulator = {}
 		
-		# Constraints for latitude and longitude.
-		latConstraint = {'min': -90, 'max': 90}
-		lonConstraint = {'min': -180, 'max': 180}
-		
 		# See if we have bad data...
 		failboat = False
 		
-		# Attempt to convert these elements to their relevant type...
-		expectedVars = {
-			"clientName": {'mandatory': True, 'type': str}, # Mandatory string with the client's name..
-			"dataOrigin": {'mandatory': True, 'type': str, 'possVals': ['airSuckClient']}, # Mandatory string describing the data origin.
-			"dts": {'mandatory': True, 'type': str}, # Mandatory date time indicating when the message was recieved.
-			"type": {'mandatory': True, 'type': str, 'possVals': ['airSSR', 'airAIS']}, # Mandatory string with specific possible values.
-			"data": {'mandatory': True, 'type': str}, # Mandatory string containing the data.
-			"clientLat": {'mandatory': False, 'type': float, 'constraints': latConstraint}, # Optoinal float containing the client's latitude.
-			"clientLon": {'mandatory': False, 'type': float, 'constraints': lonConstraint}, # Optional float containing the client's longitude.
-			"clientPosMeta": {'mandatory': False, 'type': str, 'possVals': ['manual']} # Optional string containg metadata about the client's posistion data.
-		}
-		
 		try:
 			# Loop through all the data items we get.
-			for entry, entryParams in expectedVars.iteritems():
+			for entry, entryParams in self.__expectedVars.iteritems():
 				
 				# Create a holder for our value of the specified type.
 				thisVal = entryParams['type']

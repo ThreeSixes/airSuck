@@ -8,7 +8,7 @@ Dependencies for components of the dump1090 stack:
     python-pymongo: mongoDump.py, stateMongoDump.py
     Node.JS: stateNode.js
     npm: Node.JS
-    stateNode.js: Node.JS modules socket.io, express
+    stateNode.js: Node.JS modules socket.io, express, node-syslog
 
 ++ Instructions to set up airSuck
   - Install prerequisites listed above on the host or hosts that will run each component.
@@ -16,7 +16,7 @@ Dependencies for components of the dump1090 stack:
   - Move the airSuck folder to /opt.
   - Copy the necessary supervisor scripts from supervisor/ to /etc/supervisor/conf.d/
     - In order to recieve AIS data you'll need the aisConnector and aisStateEngine scripts.
-    - In order to recieve ADS-B data you'll need at least one of the dump1090ConnClt or dump1090ConnSrv scripts and the ssrStateEngine.
+    - In order to recieve ADS-B data you'll need at least one of the dump1090ConnClt or airSuckServer scripts and the ssrStateEngine.
     - In order to use the Node.JS web server copy the stateNode script to the conf.d folder.
     - If you want to store state or raw data in MongoDB you'll need to add mongoDump and/or stateMongoDump.
   - In /opt/airSuck/config copy config.py to /opt/airSuck. This is a template for the main configuration file.

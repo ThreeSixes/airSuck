@@ -120,13 +120,13 @@ class handler1090:
 				# If we are configured to use the connector mongoDB forward the traffic to it.
 				if config.connMongo['enabled'] == True:
 					self.__rQ.rpush(config.connRel['qName'], jsonMsg)
-					
-					# Put data on the pub/sub queue.
-					self.__psQ.publish(config.connPub['qName'], jsonMsg)
-					
-					# If we're debugging
-					if self.__debugOn:
-						self.__logger.log("Enqueued: %s" %str(msg['data']))
+				
+				# Put data on the pub/sub queue.
+				self.__psQ.publish(config.connPub['qName'], jsonMsg)
+				
+				# If we're debugging
+				if self.__debugOn:
+					self.__logger.log("Enqueued: %s" %str(msg['data']))
 			
 			else:
 			# If we're debugging

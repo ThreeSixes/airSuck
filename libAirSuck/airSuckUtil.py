@@ -856,3 +856,30 @@ class airSuckUtil:
         
         # Send the data back along.
         return retVal
+    
+    def getICAOMeta(self, icaoAAInt):
+        """
+        Get metadata from ICAO addresses - based on the table here:
+        http://www.kloth.net/radio/icao24alloc.php
+        THIS IS NOT YET COMPLETE.
+        """
+        
+        # Store return value.
+        retVal = {}
+        
+        # Hold metadata about which countries we're looking at.
+        # Prefix table:
+        # - 14 bits = 1024 addrs.
+        # - 12 bits = 4096 addrs.
+        # - 9 bits = 32768 addrs.
+        # - 6 bits = 262144 addrs.
+        # - 4 bits = 1048576 addrs.
+        
+        # Metadata for each ICAO AA block.
+        icaoMeta = {
+            # Prefix: {'length': bit length}
+            0b011100000000000000000000: {'length': 12, 'isoCC': 'AF'} # Afghanistan
+        }
+        
+        return retVal
+    

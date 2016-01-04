@@ -6,16 +6,23 @@
  * Licensed under GPL V3
  * https://github.com/ThreeSixes/airSuck
  * 
- * Vehicle creator, manipulation, and destruction functions
+ * Vehicle class prototype definition and functions, some
+ * to be replaced by custom vehicle types
  *
  * Deps: jQuery
  **********************************************************/
 
 /***************************************************
+ * TO DO
+ **************************************************/
+// Create a destructor registration for additional functions as destruction
+// Create an updater registration for additional functions as update
+
+/***************************************************
  * MISC HELPERS
  **************************************************/
 
-// Converts a heading from degrees to a N,S,E,W
+// Converts a heading from degrees to a cardinal direction, 16 settings
 function degreeToCardinal(degree) {
   let bearing;
   //determing the relevant bearing
@@ -60,6 +67,7 @@ class Vehicle {
     this.lastPos = "none";
     this.lastUpdate = new Date().getTime();
     this.active = true;// set true if the vehicle is currently active
+    this.maxAge = 1000;// default vehicle expiration time in milliseconds since last contact
     // gMap icon stuff
     this.dirIcoPath = "m 0,0 -20,50 20,-20 20,20 -20,-50"; // Path we want to use for ADS-B targets we have direction data for.
     this.dirIcoScale = 0.15; // Scale of the path.
@@ -84,13 +92,22 @@ class Vehicle {
   }
 }
 
-// update function, created as prototype for single definition
+/***************************************************
+ * FUNCTIONS UPDATE THE VEHICLE INFO AND TABLE ENTRY
+ * updateTableEntry function to be overridden by
+ * custom vehicle types
+ **************************************************/
+Vehicle.prototype.updateTableEntry = function(){
+  if (debug){console.log('Error: Function updateTableEntry not set for protocol: '+this.protocol);}
+  return;
+};
+
+
 Vehicle.prototype.update = function(msgJSON){
-  if(debug){console.log('Vehicle updater called for: ' + this.addr);}
   // update data in the object
   $.extend(true, this, msgJSON);
   // update the last update parameter
-  this.lastUpdate = new Date().getTime();
+  this.lastUpdate = Date.now();
   // temporary, need to make these modular and use the updateFunctions array, static for now
   this.updateTableEntry();
   // run each function registered in the updateFunctions array
@@ -99,16 +116,70 @@ Vehicle.prototype.update = function(msgJSON){
   });
 };
 
-// create the destructor as a prototype function (defined once)
+/***************************************************
+ * VEHICLE DESTRUCTOR
+ * CUSTOM VEHICLES MAY REGISTER ADDITIONAL
+ * DESTRUCTOR FUNCTIONS
+ **************************************************/
 Vehicle.prototype.destroy = function(){
-  if(debug){console.log('Vehicle destructor called for: ' + this.addr);}
-  // run each function registered in the updateFunctions array
-  this.destructorFunctions.forEach(function(){
+  if(debug){console.log('Destroying vehicle: ' + this.parseName());}
+  
+  // Run add-on destructor processes
+  //this.destructorFunctions.forEach(function(){
     //destructor(this.addr);
-  });
+  //});
+  
+  // Remove table entries
+  $('#'+this.addr).remove();
+  
+  // Default destructor processes
+  //if(this.info != 'undefined'){this.info.close();}// close the gMap info window
+  //this.pathPoly.setVisible(false);// turn off the path
+  //this.marker.setMap(null);// remove the icon from the map
+  //vehicles[this.addr] = null;// invalidate this object, can't fully delete since its gone in ECMAScript 6...
 };
 
-// icon factory
+/***************************************************
+ * FUNCTION SETS THE ICON TO HALFLIFE, SETS INACTIVE
+ **************************************************/
+Vehicle.prototype.setHalflife = function(){
+  if(debug){console.log("Halflife reached for " + this.parseName());}
+  // Deactivate vehicle and change the icon for it.
+  this.active = false;
+  //if(this.marker!='undefined'){this.marker.setIcon(this.createIcon());}
+};
+
+/***************************************************
+ * FUNCTION DETERMINES IF A VEHICLE SHOULD BE
+ * SET TO HALFLIFE, EXPIRED, OR REMAIN ACTIVE
+ **************************************************/
+Vehicle.prototype.checkExpiration = function(){
+  //if(debug){console.log("Checking expiration for " + this.parseName());}
+  // Compute the time delta
+  let vehDelta = Date.now() - this.lastUpdate;
+  // Return Active, Halflife, or Expired
+  if (vehDelta >= this.maxAge) {
+    return('Expired');
+  } else if ((vehDelta >= (this.maxAge/2)) && (this.active == true)) {
+    return('Halflife');
+  } else {
+    return('Active');
+  }
+};
+
+/***************************************************
+ * DEFAULT FUNCTION DETERMINES VEHICLE NAME
+ * TO BE OVERRIDEN BY CUSTOM VEHICLES
+ **************************************************/
+Vehicle.prototype.parseName = function() {
+  // default vehicle name function, to be customized per vehicle type
+  return this.addr.toUpperCase();
+};
+
+/***************************************************
+ * FUNCTION CREATES VEHICLE ICONS FOR GMAPS
+ * OVERRIDE IF USING A DIFFERENT HEADING
+ **************************************************/
 Vehicle.prototype.createIcon = function() {
    // If we have heading data for the vehicle
   if (this.heading != 'undefined') {
@@ -131,10 +202,92 @@ Vehicle.prototype.createIcon = function() {
   }
   // And return it.
   return newIcon;
+};
+
+/***************************************************
+ * FUNCTION ADDS A GMAPS MARKER TO THE VEHICLE
+ **************************************************/
+Vehicle.prototype.setMarker = function() {
+  // Create our marker.
+  this.marker = new google.maps.Marker({
+    icon: this.createIcon(),
+    map: map,
+    vehName: vehName
+  });
+  
+  // Add listener to marker to open info window
+  this.marker.addListener('click', function() {
+    // If our infoWindow is being shown...
+    if (this.info.shown) {
+      // Close it.
+      this.info.close();
+      this.info.setContent("");
+      this.info.shown = false;
+    } else {
+      // Set data in case we don't have it, open it, and flag it as open.
+      this.info.setContent(infoFactory(this.addr));
+      this.info.open(map, this.marker);
+      this.info.shown = true;
+    }
+  });
+  
+  // Add listener to marker to show the path
+  this.marker.addListener('rightclick', function() {
+    // Check to see if the path is visible and reverse the visiblity
+    if (this.pathPoly.getVisible() == true) {
+      this.pathPoly.setVisible(false);
+    } else {
+      this.pathPoly.setVisible(true);
+    }
+  });
+}
+
+/***************************************************
+ * FUNCTION MOVES THE VEHICLE MARKER AND INFO POSITIONS
+ **************************************************/
+Vehicle.prototype.movePosition = function() {
+    // Figure out where we are in 2D space to determine whether or not we should move the marker.
+    let thisPos = this.lat + "," + this.lon;
+    // If we have new position daa...
+    if (this.lastPos != thisPos) {
+      // Create a new Google Maps LatLng object to use for the next two steps:
+      let newPos = new google.maps.LatLng(this.lat, this.lon);
+      // copy the path object
+      let pathObject = this.pathPoly.getPath();
+      
+      // update with the new path
+      pathObject.push(newPos);
+      // push back to the polyline
+      this.pathPoly.setPath(pathObject);
+      // set the polyline color
+      this.pathPoly.setOptions({strokeColor: this.stkColor});
+      // Modify the icon to have the correct rotation, and to indicate there's bearing data.
+      this.marker.setIcon(this.setIcon());
+      
+      // Set the 2D data with what we have now.
+      this.lastPos = thisPos;
+      
+      // Move the marker.
+      this.marker.setPosition(thisPos);
+      // Set the initial location of the info window
+      this.info.setPosition(thisPos);
+    }
+};
+
+/***************************************************
+ * FUNCTION ADDS A GMAPS INFO WINDOW TO THE VEHICLE
+ **************************************************/
+Vehicle.prototype.setInfoWindow = function() {
+  // Create our info window.
+  this.info = new google.maps.InfoWindow({
+    content: "",
+    shown: false
+  });
 }
 
 /***************************************************
  * VEHICLE TYPE REGISTRATION
+ * CUSTOM VEHICLES NEED TO REGISTER USING THIS FUNCTION
  **************************************************/
 // Function to register new vehicle types
 function registerVehicleType(newProtocol,newDomName,newFaIcon,newConstructor,newTableHeader) {
@@ -146,7 +299,7 @@ function registerVehicleType(newProtocol,newDomName,newFaIcon,newConstructor,new
     constructor: newConstructor,// constructor function for this vehicle type
     buildTable: newTableHeader// header row to use for this vehicle type in its' data table
   });
-}
+};
 
 
 
@@ -163,7 +316,8 @@ function registerVehicleType(newProtocol,newDomName,newFaIcon,newConstructor,new
  **************************************************/
 
 /***************************************************
- * VEHICLE ICON FACTORY - Has been replaced for Vehicle Objects, can remove once objects are fully integrated
+ * VEHICLE ICON FACTORY
+ * REPLACED FOR VEHICLE OBJECTS
  **************************************************/
 // Create icons for vehicles.
 function iconFactory(vehName) {
@@ -182,16 +336,13 @@ function iconFactory(vehName) {
         dirIcoScale = dirAircraftScl;
         ndIcoPath = ndAircraft;
         ndIcoScale = ndAircraftScl;
-        
         // Pick active/inactive color.
         if (vehData[vehName].active == true) {
           vehColor = aircraftActive; 
         } else {
           vehColor = aircraftInactive;
         }
-        
         break;
-      
       case "airAIS":
         // Select vehicle properties.
         dirIcoPath = dirShip;
@@ -249,32 +400,56 @@ function iconFactory(vehName) {
 
 /***************************************************
  * VEHICLE DESRUCTOR - to be replaced for Vehicle Objects
+ * REPLACED FOR VEHICLE OBJECTS
  **************************************************/
 // Expire vehicles.
 function expireVehicles() {
+  
+  // ***********************************************************
+  // ************** EXPIRE CODE FOR VEHICLE OBJECTS ************
+  // ***********************************************************
+  if (debug){console.log("Expiration check running");}
+  let key;
+  for (key in vehicles) {
+    // Get the state of the vehicle and take appropriate action
+    // Don't run the check on nulled objects because JS ECMAScript 6 doesn't allow delete...
+    if (vehicles[key]!=null) {
+      switch (vehicles[key].checkExpiration()) {
+          case 'Halflife':
+            if (debug) {console.log('Halflife determined for vehicle: '+vehicles[key].parseName());}
+            vehicles[key].setHalflife();
+            break;
+          case 'Expired':
+            if (debug) {console.log('Expiration determined for vehicle: '+vehicles[key].parseName());}
+            // Vehicle expired, cleanup the vehicles things...
+            vehicles[key].destroy();
+            // Nullify the entry since ECMAScript 6 doesn't let us use destroy
+            vehicles[key]=null;
+            break;
+          default:
+            // Do nothing on active or other
+            break;
+      }
+    }
+  }
+  // ***********************************************************
+  // ***********************************************************
+  
+  
   // Set the time we started the process of checking.
   var checkStart = new Date().getTime();
-  
+  // ************** LOOPS THROUGH VEHICLES ***************
   // Loop through every vehicle we have data on
   for (var veh in vehData) {
     var vehAge = null;
-    
     // Determine the vehicle age.
     switch (vehData[veh].type) {
-      case "airSSR":
-        vehAge = aircraftAge;
-        break;
-      
-      case "airAIS":
-        vehAge = shipAge;
-        break;
-      
+      case "airSSR":vehAge = aircraftAge;break;
+      case "airAIS":vehAge = shipAge;break;
       default:
         // Just expire things we don't support.
-        vehAge = 1000;
-        break;
+        vehAge = 1000;break;
     }
-    
     // Compute the time delta and set up halflife.
     var vehDelta = checkStart - vehData[veh].lastUpdate;
     var vehHalflife = vehAge / 2;
@@ -283,24 +458,16 @@ function expireVehicles() {
     
     // Set empty debugging string...
     var debugStr = "";
-    
     // If we have idInfo...
-    if ("idInfo" in vehData[veh]) {
-      // Add idInfo if we have it.
-      debugStr = vehData[veh].idInfo + " ";
-    }
-    
+    if ("idInfo" in vehData[veh]) {debugStr = vehData[veh].idInfo + " ";}
     // If we have a squawk...
-    if ("aSquawk" in vehData[veh]) {
-      // Add the mode A sqawk code.
-      debugStr = debugStr + "(" + vehData[veh].aSquawk + ") ";
-    }
-    
+    if ("aSquawk" in vehData[veh]) {debugStr = debugStr + "(" + vehData[veh].aSquawk + ") ";}
     // Add ICAO address.
     debugStr = debugStr + "[" + vehData[veh].addr + "]";
     
     // Check to see if we haven't heard from them in our age time.
     if (vehDelta >= vehAge) {
+      // ************** KILLS AN OBJECT BEYOND ITS EXPIRATION AGE ***************
       
       // Update debug window
       if (debug) {$('#' + debugBx).attr('value',"Goodbye " + debugStr);}
@@ -314,6 +481,7 @@ function expireVehicles() {
       vehNotNuked = false;
       
     } else if ((vehDelta >= vehHalflife) && (vehData[veh].active == true)) {
+      // ************** TURNS ICON TO INACTIVE ***************
       
       // Update debug window
       if(debug){$('#' + debugBx).attr('value',"Half life reached for " + debugStr);}
@@ -323,6 +491,7 @@ function expireVehicles() {
       vehData[veh].marker.setIcon(iconFactory(veh));
       changed = true;
     } else {
+      // ************** ACTIVATES INACTIVE ICON ***************
       // If it's marked as inactive the reactivate it.
       if ((vehDelta < vehHalflife) && (vehData[veh].active == false)) {
         
@@ -336,6 +505,8 @@ function expireVehicles() {
       }
     }
     
+    /*
+    // ************** MOVES VEHICLE ICON - ADD TO UPDATE FUNCTION ***************
     // If we have position data
     if (changed && vehNotNuked && vehData[veh].lat) {
       // Create Google maps position object.
@@ -344,6 +515,6 @@ function expireVehicles() {
       // Redraw the marker and move inte infowindow.
       vehData[veh].marker.setPosition(newPos);
       vehData[veh].info.setPosition(newPos);
-    }
+    }*/
   }
 }

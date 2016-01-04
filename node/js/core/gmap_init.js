@@ -1,3 +1,4 @@
+"use strict";// overcome current Chrome and Firefox issues with ECMA6 stuff like classes
 /***********************************************************
  * Airsuck Google Maps system setup
  * v. 0.1

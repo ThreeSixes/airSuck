@@ -7,6 +7,7 @@
  * https://github.com/ThreeSixes/airSuck
  *
  * Handles socket.io messages for vehicle data coming from node
+ * Has been PARTIALLY converted to include vehicle class objects
  *
  * Deps: jQuery, vehicles.js
  **********************************************************/
@@ -47,15 +48,12 @@ function handleMessage(msg){
       vehData[vehName].info.setContent(infoFactory(vehName));
     }
     
-    // ********** VEHICLE OBJECTS **********
+    // ********** VEHICLE OBJECTS - EXISTING VEHICLE **********
     // if (vehName in vehicles) { // replace the main IF above
-    // Update vehicle info
-    if (debug){console.log('Vehicle update received for: ' + msgJSON.addr);}
     // add the new vehicle (constructor should call registered update functions)
     vehicles[vehName].update(msgJSON);
-    if (debug){console.log('Successfully updated: ' + vehicles[vehName].addr);}
     
-    // ********** VEHICLE OBJECTS **********
+    // ********** VEHICLE OBJECTS - EXISTING VEHICLE **********
     
   } else {
     // Add a new vehicle.
@@ -76,8 +74,10 @@ function handleMessage(msg){
         path: new google.maps.MVCArray()
       })
     };
-    
-    // ********** VEHICLE OBJECTS **********
+
+    // ***************************************************    
+    // ********** VEHICLE OBJECTS - NEW VEHICLE **********
+    // ***************************************************
     
     // Add vehicle to the object array
     let index;
@@ -87,15 +87,16 @@ function handleMessage(msg){
         if (debug){console.log('New vehicle found, type registered: ' + msgJSON.type);}
         // add the new vehicle (constructor should call registered update functions)
         vehicles[vehName] = vehicleTypes[index].constructor(msgJSON);
-        if (debug){console.log('Successfully added: ' + vehicles[vehName].addr);}
         break;
       } else if (index==length) {
         // vehicle type not registered, drop data
         if (debug){console.log('New vehicle found, type not registered: ' + msgJSON.type + ' Dropping data.')}
       }
     }
-    // ********** VEHICLE OBJECTS **********
-    
+
+    // ***************************************************    
+    // ********** VEHICLE OBJECTS - NEW VEHICLE **********
+    // ***************************************************
     
     
     // Create objects for the aircraft's marker and current data as well as a flag for position changes, etc.
@@ -174,6 +175,8 @@ function handleMessage(msg){
     if(debug){$('#' + debugBx).attr('value',"Hello " + debugStr);}
   }
   
+  
+  // CODE BELOW ADDED TO VEHICLE PROTOTYPE AS MOVEPOSITION FUNCTION
   // If we have latitude and by extension longitude data...
   if (("lat" in vehData[vehName]) && mapLoaded) {
     

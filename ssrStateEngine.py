@@ -105,11 +105,25 @@ class SubListener(threading.Thread):
             # Delete the original timestamp.
             thisTime = cacheData.pop('dts', None)
             
-            # Set the first seen data.
-            self.__redHash.hsetnx(fullName, 'firstSeen', thisTime)
+            # Set the first seen data, also figure out if this is the first time we've seen this vehicle since the expire time.
+            isNew = self.__redHash.hsetnx(fullName, 'firstSeen', thisTime)
             
             # Update or create cached data, if we have more than just a name
             if type(cacheData) == dict:
+                
+                # If it's new...
+                if isNew == 1:
+                    # Add our metadata.
+                    cacheData.update(self.asu.getICAOMeta(cacheData['icaoAAInt']))
+                    
+                    # Are we debugging?
+                    if config.ssrStateEngine['debug']:
+                        # Log new contact.
+                        logger.log("New SSR contact: %s" %objName)
+                        
+                        # And if we have an ICAO AA metadata
+                        if 'icaoAACC' in cacheData:
+                            logger.log("Flag of %s is %s." %(objName, cacheData['icaoAACC']))
                 
                 # Set all the remaining values in the cache.
                 self.__redHash.hmset(fullName, cacheData)

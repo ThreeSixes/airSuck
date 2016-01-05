@@ -34,14 +34,18 @@ function setupSidebar(){
             if (debug) {console.log('Adding vehicle icon to sidebar header: ' + vehicleTypes[index].protocol);}
             $('#sidebar-header').append('<i id="button-list-' + vehicleTypes[index].domName + '" class="fa ' + vehicleTypes[index].faIcon + ' sidebar-button"></i>');
         }
-        $('#sidebar-header').append('<i id="button-search" class="fa fa-search sidebar-button"></i>');
+        // SEARCH - TO DO
+        //$('#sidebar-header').append('<i id="button-search" class="fa fa-search sidebar-button"></i>');
+        
         // adjust the size of each button based on the number of buttons
-        $('.sidebar-button').css('width',((1/(length+1))*100) + '%');
+        $('.sidebar-button').css('width',((1/(length))*100) + '%');
         
         // setup the sidebar body containers and related tables - one for each vehicle type + search
         for (index=0;index<length;++index) {
             if (debug) {console.log('Adding vehicle table to sidebar body: ' + vehicleTypes[index].protocol);}
             $('#sidebar-body').append('<div id="container-list-' + vehicleTypes[index].domName + '" class="sidebar-container"></div>');
+            // set a table header
+            $('#container-list-' + vehicleTypes[index].domName).append('<h1>Vehicles broadcasting over '+vehicleTypes[index].protocol+'</h1>');
             // setup the vehicle table
             $('#container-list-' + vehicleTypes[index].domName).append('<table id="table-'+vehicleTypes[index].domName+'" class="vehicleTable">');
             vehicleTypes[index].buildTable('#table-'+vehicleTypes[index].domName);
@@ -60,7 +64,8 @@ function setupSidebar(){
                 $('#container-list-' + domName).show();
             });
         }
-        // setup the search container
+        // TO DO setup the search container
+        /*
         $('#sidebar-body').append('<div id="container-search" class="sidebar-container"></div>');
         $('#container-search').hide();
         // search button
@@ -69,7 +74,7 @@ function setupSidebar(){
             $('.sidebar-container').hide();
             // show the vehicle info sidebar container
             $('#container-search').show();
-        });
+        });*/
 
         // setup a button on the main UI to show and hide
         $('body').append('<i id="sidebar-icon" class="fa fa-chevron-left"></i>');
@@ -95,33 +100,6 @@ function setupSidebar(){
             // slide out or in the sidebar
             $('#sidebar').animate({width:"toggle"}); 
         });
-        
-        // hijack the vehicle info header from the Gmap pop-up and make
-        // it clickable to show the sidebar vehicle info window
-        /*
-        $('.infoTable').click(function(){
-            // check if the sidebar is open or closed and take action
-            if ($('#sidebar').css('display') == 'none') {
-                // sidebar closed, slide icon, change to fa-chevron-right
-                $('#sidebar-icon').removeClass('fa-chevron-left');
-                $('#sidebar-icon').addClass('fa-chevron-right');
-                // TO-DO, don't hardcode the movement at 32%
-                $('#sidebar-icon').animate({right:"31%"});
-                // by default, show the vehicle list
-                // ********************** ADJUST **************************
-                loadVehicleInfo('#container-list-AIS');
-                $('#container-list-AIS').show();
-            } else {
-                // sidebar open, close it and reset icon
-                $('#sidebar-icon').removeClass('fa-chevron-right');
-                $('#sidebar-icon').addClass('fa-chevron-left');
-                // TO-DO, don't hardcode the movement at 10px
-                $('#sidebar-icon').animate({right:"10px"});
-            }
-            // slide out or in the sidebar
-            $('#sidebar').animate({width:"toggle"}); 
-        });*/
-        
     }
 };
 

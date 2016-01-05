@@ -80,7 +80,6 @@ $(document).ready(function(){
         polyRamp.setNumberRange(minimumAltitude,maximumAltitude);
         polyRamp.setSpectrum(spectrum[0], spectrum[1], spectrum[2], spectrum[3]);
     });
-    $.getScript("js/core/gmap_popup.js");//Load the google map popup constructors
     // Load the mapping system (Google only at the moment)
     $.getScript("https://maps.googleapis.com/maps/api/js?&callback=initMap&signed_in=true");
     // Global Google Maps objects are global. :)

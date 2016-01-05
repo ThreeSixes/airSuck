@@ -12,7 +12,7 @@
  **********************************************************/
 // Register vehicle type
 if(debug){console.log('Registering vehicle type: SSR');}
-registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {if (debug) {console.log('SSR Constructor called with message: ' + msgJSON);}return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Type</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Has Pos</th></tr>');});
+registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Type</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Has Pos</th></tr>');});
 
 /***************************************************
  * SSR OBJECT DECLARATION
@@ -20,7 +20,7 @@ registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {if (debug) {con
 class Aircraft extends Vehicle {
   constructor(msgJSON) {
     // create the generic vehicle object
-    super(msgJSON,'AIS');
+    super(msgJSON,'SSR');
     // extend with SSR specific data
     $.extend(true, this, msgJSON);
     // add additional parameters
@@ -48,18 +48,19 @@ class Aircraft extends Vehicle {
 Aircraft.prototype.update = function(msgJSON){
   // update data in the object
   $.extend(true, this, msgJSON);
+  // if not set to active, reactivate
+  if (this.active == false) {this.active=true;}
+  
   // set the path color if we have an altitude
   if (this.alt != 'undefined' && this.alt != null) {
     this.stkColor = "#" + polyRamp.colourAt(this.alt / 1000); // Color of the path
   }
   // update the last update parameter
   this.lastUpdate = Date.now();
-  // temporary, need to make these modular and use the updateFunctions array, static for now
+  // update the vehicle entry in its' table
   this.updateTableEntry();
-  // run each function registered in the updateFunctions array
-  this.updateFunctions.forEach(function(){
-    //updater(this.addr);
-  });
+  // move the maps position
+  this.movePosition();
 };
 
 /***************************************************

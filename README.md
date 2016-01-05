@@ -1,6 +1,6 @@
-AirSuck is an ADS-B/SSR and AIS processing, storage, and display application with Google Maps integration.
+##AirSuck is an ADS-B/SSR and AIS processing, storage, and display application with Google Maps integration.
 
-Features:
+###Features:
  - GPLv3 license.
  - Uses dump1090 binary output to proces SSR frames.
  - Uses a generic AIS TCP port to get AIS data frames.
@@ -10,13 +10,14 @@ Features:
  - Can easily be used in a distributed architecture for scalability.
  - Real-time data display with Google Maps integration uisng Node.JS
  - The architecture is designed to easily integrate with other software projects using Redis queues or MongoDB queries.
+ - Data streams are easy-to-integrate JSON.
  - The libAirSuck package can be used in part or entirely by other python projects to process telemetry data.
    - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, cprMath.py, handler1090.py, and handlerAIS.py.
 
 Support for ACARS data and using the FAA downloadable aircraft database to provide additional aircraft data are planned in future releases. 
 
 
-File list:
+###File list:
 
 "Daemons":
   - airSuckClient.py - A client script that submits information to airSuckServer.py. Currently this script pulls data from dump1090 only. AIS support is planned.
@@ -69,10 +70,11 @@ AirSuck Geospatial viewer web page:
   - node/jquery-2.1.4.min.js - jQuery javascript library served locally. (See https://jquery.com)
   
 Documentation:
+  - SETUP.md - Markdown formatted doc describing how to set airSuck up.
   - docs/airSuck data dictionary.ods - Data dictionary for JSON data passed between components of airSuck.
-  - docs/README - Description of airSuck's operation and configuration.
+  - docs/README.md - Description of airSuck's operation and configuration.
 
-Acknowledgements:
-  - This project uses code from Bistromath's gr-modes project (https://github.com/bistromath/gr-air-modes), and from MalcomRobb's dump1090 (https://github.com/MalcolmRobb/dump1090).
-  - The AIS regex in handlerAIS.py is from vlfig's freeais. https://github.com/vlfig/ais-decoder/blob/master/src/main/java/org/freeais/ais/AISParser.java.
+##Acknowledgements:
+  - This project uses code from [Bistromath's gr-modes](https://github.com/bistromath/gr-air-modes) project, and from [MalcomRobb's dump1090](https://github.com/MalcolmRobb/dump1090).
+  - The AIS regex in handlerAIS.py is from [vlfig's ais-decoder](https://github.com/vlfig/ais-decoder/blob/master/src/main/java/org/freeais/ais/AISParser.java).
   - Matthew Lambert for a lot of work on the Google Maps integration.

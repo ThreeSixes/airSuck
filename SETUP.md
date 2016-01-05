@@ -1,5 +1,5 @@
 #Single-system Ubuntu install and configuration for ADS-B
-####This installation is for a single system only. You can easily configure AIRSuck to connect to multiple dump1090 instances using the dump1090 connector and mutlipe AIS targets using the AIS connector. If the airSuckClient is installed and configured on many machines one airSuck server can recieve traffic from them.
+This installation is for a single system only. You can easily configure AirSuck to connect to multiple dump1090 instances using the dump1090 connector and multiple AIS targets using the AIS connector. If the airSuckClient is installed and configured on many machines one airSuck server can recieve traffic from them.
 
 ##If you want to use airSuck to pick up ADS-B from aircraft, etc. run first few steps here.
 ####Note: If you want AIS support you'll need to know the IP address and TCP port of one or more AIS sources.

@@ -43,7 +43,7 @@ class SubListener(threading.Thread):
     """
     def __init__(self, channels):
         threading.Thread.__init__(self)
-        self.asu = airSuckUtil()
+        self.__asu = airSuckUtil()
         
         # Redis queues and entities
         self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
@@ -183,7 +183,7 @@ class SubListener(threading.Thread):
                 
                 try:
                     # Get the metatdata from the MMSI
-                    mmsiMeta = self.asu.getMMSIMeta(cacheData['addr'])
+                    mmsiMeta = self.__asu.getMMSIMeta(cacheData['addr'])
                     
                     # if we have good data from the metadata processor
                     if type(mmsiMeta) == dict:
@@ -350,15 +350,15 @@ class SubListener(threading.Thread):
                 
                 # If we have navigation status data display it.
                 if 'navStat' in data:
-                    data.update({'navStatMeta': self.asu.getAISNavStat(data['navStat'])})
+                    data.update({'navStatMeta': self.__asu.getAISNavStat(data['navStat'])})
                 
                 # If we have navigation status data display it.
                 if 'epfd' in data:
-                    data.update({'epfdMeta': self.asu.getEPFDMeta(data['epfd'])})
+                    data.update({'epfdMeta': self.__asu.getEPFDMeta(data['epfd'])})
                 
                 # If we have navigation status data display it.
                 if 'shipType' in data:
-                    data.update({'shipTypeMeta': self.asu.getAISShipType(aisWrapped['shipType'])})
+                    data.update({'shipTypeMeta': self.__asu.getAISShipType(aisWrapped['shipType'])})
                 
                 # Enqueue processed state data.
                 self.enqueueData(self.updateState(aisWrapped['mmsi'], data))

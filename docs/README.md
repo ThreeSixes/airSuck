@@ -1,42 +1,42 @@
 #AirSuck block diagram describing communication between various components.
-
->     +---------------------+
->     | Dump1090 managed    |
->     | by client as thread |                            (2)             +-------+
->     +--------+------------+   +--------+       +------------------+    |AIS TCP|
->              ^                |Dump1090| <---+ |dump1090ConnClt.py|    |Source |
->              |                +--------+  TCP  +-------+----------+    +---+---+
->              |                                         |                   ^
->      +-------+--------+           +----------------+   | Redis         TCP |
->  (1) |AirSuckClient.py| +-------> |AirSuckServer.py|   |                   |
->      +----------------+   TCP     +--------+-------+   |       +-----------+---+
->                                            |           +-------+AisConnector.py| (3)
->                                            +-----------+       +---------------+
->                                            |
->                      +----------------+    |    +---------------+     +------------+
->                  (4) |Redis connector | <--+--> |Redis connector+----->mongoDump.py| (5)
->                      |pub/sub queue   |         |reilable queue |     +------+-----+
->                      +-------+--------+         +---------------+            |
->                              |                              (4)              |
->                              |Redis                                     +----v----+
->    +-----------------+       |      +-----------------+                 |MongoDB  |
->(6) |ssrStateEngine.py<-------+------>aisStateEngine.py| (6)             |airConn  |
->    +-------------+---+              +--+--------------+                 |collecion|
->                  |                     |                                +---------+
->                  +------------+--------+
->                               |
->          +-------------+      |Redis  +---------------+ (8)                (9)
->          |Redis state  |      |       |Redis state    |             +-----------------+
->      (7) |pub/sub queue<------+------->reliable queue +------------->stateMongoDump.py|
->          +-----+-------+              +---------------+             +----------+------+
->                |                                                               |
->                +-------------------+                                           |
->     (10)       |                   |  (11)                   (12)        +-----v----+
-> +--------------v---+         +-----v------+             +-----------+    |MongoDB   |
-> |All client scripts|         |NodeJS:     <-------------+Web browser|    |airState  |
-> +------------------+         |stateNode.js|    HTTP     +-----------+    |collection|
->                              +------------+                              +----------+
-
+```
+     +---------------------+
+     | Dump1090 managed    |
+     | by client as thread |                            (2)             +-------+
+     +--------+------------+   +--------+       +------------------+    |AIS TCP|
+              ^                |Dump1090| <---+ |dump1090ConnClt.py|    |Source |
+              |                +--------+  TCP  +-------+----------+    +---+---+
+              |                                         |                   ^
+      +-------+--------+           +----------------+   | Redis         TCP |
+  (1) |AirSuckClient.py| +-------> |AirSuckServer.py|   |                   |
+      +----------------+   TCP     +--------+-------+   |       +-----------+---+
+                                            |           +-------+AisConnector.py| (3)
+                                            +-----------+       +---------------+
+                                            |
+                      +----------------+    |    +---------------+     +------------+
+                  (4) |Redis connector | <--+--> |Redis connector+----->mongoDump.py| (5)
+                      |pub/sub queue   |         |reilable queue |     +------+-----+
+                      +-------+--------+         +---------------+            |
+                              |                              (4)              |
+                              |Redis                                     +----v----+
+    +-----------------+       |      +-----------------+                 |MongoDB  |
+(6) |ssrStateEngine.py<-------+------>aisStateEngine.py| (6)             |airConn  |
+    +-------------+---+              +--+--------------+                 |collecion|
+                  |                     |                                +---------+
+                  +------------+--------+
+                               |
+          +-------------+      |Redis  +---------------+ (8)                (9)
+          |Redis state  |      |       |Redis state    |             +-----------------+
+      (7) |pub/sub queue<------+------->reliable queue +------------->stateMongoDump.py|
+          +-----+-------+              +---------------+             +----------+------+
+                |                                                               |
+                +-------------------+                                           |
+     (10)       |                   |  (11)                   (12)        +-----v----+
+ +--------------v---+         +-----v------+             +-----------+    |MongoDB   |
+ |All client scripts|         |NodeJS:     <-------------+Web browser|    |airState  |
+ +------------------+         |stateNode.js|    HTTP     +-----------+    |collection|
+                              +------------+                              +----------+
+```
 ##Component roundup:
 
 ### 1) The airSuckClient.py and airSuckServer.py. These two scripts are designed to run as a client/server pair with remote connections in mind. The server can accept many client connections, and the client manages the dump1090 thread which also includes a watchdog that will restart the dump1090 client in the event of a failure. The client and server components also send each other keepalives and have watchdogs that re-estabish the connections in the event they are disrupted.

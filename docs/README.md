@@ -1,4 +1,4 @@
-#AirSuck block diagram describing communication between various components.
+###AirSuck block diagram describing communication between various components.
 ```
      +---------------------+
      | Dump1090 managed    |

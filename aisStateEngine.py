@@ -177,7 +177,9 @@ class SubListener(threading.Thread):
             # Set the first seen data, and get MMSI metadata
             if self.__redHash.hsetnx(fullName, 'firstSeen', thisTime):
                 
-                logger.log("New AIS contact: %s" %objName)
+                # Debug?
+                if config.aisStateEngine['debug']:
+                    logger.log("New AIS contact: %s" %objName)
                 
                 try:
                     # Get the metatdata from the MMSI

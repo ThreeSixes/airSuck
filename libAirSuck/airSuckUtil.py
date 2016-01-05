@@ -1354,7 +1354,7 @@ class airSuckUtil:
                     
                     # If we explicitly want the country name...
                     if cc2Country:
-                        retVal.update({'mmsiCountry': self.isoCCtoCountry(retVal['icaoAACC'])})
+                        retVal.update({'icaoAACountry': self.isoCCtoCountry(retVal['icaoAACC'])['country']})
         
         return retVal
     

@@ -95,6 +95,7 @@ class SubListener(threading.Thread):
             'entryPoint': 'entryPoint',
             'mmsiType': 'mmsiType',
             'mmsiCC': 'mmsiCC',
+            'mmsiCountry': 'mmsiCountry',
             'imoCheck': 'imoCheck',
             'srcLat': 'srcLat',
             'srcLon': 'srcLon',
@@ -176,6 +177,8 @@ class SubListener(threading.Thread):
             # Set the first seen data, and get MMSI metadata
             if self.__redHash.hsetnx(fullName, 'firstSeen', thisTime):
                 
+                logger.log("New AIS contact: %s" %objName)
+                
                 try:
                     # Get the metatdata from the MMSI
                     mmsiMeta = self.asu.getMMSIMeta(cacheData['addr'])
@@ -185,10 +188,22 @@ class SubListener(threading.Thread):
                         # If we have a country code, set it.
                         if 'mmsiCC' in mmsiMeta:
                             cacheData.update({'mmsiCC': mmsiMeta['mmsiCC']})
+                            
+                            # Debug?
+                            if config.aisStateEngine['debug']:
+                                logger.log("Flag of %s is %s." %(objName, cacheData['mmsiCC']))
+                        
+                        # If we have a country name, set it.
+                        if 'mmsiCountry' in mmsiMeta:
+                            cacheData.update({'mmsiCountry': mmsiMeta['mmsiCountry']})
                         
                         # Set MMSI type if we have it.
                         if 'mmsiType' in mmsiMeta:
                             cacheData.update({'mmsiType': mmsiMeta['mmsiType']})
+                            
+                            # Debug?
+                            if config.aisStateEngine['debug']:
+                                logger.log("MMSI type of %s is %s." %(objName, cacheData['mmsiType']))
                 
                 except:
                     # Log our exceptoin.

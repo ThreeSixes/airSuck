@@ -47,7 +47,7 @@ class SubListener(threading.Thread):
     """
     def __init__(self, channels):
         threading.Thread.__init__(self)
-        self.asu = airSuckUtil()
+        self.__asu = airSuckUtil()
         
         # Redis queues and entities
         self.__psQ = redis.StrictRedis(host=config.connPub['host'], port=config.connPub['port'])
@@ -79,6 +79,8 @@ class SubListener(threading.Thread):
             'fs': int,
             'utcSync': int,
             'icaoAAInt': int,
+            'icaoAACC': str,
+            'icaoAACountry': str,
             'srcLat': float,
             'srcLon': float
         }
@@ -91,12 +93,13 @@ class SubListener(threading.Thread):
     
     def updateState(self, objName, cacheData):
         """
-        updateState
-        
         Update state engine with data from incoming frames given the data in the dict cacheData. objName is the name of the ICAO AA in hex, or emergency squawk code.
         
         Returns all data in the cache.
         """
+        
+        # Blank dictionary.
+        retVal = {}
         
         try:
             # Create properly-formatted name for the state hash table we're creating.
@@ -113,15 +116,34 @@ class SubListener(threading.Thread):
                 
                 # If it's new...
                 if isNew == 1:
-                    # Add our metadata.
-                    cacheData.update(self.asu.getICAOMeta(cacheData['icaoAAInt']))
+                    
+                    # Make sure we have a numeric ICAO AA at this point.
+                    if 'icaoAAInt' in cacheData:
+                        # Add our metadata about the ICAO AA we have.
+                        cacheData.update(self.__asu.getICAOMeta(cacheData['icaoAAInt']))
+                    
+                    else:
+                        # make sure we also have an ICAO AA in hex format...
+                        if 'icaoAAHx' in cacheData:
+                            # Get the ICOA AA in integer format
+                            icaoAAInt = int(cacheData['icaoAAHx'], 16)
+                            
+                            # If we're debugging...
+                            if config.ssrStateEngine['debug']:
+                                logger.log("Missing icaoAAInt for %s. Got %s." %(cacheData['icaoAAHx'], icaoAAInt))
+                            
+                            # Add it to our cache data...
+                            cacheData.update({'icaoAAInt': icaoAAInt})
+                            
+                            # Add our metadata about the ICAO AA we have.
+                            cacheData.update(self.__asu.getICAOMeta(cacheData['icaoAAInt']))
                     
                     # Are we debugging?
                     if config.ssrStateEngine['debug']:
                         # Log new contact.
                         logger.log("New SSR contact: %s" %objName)
                         
-                        # And if we have an ICAO AA metadata
+                        # And if we now have ICAO AA CC metadata
                         if 'icaoAACC' in cacheData:
                             logger.log("Flag of %s is %s." %(objName, cacheData['icaoAACC']))
                 
@@ -131,7 +153,7 @@ class SubListener(threading.Thread):
             # Set expiration on the hash entry.
             self.__redHash.expire(fullName, config.ssrStateEngine['hashTTL'])
             
-            # Get all the date from our hash.
+            # Get all the data from our hash.
             retVal = self.__redHash.hgetall(fullName)
             
             # Add the address.
@@ -149,8 +171,6 @@ class SubListener(threading.Thread):
 
     def pullState(self, objName):
         """
-        pullState(objName)
-        
         Pull state information for a given object name. Returns a dict with existing data.
         """
         
@@ -169,8 +189,6 @@ class SubListener(threading.Thread):
     
     def getEmergencyInfo(self, data):
         """
-        getEmergencyInfo(data)
-        
         Get stateful emergency info for a given state entry.
         
         Returns a dict containing emergency info.
@@ -215,8 +233,6 @@ class SubListener(threading.Thread):
     
     def fixDataTypes(self, statusData):
         """
-        fixDataTypes(self, statusData)
-        
         Converts data from strings to their approriate datatypes. This is necessary since REDIS stores everything as a string in hash tables.
         """
         
@@ -248,8 +264,6 @@ class SubListener(threading.Thread):
 
     def enqueueData(self, statusData):
         """
-        enqueueDate(statusData)
-        
         Put status data on a queue for processing
         """
         
@@ -273,8 +287,6 @@ class SubListener(threading.Thread):
 
     def str2Bool(self, thisStr):
         """
-        str2Bool(thisStr)
-        
         Convert a string representing a boolean value to a boolean value. If the string is "True" or "true" this returns True. Else it returns False.
         """
         
@@ -288,8 +300,6 @@ class SubListener(threading.Thread):
 
     def crcInt2Hex(self, crcInt):
         """
-        crcInt2Hex(crcInt)
-        
         Convert the CRC value as in intteger to a hex string.
         Returns a hex string.
         """
@@ -297,6 +307,10 @@ class SubListener(threading.Thread):
         return binascii.hexlify(chr((crcInt >> 16) & 0xff) + chr((crcInt >> 8) & 0xff) + chr((crcInt & 0xff)))
     
     def worker(self, work):
+        """
+        Given an SSR entry do some work.
+        """
+        
         # Do work on the data returned from the subscriber.
         ssrJson = str(work['data'])
         
@@ -343,7 +357,7 @@ class SubListener(threading.Thread):
                             if ssrWrapped['df'] in (0, 4, 5, 20, 21):
                                 # XOR the computed and frame CRC values to get a potential ICAO AA
                                 potAA = self.crcInt2Hex(ssrWrapped['frameCrc'] ^ ssrWrapped['cmpCrc'])
-                                
+                                                                
                                 # See if we're aware of the potential valid AA.
                                 data.update(self.pullState(potAA))
                                 
@@ -363,7 +377,7 @@ class SubListener(threading.Thread):
                         # Get mode A metadata.
                         if 'aSquawk' in ssrWrapped:
                             # Try to get metadata from the squawk code...
-                            aMeta = self.asu.modeA2Meta(ssrWrapped['aSquawk'], self.asu.regionUSA)
+                            aMeta = self.__asu.modeA2Meta(ssrWrapped['aSquawk'], self.__asu.regionUSA)
                             
                             # If we have usable data, add it.
                             if aMeta != None:
@@ -396,6 +410,14 @@ class SubListener(threading.Thread):
                             # Client name data
                             if 'clientName' in ssrWrapped:
                                 data.update({"lastClientName": ssrWrapped['clientName']})
+                            
+                            # ICAO AA country code
+                            if 'icaoAACC' in ssrWrapped:
+                                data.update({"icaoAACC": ssrWrapped['icaoAACC']})
+                            
+                            # ICAO AA country
+                            if 'icaoAACountry' in ssrWrapped:
+                                data.update({"icaoAACountry": ssrWrapped['icaoAACountry']})
                             
                             # Check for emergency conditions.
                             data.update(self.getEmergencyInfo(ssrWrapped))
@@ -543,7 +565,7 @@ class SubListener(threading.Thread):
                                                         if (not ('heading' in data) or derivedHeading) and not ('heading' in ssrWrapped):
                                                             
                                                             # Get the bearing based on the location we have.
-                                                            newHeading = self.asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
+                                                            newHeading = self.__asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
                                                             # Add the heading to the traffic data
                                                             data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
                                                     

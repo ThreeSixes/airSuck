@@ -1113,11 +1113,10 @@ class airSuckUtil:
         # Send the data back along.
         return retVal
     
-    def getICAOMeta(self, icaoAAInt):
+    def getICAOMeta(self, icaoAAInt, cc2Country=False):
         """
         Get metadata from ICAO addresses - based on the table here:
         http://www.kloth.net/radio/icao24alloc.php
-        THIS IS NOT YET COMPLETE.
         """
         
         # Store return value.
@@ -1352,6 +1351,10 @@ class airSuckUtil:
                 if (thisMask & icaoAAInt) == blockPrefix:
                     # Add metadata.
                     retVal.update({'icaoAACC': thisEntity})
+                    
+                    # If we explicitly want the country name...
+                    if cc2Country:
+                        retVal.update({'mmsiCountry': self.isoCCtoCountry(retVal['icaoAACC'])})
         
         return retVal
     

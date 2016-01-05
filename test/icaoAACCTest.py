@@ -8,6 +8,14 @@ from pprint import pprint
 
 asu = airSuckUtil()
 
+targetICAOHx = ["a41e94", "a37986", "a4e0b9"]
+
+# Loop
+for aa in targetICAOHx:
+    icaoAAInt = int(aa, 16)
+    print("Data for %s: %s" %(aa, asu.getICAOMeta(icaoAAInt)))
+
+# Fixed tests.
 print("Egyptair plane: ")
 pprint(asu.getICAOMeta(65703))
 

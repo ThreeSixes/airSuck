@@ -17,7 +17,7 @@ $ sudo mv dump1090 /opt
 ```
 ###Now install airSuck and its dependencies.
 
-####Next install the necessary dependencies for airSuck.
+#####Next install the necessary dependencies for airSuck.
 ```shell
 $ sudo apt-get install python supervisor monogodb-server redis-server nodejs npm python-redis
 ```
@@ -43,8 +43,8 @@ $ sudo cp config/config.py .
 $ sudo cp config/nodeConfig.js node/
 ```
 
-Copy supvervisor config files into place. These files keep various components of airSuck running.
-```shell
+###Copy supvervisor config files into place. These files keep various components of airSuck running.
+#####```shell
 $ cd /opt/airSuck
 $ sudo cp supvervisor/airSuck-airSuckServer.py /etc/supervisor/conf.d/
 $ sudo cp supvervisor/airSuck-airSuckClient.py /etc/supervisor/conf.d/
@@ -55,8 +55,8 @@ $ sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
 $ sudo cp supvervisor/airSuck-stateNode.py /etc/supervisor/conf.d/
 ```
 
-Editing config.py - since this a single-host installation minimal configuration will be required.
-WARNING: This configuration file is actually Python code which depends on the arrangment of the whitespace at the beginning of each line. Don't remove spaces or tabs before configuration variables.
+###Editing config.py - since this a single-host installation minimal configuration will be required.
+#####**WARNING:** This configuration file is actually Python code which depends on the arrangment of the whitespace at the beginning of each line. Don't remove spaces or tabs before configuration variables.
 
 ```shell
 $ sudo nano /opt/airSuck/config.py
@@ -78,8 +78,8 @@ Change the connSrvHost line to 127.0.0.1 like so:
 ```python
 'connSrvHost': "127.0.0.1",
 ```
-Optionally you can also activate position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
-If you choose to enable it follow these steps:
+###Optionally you can also activate position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
+#####If you choose to enable it follow these steps:
 
 Change reportPos to True:
 ```python
@@ -91,8 +91,8 @@ My example yields a latitude and longitude of 45.520851 and -122.625855 respecti
 ```python
 'myPos': [45.520851, -122.625855, "manual"],
 ```
-We can now edit node/nodeConfig.js. Only one variable needs to be modified:
-
+###We can now edit node/nodeConfig.js. Only one variable needs to be modified:
+####
 ```shell
 $ sudo nano /opt/airSuck/config.py
 ```
@@ -113,8 +113,8 @@ $ /etc/init.d/supervisor restart
 ```
 Once supervisor restarts you can point your browser to http://127.0.0.1:8090 to see a map and list of ADS-B targets.
 
-Troubleshooting:
-
+##Troubleshooting:
+#####
 1) Check supevisor to make sure everything is running.
 If the browser isn't showing data you can check the status of the software using:
 

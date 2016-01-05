@@ -8,58 +8,58 @@ This installation is for a single system only. You can easily configure AirSuck 
 
 ###Install MalcolmRobb's dump1090 fork. You'll also need to install a couple dependencies first.
 ```shell
-$ sudo apt-get install librtlsdr-dev librtlsdr0 libusb-dev
-$ git clone https://github.com/MalcolmRobb/dump1090.git
-$ cd dump1090
-$ make
-$ cd ..
-$ sudo mv dump1090 /opt
+sudo apt-get install librtlsdr-dev librtlsdr0 libusb-dev
+git clone https://github.com/MalcolmRobb/dump1090.git
+cd dump1090
+make
+cd ..
+sudo mv dump1090 /opt
 ```
 ###Now install airSuck and its dependencies.
 
 Next install the necessary dependencies for airSuck.
 ```shell
-$ sudo apt-get install python supervisor monogodb-server redis-server nodejs npm python-redis
+sudo apt-get install python supervisor monogodb-server redis-server nodejs npm python-redis
 ```
 
 Then install the necessary nodeJS packages for stateNode.js
 ```shell
-$ sudo npm install express
-$ sudo npm install node-syslog
-$ sudo npm install redis
-$ sudo npm install socket.io
-$ sudo npm install socket.io-emitter
+sudo npm install express
+sudo npm install node-syslog
+sudo npm install redis
+sudo npm install socket.io
+sudo npm install socket.io-emitter
 ```
 Once all of the dependencies have been satisfied we can use git to pull airSuck. By default airSuck expects to be in /opt so we'll install it there.
 ```shell
-$ cd /opt/
-$ sudo git clone https://github.com/ThreeSixes/airSuck.git
+cd /opt/
+sudo git clone https://github.com/ThreeSixes/airSuck.git
 ```
 
 Copy relevant airSuck config files into place.
 ```shell
-$ cd /opt/airSuck
-$ sudo cp config/config.py .
-$ sudo cp config/nodeConfig.js node/
+cd /opt/airSuck
+sudo cp config/config.py .
+sudo cp config/nodeConfig.js node/
 ```
 
 ###Copy supvervisor config files into place. These files keep various components of airSuck running.
 ```shell
-$ cd /opt/airSuck
-$ sudo cp supvervisor/airSuck-airSuckServer.py /etc/supervisor/conf.d/
-$ sudo cp supvervisor/airSuck-airSuckClient.py /etc/supervisor/conf.d/
-$ sudo cp supvervisor/airSuck-ssrStateEngine.py /etc/supervisor/conf.d/
-$ sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
-$ sudo cp supvervisor/airSuck-stateMongoDump.py /etc/supervisor/conf.d/
-$ sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
-$ sudo cp supvervisor/airSuck-stateNode.py /etc/supervisor/conf.d/
+cd /opt/airSuck
+sudo cp supvervisor/airSuck-airSuckServer.py /etc/supervisor/conf.d/
+sudo cp supvervisor/airSuck-airSuckClient.py /etc/supervisor/conf.d/
+sudo cp supvervisor/airSuck-ssrStateEngine.py /etc/supervisor/conf.d/
+sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
+sudo cp supvervisor/airSuck-stateMongoDump.py /etc/supervisor/conf.d/
+sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
+sudo cp supvervisor/airSuck-stateNode.py /etc/supervisor/conf.d/
 ```
 
 ###Editing config.py - since this a single-host installation minimal configuration will be required.
 **WARNING:** This configuration file is actually Python code which depends on the arrangment of the whitespace at the beginning of each line. Don't remove spaces or tabs before configuration variables.
 
 ```shell
-$ sudo nano /opt/airSuck/config.py
+sudo nano /opt/airSuck/config.py
 ```
 
 In config.py edit the genHost variable to contain the name of your computer like so:
@@ -94,7 +94,7 @@ My example yields a latitude and longitude of 45.520851 and -122.625855 respecti
 ###We can now edit node/nodeConfig.js. Only one variable needs to be modified:
 ####
 ```shell
-$ sudo nano /opt/airSuck/config.py
+sudo nano /opt/airSuck/config.py
 ```
 
 Change redisHost to 127.0.0.1.
@@ -105,11 +105,11 @@ Plug in your RTL-SDR and antenna to the machine running airSuck.
 
 Assuming all went well previously we can start supervisor
 ```shell
-$ /etc/init.d/supervisor start
+/etc/init.d/supervisor start
 ```
 If that fails try this:
 ```shell
-$ /etc/init.d/supervisor restart
+/etc/init.d/supervisor restart
 ```
 Once supervisor restarts you can point your browser to http://127.0.0.1:8090 to see a map and list of ADS-B targets.
 
@@ -119,7 +119,7 @@ Once supervisor restarts you can point your browser to http://127.0.0.1:8090 to 
 If the browser isn't showing data you can check the status of the software using:
 
 ```shell
-$ sudo supervisorctl
+sudo supervisorctl
 ```
 You'll see a list of airSuck processes. If any of them are listed in a state other than RUNNING it means something went wrong. Check the log files under /etc/supervisor/ for more details about the error message.
 

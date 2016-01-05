@@ -121,7 +121,7 @@ If the browser isn't showing data you can check the status of the software using
 ```shell
 sudo supervisorctl
 ```
-You'll see a list of airSuck processes. If any of them are listed in a state other than RUNNING it means something went wrong. Check the log files under /etc/supervisor/ for more details about the error message.
+You'll see a list of airSuck processes. If any of them are listed in a state other than RUNNING it means something went wrong. Check the log files under /var/log/supervisor/ for more details about the error message.
 
 2) If in the browser you're not seeing aircraft in the list or on the screen make sure there are aircraft overhead and that you have a relatively clear view of the sky. Radio reception is key. You can also edit config.py and add the --aggressive flag to the dump1090Args section of the airSuckClient config.
 

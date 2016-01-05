@@ -47,14 +47,12 @@ alive = True
 ####################
 
 class dataSource(threading.Thread):
-	""" dataSource class
-	
-	Takes two required arguments and one optional: myName (client-identifying string), AISSrc (AISSrc source dictionary), optinally enqueue which should be True or False (by default it will enqueue data, otherwise will print it).
-	
-	A generic class that represents a given AIS data source
-	"""
-	
 	def __init__(self, myName, AISSrc, enqueue=True):
+		"""
+		Takes two required arguments and one optional: myName (client-identifying string), AISSrc (AISSrc source dictionary), optinally enqueue which should be True or False (by default it will enqueue data, otherwise will print it).
+		A generic class that represents a given AIS data source
+		"""
+		
 		logger.log("Init thread for %s." %myName)
 		threading.Thread.__init__(self)
 		

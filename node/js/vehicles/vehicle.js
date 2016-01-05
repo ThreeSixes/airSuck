@@ -279,7 +279,7 @@ Vehicle.prototype.destroy = function(){
   
   // Default destructor processes
   if(this.info != null){this.info.close();}// close the gMap info window
-  this.pathPoly.setVisible(false);// turn off the path
+  this.pathPoly.setMap(null);// turn off the path
   this.marker.setMap(null);// remove the icon from the map
   //vehicles[this.addr] = null;// invalidate this object, can't fully delete since its gone in ECMAScript 6...
 };

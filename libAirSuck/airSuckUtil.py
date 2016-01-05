@@ -730,7 +730,8 @@ class airSuckUtil:
         """
         getMMSIMeta(mmsi)
         
-        Get metatdata from a given MMSI address
+        Get metatdata from a given MMSI address. This is based on the following table:
+        http://www.vtexplorer.com/vessel-tracking-mmsi-mid-codes.html
         """
         
         # Empty reuturn dict.
@@ -1115,7 +1116,7 @@ class airSuckUtil:
     
     def getICAOMeta(self, icaoAAInt, cc2Country=False):
         """
-        Get metadata from ICAO addresses - based on the table here:
+        Get metadata from ICAO addresses - based on the table here by Ralf D. Kloth:
         http://www.kloth.net/radio/icao24alloc.php
         """
         

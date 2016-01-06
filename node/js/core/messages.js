@@ -49,7 +49,7 @@ function handleMessage(msg){
         
         // create a marker icon for the vehicle (may move to the constructor)
         vehicles[vehName].setMarker();
-
+        
         // Add listeners to marker - must be here to access the vehicles array
         vehicles[vehName].marker.addListener('click', function() {
           vehicleMarkerClickListener(vehName);

@@ -12,7 +12,7 @@
  **********************************************************/
 // Register vehicle type
 if(debug){console.log('Registering vehicle type: SSR');}
-registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Type</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Has Pos</th></tr>');});
+registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Cat.</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Has Pos</th></tr>');});
 
 /***************************************************
  * SSR OBJECT DECLARATION

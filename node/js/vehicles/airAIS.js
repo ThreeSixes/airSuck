@@ -13,7 +13,7 @@
 
 // Register vehicle type
 if(debug){console.log('Registering vehicle type: AIS');}
-registerVehicleType('airAIS','AIS','fa-ship',function(msgJSON) {return new Ship(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Type</th><th>Flag</th><th>Velocity</th><th>Destination</th><th>Has Pos</th></tr>');});
+registerVehicleType('airAIS','AIS','fa-ship',function(msgJSON) {return new Ship(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Type</th><th>Flag</th><th>Velocity</th><th>Course</th><th>Destination</th><th>Pos</th></tr>');});
 
 /***************************************************
  * AIS OBJECT DECLARATION
@@ -63,7 +63,7 @@ Ship.prototype.createTableEntry = function() {
   if (debug) {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+((this.name==null) ? '' : this.name)+'</td><td>'+(((this.shipType == undefined) || (this.shipType == null)) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td></tr>');
+  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+((this.name==null) ? '--' : this.name)+'</td><td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td><td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td><td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td><td>'+((this.destination==null) ? '--' : this.destination)+'</td><td>'+((hasPos) ? '*' : '--')+'</td></tr>');
 };
 
 /***************************************************
@@ -73,7 +73,7 @@ Ship.prototype.updateTableEntry = function() {
   if (debug) {console.log('Updating table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.shipType==null) ? '' : this.shipType)+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td>');
+  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td><td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td><td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td><td>'+((this.destination==null) ? '--' : this.destination)+'</td><td>'+((hasPos) ? '*' : '--')+'</td>');
 };
 
 /***************************************************

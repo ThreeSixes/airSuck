@@ -12,7 +12,7 @@
  **********************************************************/
 // Register vehicle type
 if(debug){console.log('Registering vehicle type: SSR');}
-registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Cat.</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Has Pos</th></tr>');});
+registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Cat.</th><th>Flag</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Pos</th></tr>');});
 
 /***************************************************
  * SSR OBJECT DECLARATION
@@ -84,7 +84,7 @@ Aircraft.prototype.createTableEntry = function() {
   if (debug) {console.log('Creating new table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+this.name+'</td><td>'+((this.category==null) ? '' : this.category)+'</td><td>'+((this.alt==null) ? '' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '' : this.velo + ' mph')+'</td><td>'+((this.heading==null) ? '' : degreeToCardinal(this.heading))+'</td><td>'+hasPos+'</td></tr>');
+  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+this.name+'</td><td>'+((this.category==null) ? '--' : this.category)+'</td><td>' +((this.icaoAACC==null) ? '--' : this.icaoAACC)+ '</td><td>'+((this.alt==null) ? '--' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' mph')+'</td><td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td><td>'+((hasPos) ? '*' : '--')+'</td></tr>');
 };
 
 /***************************************************
@@ -94,45 +94,5 @@ Aircraft.prototype.updateTableEntry = function() {
   if (debug) {console.log('Updating table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.category==null) ? '' : this.category)+'</td><td>'+((this.alt==null) ? '' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '' : this.velo + ' mph')+'</td><td>'+((this.heading==null) ? '' : degreeToCardinal(this.heading))+'</td><td>'+hasPos+'</td>');
+  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.category==null) ? '--' : this.category)+'</td><td>' +((this.icaoAACC==null) ? '--' : this.icaoAACC)+ '</td><td>'+((this.alt==null) ? '--' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td><td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td><td>'+((hasPos) ? '*' : '--')+'</td>');
 };
-
-/***************************************************
- * FUNCTION UPDATES VEHICLE INFO WINDOW
- **************************************************/
-Aircraft.prototype.setInfoWindow = function() {
-  // By default this name should just be the name.
-  var contentStr = this.parseName();
-  
-  // But if we have altitude and climb information add them, too.
-  if ((this.alt != null || this.alt != undefined) || (this.vertRate != null || this.vertRate != undefined)) {
-    // Add break.
-    contentStr+="<br/>";
-    
-    // Check for altitude
-    if (this.alt) {
-      if (this.alt != null && this.alt != undefined) {
-        // Add altitude value.
-        contentStr += this.alt + " ft. ";
-      }
-    }
-    
-    // Check for climb
-    if (this.vertRate) {
-      // If the vertical rate is positive add a +.
-      if (this.vertRate > 0) {
-        contentStr += "+";
-      }
-      
-      // Add climb and unit.
-      contentStr += vertRate + " ft/min";
-    }
-  }
-  
-  // Create our info window.
-  this.info = new google.maps.InfoWindow({
-    position:new google.maps.LatLng(this.lat, this.lon),
-    content: contentStr,
-    shown: false
-  });
-}

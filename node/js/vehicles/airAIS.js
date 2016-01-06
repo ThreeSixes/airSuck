@@ -48,10 +48,9 @@ class Ship extends Vehicle {
 Ship.prototype.parseName = function() {
   let idStr='';
   // If we have a vessel name
-  if (this.vesselName) {idStr += this.vesselName + " ";}
+  if (this.vesselName) { if (this.vesselName !== undefined) {idStr += this.vesselName + " "; } }
   // If we have a valid IMO
-  idStr += "(" + this.imo + ((this.imoCheck==false) ? "*" : "") + ") ";
-  if (this.aSquawk) {idStr += "(" + this.aSquawk + ") ";}
+  if (this.imo) { if (this.imo>0) { idStr += "(" + this.imo + ((this.imoCheck==false) ? "*" : "") + ") "; } }
   // We should always have an MMSI address.
   idStr += "[" + this.addr.toString() + "]";
   return idStr;
@@ -64,7 +63,7 @@ Ship.prototype.createTableEntry = function() {
   if (debug) {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+this.name+'</td><td>'+((this.shipType==null) ? '' : this.shipType)+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td></tr>');
+  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+((this.name==null) ? '' : this.name)+'</td><td>'+((this.shipType==null) ? '' : this.shipType)+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td></tr>');
 };
 
 /***************************************************

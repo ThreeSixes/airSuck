@@ -63,7 +63,7 @@ Ship.prototype.createTableEntry = function() {
   if (debug) {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+((this.name==null) ? '' : this.name)+'</td><td>'+((this.shipType==null) ? '' : this.shipType)+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td></tr>');
+  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+((this.name==null) ? '' : this.name)+'</td><td>'+(((this.shipType == undefined) || (this.shipType == null)) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td><td>'+((this.mmsiCC==null) ? '' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '' : this.velo + ' kts')+'</td><td>'+((this.destination==null) ? '' : this.destination)+'</td><td>'+hasPos+'</td></tr>');
 };
 
 /***************************************************

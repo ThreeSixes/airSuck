@@ -69,7 +69,14 @@ Aircraft.prototype.update = function(msgJSON){
 Aircraft.prototype.parseName = function() {
   let idStr='';
   // If we have a plane/flight ID
-  if (this.idInfo) {idStr += this.idInfo + " ";}
+  if (this.idInfo) {
+    // If we have 'default' or 'blank' idInfo field
+    if (this.idInfo != "@@@@@@@@") {
+      // Just blank the field.
+      idStr += this.idInfo + " ";
+    }
+    
+  }
   // And if we have a squawk code...
   if (this.aSquawk) {idStr += "(" + this.aSquawk + ") ";}
   // We should always have an ICAO address.
@@ -94,5 +101,5 @@ Aircraft.prototype.updateTableEntry = function() {
   if (debug) {console.log('Updating table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.category==null) ? '--' : this.category)+'</td><td>' +((this.icaoAACC==null) ? '--' : this.icaoAACC)+ '</td><td>'+((this.alt==null) ? '--' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td><td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td><td>'+((hasPos) ? '*' : '--')+'</td>');
+  $('#'+this.addr).html('<td>'+this.parseName()+'</td><td>'+((this.category==null) ? '--' : this.category)+'</td><td>' +((this.icaoAACC==null) ? '--' : this.icaoAACC)+ '</td><td>'+((this.alt==null) ? '--' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td><td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td><td>'+((hasPos) ? '*' : '--')+'</td>');
 };

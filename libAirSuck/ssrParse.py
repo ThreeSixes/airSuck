@@ -23,20 +23,20 @@ import sys
 ##################
 
 class ssrParse:
-    """
-    ssrParse is a class that provides support for decoding SSR modes A, C, and S.
-    
-    ssrParse only supports parsing of DF (downlink format) data so far.
-    
-    the principal method is ssrParse(strData) with strData being a binary string of SSR data.
-    """
-    
     #####################
     # Class constructor #
     #####################
     
     
     def __init__(self):
+        """
+        ssrParse is a class that provides support for decoding SSR modes A, C, and S.
+        
+        ssrParse only supports parsing of DF (downlink format) data so far.
+        
+        the principal method is ssrParse(strData) with strData being a binary string of SSR data.
+        """
+        
         # Do we set the names of DFs, formats, etc.?
         self.decodeNames = False
         
@@ -44,6 +44,9 @@ class ssrParse:
         self.__crcPoly = 0xfff409
         self.__crc24Mask = 0xffffff
         self.__crcTable = self.buildCrcTable()
+        
+        # 6-bit ASCII table.
+        self.__ascii6Table = ["@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "/", "]", "^", "_", " ", "!", "\"", "#", "$", "%", "&", "\\", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?"]
 
     ####################
     # Config Functions #
@@ -52,8 +55,6 @@ class ssrParse:
     
     def setReturnNames(self, onOff):
         """
-        setReturnNames(onOff)
-        
         Turns decoding of DF names, formats, and other data on or off. onOff is a boolean value where True = decode names, and False = don't decode names. This can be changed during runtime.
         
         Returns True for success, False for failure.
@@ -79,8 +80,6 @@ class ssrParse:
     
     def asciiHx2Str(self, asciiHx):
         """
-        asciiHx2Str(asciiHx)
-        
         Convert a hex string represented in ASCII to a binary string.
         
         Returns a string.
@@ -90,8 +89,6 @@ class ssrParse:
     
     def buildCrcTable(self):
         """
-        buildCrcTable()
-        
         Create CRC value table for improved CRC computation performance.
         
         Returns the CRC table.
@@ -115,8 +112,6 @@ class ssrParse:
     
     def getCrc(self, data):
         """
-        getCrc(data)
-        
         Compute the CRC value of a given frame.
         
         Returns the CRC value as an int.
@@ -131,8 +126,6 @@ class ssrParse:
     
     def formatString(self, subject):
         """
-        formatString(subject)
-        
         Properly format a string as either ASCII for Python versions < 3, and as UTF-8 for Python version >= 3.
         This should be used for any data that has been "hexlified".
         Returns either a unicode or ASCII string.
@@ -151,8 +144,6 @@ class ssrParse:
     
     def getIcaoAAHx(self, data):
         """
-        getIcaoAAHx(data)
-        
         Get the ICAO AA as a hex string, given a frame such as DF11 or DF17.
         """
         
@@ -166,8 +157,6 @@ class ssrParse:
     
     def getIcaoAAInt(self, data):
         """
-        getIcaoAAInt(data)
-        
         Get the ICAO AA as an int, given a frame such as DF11 or DF17.
         """
         
@@ -175,8 +164,6 @@ class ssrParse:
 
     def getCACO(self, data):
         """
-        getCACO(data)
-        
         Get the CA/Capability or Control value for a given frame such as DF11, DF17, and DF18.
         """
         
@@ -184,8 +171,6 @@ class ssrParse:
     
     def getFlightStatus(self, data):
         """
-        getFlightStatus(data)
-        
         Get the flight status field from DF4, DF5, DF20, and DF21 as an array [0] containing the extracted numeric data and [1] containing descriptive text.
         """
         
@@ -200,8 +185,6 @@ class ssrParse:
     
     def getEmergencyState(self, data):
         """
-        getEmergencyState(data)
-        
         Get the emergency state of an aircraft given a frame such as DF28 an array [0] containing the extracted numeric data and [1] containing descriptive text. Also sets the emergency flag.
         """
         
@@ -222,8 +205,6 @@ class ssrParse:
     
     def get13BitAlt(self, data):
         """
-        get13BitAlt(data)
-        
         Get the 13-bit altitude data from DF0, DF4, DF16, and DF20.
         """
         
@@ -242,8 +223,6 @@ class ssrParse:
     
     def getModeAStr(self, modeAGil):
         """
-        getModeAStr(modeAGil)
-        
         Get a formatted mode A Squawk code. Returns a squawk string. 
         """
         
@@ -261,8 +240,6 @@ class ssrParse:
     
     def gillham2Bin(self, grayCode):
         """
-        gillham2Bin(gray)
-        
         Convert Gillham gray code used in 13-bit altitude and mode A/C data to an int.
         
         This function ignores the X/M bit.
@@ -320,8 +297,6 @@ class ssrParse:
     
     def bin2Gillham(self, data):
         """
-        bin2Gillham(data)
-        
         Convert a byestream to a Gillham encoded byte. Retruns an integer for success, and False for a failure.
         
         This function does not ignore the X/M bit.
@@ -379,8 +354,6 @@ class ssrParse:
     
     def modeASquawk2modeCAlt(self, modeAInt):
         """
-        modeASquawk2modeCAlt(modeAInt)
-        
         Attempt to convert a mode A squawk code to a mode C altitude. It accepts a 2-byte number containing a hex representation of the squawk code. Squawk 0040 = 0x0040.
         
         If the altitude can be decoded it returns an integer. If the altitude violates mode C constraints it returns False. Mode C altitudes have 100ft resolution.
@@ -404,8 +377,6 @@ class ssrParse:
     
     def modeA2C(self, modeAData):
         """
-        ModeA2ModeC(modeAData)
-        
         Convert mode A data into mode C data.
         """
         # I have no idea how this algrithm was devised since I'm not sure how the encoding works for altitude. Cheers.
@@ -465,8 +436,6 @@ class ssrParse:
     
     def decode12BitAlt(self, data):
         """
-        decod12BitAlt(data)
-        
         Decode 12-bit Altitude (in DF9, DF17, etc.)
         """
         
@@ -496,8 +465,6 @@ class ssrParse:
     
     def decode13BitAlt(self, data):
         """
-        decode13BitAlt(data)
-        
         Decode 13-bit Altitude (in DF0, DF4, DF15, DF20, and DF23)
         """
         
@@ -538,36 +505,24 @@ class ssrParse:
     
     def decode6BitChr(self, data):
         """
-        decode6Bit(data):
-        
-        Decode a given byte as a 6-bit character for aircraft ident data.
-        
-        From bistomath's gr-air-modes code:
-           https://github.com/bistromath/gr-air-modes/blob/master/python/parse.py
+        Decode a given byte as a 6-bit character for aircraft ident data using the AIS char set.
         """
         
-        # Decode from A-Z
-        if (data == 0):
-            # Null chracter.
-            None
-        if (data > 0 and data < 27):
-            retVal = chr(ord("A") + data - 1)
-        # 32 is a space.
-        elif data == 32:
-            retVal = " "   
-        # Decode from 0 - 9.
-        elif (data > 47 and data < 58):
-            retVal = chr(ord("0") + data - 48)
-        else:
-            # Unknown chracter represented as ?
-            retVal = "?"
+        # Set return value.
+        retVal = ""
+        
+        try:
+            # Get the 6-bit char.
+            retVal = self.__ascii6Table[data]
+        
+        except:
+            # Do nothing - invalid char.
+            pass
         
         return retVal
     
     def getIDInfo(self, data):
         """
-        getIDInfo(data)
-        
         Get the 8 character flight ID data from data as a string converted to an int.
         """
         
@@ -584,8 +539,6 @@ class ssrParse:
     
     def checkSquawk(self, aSquawk):
         """
-        checkSquawk(aSquawk)
-        
         Check to see if we have an emergency squawk code. Returns false for no emergency nad a string describing the emergency being squawked. Also sets the emergency flag.
         """
         
@@ -611,8 +564,6 @@ class ssrParse:
     
     def getDwnlnkReq(self, data):
         """
-        decodeDwnlnkField(data)
-        
         Decode Downlink request field from DF4, 5, 20, and 21. Returns an array where [0] is the numeric downlink request value and [1] is the name.
         """
         
@@ -664,8 +615,6 @@ class ssrParse:
     
     def getUtilityMsg(self, data):
         """
-        getUtilityMsg(data)
-        
         Get the utility message field data from DF4, 5, 20, and 21. Returns an array with the IIS field in [0], the IDS in [1], and the IDS name in [2].
         """
         
@@ -689,8 +638,6 @@ class ssrParse:
     
     def ssrParse(self, binData):
         """
-        ssrParse(binData)
-        
         Parse SSR data.
         
         Parse SSR data, looking for fields, etc. from binary data in the string binData.

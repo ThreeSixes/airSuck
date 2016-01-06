@@ -78,7 +78,7 @@ Change the connSrvHost line to 127.0.0.1 like so:
 ```python
 'connSrvHost': "127.0.0.1",
 ```
-###Optionally you can also activate position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
+###Optionally you can activate position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
 If you choose to enable it follow these steps:
 
 Change reportPos to True:

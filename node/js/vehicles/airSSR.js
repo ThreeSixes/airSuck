@@ -88,9 +88,19 @@ Aircraft.prototype.createTableEntry = function() {
 };
 
 /***************************************************
+ * FUNCTION UPDATES VEHICLE IN THE INFO TABLE
+ **************************************************/
+Aircraft.prototype.updateTableEntry = function() {
+  if (debug) {console.log('Updating table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
+  let hasPos;
+  if (this.lat) {hasPos=true;}else{hasPos=false;}
+  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.category==null) ? '' : this.category)+'</td><td>'+((this.alt==null) ? '' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '' : this.velo + ' mph')+'</td><td>'+((this.heading==null) ? '' : degreeToCardinal(this.heading))+'</td><td>'+hasPos+'</td>');
+};
+
+/***************************************************
  * FUNCTION UPDATES VEHICLE INFO WINDOW
  **************************************************/
-Vehicle.prototype.setInfoWindow = function() {
+Aircraft.prototype.setInfoWindow = function() {
   // By default this name should just be the name.
   var contentStr = this.parseName();
   
@@ -100,13 +110,15 @@ Vehicle.prototype.setInfoWindow = function() {
     contentStr+="<br/>";
     
     // Check for altitude
-    if (this.alt != null && this.alt != undefined) {
-      // Add altitude value.
-      contentStr += this.alt + " ft. ";
+    if (this.alt) {
+      if (this.alt != null && this.alt != undefined) {
+        // Add altitude value.
+        contentStr += this.alt + " ft. ";
+      }
     }
     
     // Check for climb
-    if (this.vertRate != null && this.vertRate != undefined) {
+    if (this.vertRate) {
       // If the vertical rate is positive add a +.
       if (this.vertRate > 0) {
         contentStr += "+";

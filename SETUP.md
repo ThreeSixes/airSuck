@@ -101,6 +101,14 @@ Change redisHost to 127.0.0.1.
 ```javascript
 redisHost: "127.0.0.1",
 ```
+
+###Set file permissions.
+####Since all the supervisor files run these python scripts as the nobody user we need to make sure all the scripts, libraries, and folders have read access for that user. The quickest way is using these two commands.
+```shell
+find /opt/airSuck/ -type f | xargs sudo setfacl -m u:nobody:r
+find /opt/airSuck/ -type d | xargs sudo setfacl -m u:nobody:rx
+```
+
 Plug in your RTL-SDR and antenna to the machine running airSuck.
 
 Assuming all went well previously we can start supervisor

@@ -73,7 +73,7 @@ $.getScript("socket.io/socket.io.js",function(){
                href: '/css/sidebar.css'
             }).appendTo('head');
          });  
-      }, 0.1);
+      }, 0.01);
      
  });
 

@@ -48,25 +48,33 @@ $.getScript("socket.io/socket.io.js",function(){
          if (debug) {console.log('Loading custom vehicle: ' + loadCustomVehicles[index]);}
          $.getScript("js/vehicles/" + loadCustomVehicles[index]);
      }
-     // Load the message handler
-     $.getScript("js/core/messages.js");
-     // load sidebar (here so it loads in the right order...)
-      $.getScript("js/core/sidebar.js",function(){
-         // setup the sidebar on successful load
-         setupSidebar();
-         // load font-awesome for icons
-         $('<link/>', {
-            rel: 'stylesheet',
-            type: 'text/css',
-            href: '/css/font-awesome/css/font-awesome.min.css'
-         }).appendTo('head');
-         // load sidebar CSS
-         $('<link/>', {
-            rel: 'stylesheet',
-            type: 'text/css',
-            href: '/css/sidebar.css'
-         }).appendTo('head');
-      });
+     
+      // Prevent race condition where sidebar loads before vehicle types finish registration.
+      setTimeout(function(){
+         // Load the message handler
+         $.getScript("js/core/messages.js");
+         
+         // load sidebar (here so it loads in the right order...)
+         $.getScript("js/core/sidebar.js",function(){
+            // setup the sidebar on successful load
+            setupSidebar();
+            
+            // load font-awesome for icons
+            $('<link/>', {
+               rel: 'stylesheet',
+               type: 'text/css',
+               href: '/css/font-awesome/css/font-awesome.min.css'
+            }).appendTo('head');
+            
+            // load sidebar CSS
+            $('<link/>', {
+               rel: 'stylesheet',
+               type: 'text/css',
+               href: '/css/sidebar.css'
+            }).appendTo('head');
+         });  
+      }, 0.1);
+     
  });
 
 /***************************************************

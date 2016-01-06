@@ -88,11 +88,39 @@ Aircraft.prototype.createTableEntry = function() {
 };
 
 /***************************************************
- * FUNCTION UPDATES VEHICLE IN THE INFO TABLE
+ * FUNCTION UPDATES VEHICLE INFO WINDOW
  **************************************************/
-Aircraft.prototype.updateTableEntry = function() {
-  if (debug) {console.log('Updating table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
-  let hasPos;
-  if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.category==null) ? '' : this.category)+'</td><td>'+((this.alt==null) ? '' : this.alt + ' ft')+'</td><td>'+((this.velo==null) ? '' : this.velo + ' mph')+'</td><td>'+((this.heading==null) ? '' : degreeToCardinal(this.heading))+'</td><td>'+hasPos+'</td>');
-};
+Vehicle.prototype.setInfoWindow = function() {
+  // By default this name should just be the name.
+  var contentStr = this.parseName();
+  
+  // But if we have altitude and climb information add them, too.
+  if ((this.alt != null || this.alt != undefined) || (this.vertRate != null || this.vertRate != undefined)) {
+    // Add break.
+    contentStr+="<br/>";
+    
+    // Check for altitude
+    if (this.alt != null && this.alt != undefined) {
+      // Add altitude value.
+      contentStr += this.alt + " ft. ";
+    }
+    
+    // Check for climb
+    if (this.vertRate != null && this.vertRate != undefined) {
+      // If the vertical rate is positive add a +.
+      if (this.vertRate > 0) {
+        contentStr += "+";
+      }
+      
+      // Add climb and unit.
+      contentStr += vertRate + " ft/min";
+    }
+  }
+  
+  // Create our info window.
+  this.info = new google.maps.InfoWindow({
+    position:new google.maps.LatLng(this.lat, this.lon),
+    content: contentStr,
+    shown: false
+  });
+}

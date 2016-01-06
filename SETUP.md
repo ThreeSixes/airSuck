@@ -108,6 +108,7 @@ redisHost: "127.0.0.1",
 find /opt/airSuck/ -type f | xargs sudo setfacl -m u:nobody:r
 find /opt/airSuck/ -type d | xargs sudo setfacl -m u:nobody:rx
 ```
+#####There may be three errors with files that include spaces in their names. You can safely ignore them.
 
 Plug in your RTL-SDR and antenna to the machine running airSuck.
 

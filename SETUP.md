@@ -110,8 +110,10 @@ find /opt/airSuck/ -type d | xargs sudo setfacl -m u:nobody:rx
 ```
 #####There may be three errors with files that include spaces in their names. You can safely ignore them.
 
+###Connect the RTL-SDR.
 Plug in your RTL-SDR and antenna to the machine running airSuck.
 
+###Start airSuck.
 Assuming all went well previously we can start supervisor
 ```shell
 /etc/init.d/supervisor start

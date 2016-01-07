@@ -44,7 +44,8 @@ airSuckClientSettings = {
     'keepaliveInterval': 300.0, # This is how often we try to ping the server, and how long we expect between pings.
     'reconnectDelay': 30.0, # This is the amount of time we want to wait initially before reconnecting.
     'reportPos': False, # Do we report the client position data specified below?
-    'myPos': [0.0, 0.0, "manual"], # Position data of the client formatted as such: [lat, lon, "position type"].
+    'gps': False, # Do we have a GPS position AND PPS support in NTP? Don't set this if NTP isn't configured to use the GPS as a reference clock.
+    'myPos': [0.0, 0.0, "manual"], # Position data of the client formatted as such: [lat, lon, "position type"]. This is ignored if GPS is set to true and the GPS has a fix.
     'debug': False, # Debug?
     
     # Dump1090 data source settings.

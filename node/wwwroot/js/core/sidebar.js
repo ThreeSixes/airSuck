@@ -17,6 +17,8 @@ function setupSidebar(){
     if ($('#sidebar').length) {
         // sidebar exists, ignore
         if (debug) {console.log('Sidebar setup called but sidebar exists, ignoring.');}
+        // Flag sidebar as loaded for giggles.
+        sidebarLoaded = true;
     } else {
         if (debug) {console.log('Sidebar setup called, setting up sidebar.');}
         // no sidebar, set it up in the body
@@ -100,6 +102,9 @@ function setupSidebar(){
             // slide out or in the sidebar
             $('#sidebar').animate({width:"toggle"}); 
         });
+        
+        // Flag sidebar as loaded.
+        sidebarLoaded = true;
     }
 };
 

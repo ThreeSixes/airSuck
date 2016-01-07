@@ -21,6 +21,11 @@ function handleMessage(msg){
     if(debug){console.log("Maps not loaded. Discarding aircraft data.");}
     return;
   }
+  if (!sidebarLoaded) {
+    // Return early - the map isn't loaded yet
+    if(debug){console.log("Sidebar not loaded. Discarding aircraft data.");}
+    return;
+  }
   // Dump the JSON string to the message box.
   if(debug){$('#' + messageBx).attr('value',msg);}
   

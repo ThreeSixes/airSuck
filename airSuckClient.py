@@ -34,6 +34,7 @@ import threading
 import traceback
 import Queue
 import atexit
+import signal
 from libAirSuck import asLog
 from subprocess import Popen, PIPE, STDOUT
 from pprint import pprint
@@ -649,6 +650,32 @@ class airSuckClient():
                 # Flag the queue worker as down.
                 self.__queueWorkerRunning = False
     
+    def __kill1090(self):
+        """
+        Kill the dump1090 process.
+        """
+        logger.log("Attempting to kill dump1090...")
+        
+        try:
+            if self.__proc1090.poll() is None:
+                self.__proc1090.kill()
+                logger.log("dump1090 killed.")
+        
+        except AttributeError:
+            # The process is already dead.
+            logger.log("dump1090 not running.")
+        
+        except:
+            # Unhandled exception.
+            tb = traceback.format_exc()
+            logger.log("Exception thrown while killing dump1090:\n%s" %tb)
+        
+        # Flag dumpairSuckClient1090 as down.
+        self.__dump1090Running = False
+        
+        # Blank the object.
+        self.__proc1090 = None
+    
     def __worker(self):
         """
         The main worker method that spins up the dump1090 executable and takes data from stdout.
@@ -856,34 +883,43 @@ class airSuckClient():
                 # Raise the exception again.
                 raise SystemExit
     
-    def __kill1090(self):
+    def __exitHandler(self, thisSig, thisFrame):
         """
-        Kill the dump1090 process.
+        When we're instructed to exit these are the things we should do.
         """
-        logger.log("Attempting to kill dump1090...")
+        if asConfig['debug']:
+            logger.log("Caught signal %s. Triggering massive amounts of die." %thisSig)
+        else:
+            logger.log("Caught signal that wants us to die.")
         
         try:
-            if self.__proc1090.poll() is None:
-                self.__proc1090.kill()
-                logger.log("dump1090 killed.")
-        
-        except AttributeError:
-            # The process is already dead.
-            logger.log("dump1090 not running.")
-        
+            # Try to kill dump1090.
+            self.__kill1090()
         except:
-            # Unhandled exception.
-            tb = traceback.format_exc()
-            logger.log("Exception thrown while killing dump1090:\n%s" %tb)
+            pass
         
-        # Flag dumpairSuckClient1090 as down.
-        self.__dump1090Running = False
-        
-        # Blank the object.
-        self.__proc1090 = None
+        # Raise this exception to kill the program nicely.
+        sys.exit(0)
     
     def run(self):
         logger.log("Starting dump1090 worker.")
+        
+        # NOTE:
+        # Since dump1090 has a bad habit of not dying unless we implement signal
+        # handlers for signals that result in the death of the client.
+        
+        # Which signals should we die from?
+        reasonsToDie = [signal.SIGTERM, signal.SIGKILL, signal.SIGHUP]
+        
+        try:
+            # Let's handle signals that should kill us. :)
+            for aReason in reasonsToDie:
+                # Set up a signal handler for all the fun ways we can be killed...
+                signal.signal(aReason, self.__exitHandler)
+        
+        except:
+            tb = traceback.format_exc()
+            logger.log("Death signal handler blew up setting signal handlers:\n%s" %tb)
         
         try:
             # Attempt to start the worker.

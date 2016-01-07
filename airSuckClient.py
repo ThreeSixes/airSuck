@@ -886,11 +886,34 @@ class airSuckClient():
             self.__worker()
         
         except KeyboardInterrupt:
+            # Make damn sure dump1090 is dead.
+            try:
+                self.__kill1090()
+            except:
+                pass
+            
             # Pass the keyboard interrupt up the chain to our main execution
             raise KeyboardInterrupt
         
         except SystemExit:
+            # Make damn sure dump1090 is dead.
+            try:
+                self.__kill1090()
+            except:
+                pass
+            # Pass the exception up the stack.
+            
             raise SystemExit
+        
+        except Exception as e:
+            # Make damn sure dump1090 is dead.
+            try:
+                self.__kill1090()
+            except:
+                pass
+            
+            # Pass the exception up the stack.
+            raise e
 
 
 #######################

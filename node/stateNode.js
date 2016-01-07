@@ -54,12 +54,11 @@ function log(eventText) {
 
 // Serve index.html if a browser asks for it.
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(__dirname + '/wwwroot/index.html');
 });
 
-// Serve our script and style directories
-app.use('/js', express.static('js'));
-app.use('/css', express.static('css'));
+// Serve our wwwroot folder as the web root.
+app.use('/', express.static(__dirname + '/wwwroot'));
 
 // When we have a message in Redis send it to all connected clients. 
 client.on("message", function (channel, message) {

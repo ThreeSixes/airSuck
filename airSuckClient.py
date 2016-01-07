@@ -33,6 +33,7 @@ import time
 import threading
 import traceback
 import Queue
+import atexit
 from libAirSuck import asLog
 from subprocess import Popen, PIPE, STDOUT
 from pprint import pprint
@@ -659,6 +660,9 @@ class airSuckClient():
         # Start our watchdog process.
         self.__myWatchdog = threading.Timer(1.0, self.__clientWatchdog)
         self.__myWatchdog.start()
+        
+        # Make sure we kill dump1090 when we shut down.
+        atexit.register(self.__kill1090)
         
         # Keep running and restarting dump1090 unless the program is killed.
         while keepRunning:

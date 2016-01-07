@@ -17,6 +17,14 @@ try:
 except:
     raise IOError("No configuration present. Please copy config/config.py to the airSuck folder and edit it.")
 
+# Load the config _very_ early.
+asConfig = config.airSuckClientSettings
+
+# If we have an attached GPS...
+if asConfig['gps']:
+    # Do GPS things.
+    from gps import *
+
 import datetime
 import json
 import re
@@ -146,6 +154,10 @@ class airSuckClient():
                 # Pass the keyboard interrupt exception up the stack.
                 raise KeyboardInterrupt
             
+            except SystemExit:
+                # pass the system exit exception up the stack.
+                raise SystemExit
+            
             except:
                 tb = traceback.format_exc()
                 logger.log("airSuck client watchdog threw exception:\n%s" %tb)
@@ -254,6 +266,16 @@ class airSuckClient():
                 
                 # Pass the exception up the chain.
                 raise KeyboardInterrupt
+            
+            except SystemExit:
+                # We don't want to keep running.
+                keepRunning = False
+                
+                # Flag the RX watcher as not running
+                self.__rxWatcherRunning = False
+                
+                # pass the system exit exception up the stack.
+                raise SystemExit
             
             except socket.timeout:
                 # If we time out do nothing. This is intentional.
@@ -436,6 +458,9 @@ class airSuckClient():
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         
+        except SystemExit:
+            raise SystemExit
+        
         except AttributeError:
             # Just die nicely.
             pass
@@ -467,6 +492,9 @@ class airSuckClient():
             
         except KeyboardInterrupt:
             raise KeyboardInterrupt
+        
+        except SystemExit:
+            raise SystemExit
         
         except AttributeError:
             # Just die nicely.
@@ -514,6 +542,10 @@ class airSuckClient():
         except KeyboardInterrupt:
             # Pass it up the stack.
             raise KeyboardInterrupt
+        
+        except SystemExit:
+            # Pass it up the stack.
+            raise SystemExit
         
         except Exception as e:
             if 'errno' in e:
@@ -638,7 +670,11 @@ class airSuckClient():
             
             except KeyboardInterrupt:
                 # Pass it on...
-                KeyboardInterrupt
+                raise KeyboardInterrupt
+            
+            except SystemExit:
+                # Pass it up.
+                raise SystemExit
             
             except:
                 tb = traceback.format_exc()
@@ -664,6 +700,17 @@ class airSuckClient():
                 # Raise the keyboard interrupt.
                 raise KeyboardInterrupt
             
+            except SystemExit:
+                
+                # Stop looping.
+                keepRunning = False
+                
+                # Flag the RX watcher as not running
+                self.rxWatcherRunning = False
+                
+                # Pass the exception up the chain to our runner.
+                raise SystemExit
+            
             except:
                 # Log the exception
                 tb = traceback.format_exc()
@@ -684,6 +731,11 @@ class airSuckClient():
                 
                 # Pass the exception up the chain to our runner.
                 raise KeyboardInterrupt
+            
+            except SystemExit:
+                
+                # Pass the exception up the chain to our runner.
+                raise SystemExit
             
             except:
                 # Something else unknown happened.
@@ -747,6 +799,14 @@ class airSuckClient():
                 # Pass the exception up the chain to our runner.
                 raise KeyboardInterrupt
             
+            except SystemExit:
+                # Flag dump1090 as down.
+                self.__dump1090Running = False
+                self.__proc1090 = None
+                
+                # Raise the exception again.
+                raise SystemExit
+            
             except OSError:
                 # Dump an error since the OS reported dump1090 can't run.
                 logger.log("Unable to start dump1090. Please ensure dump1090 is at %s." %asConfig['dump1090Path'])
@@ -784,6 +844,13 @@ class airSuckClient():
                 
                 # Raise the exception again.
                 raise KeyboardInterrupt
+            
+            except SystemExit:
+                # We don't want to keep running since we were killed.
+                keepRunning = False
+                
+                # Raise the exception again.
+                raise SystemExit
     
     def __kill1090(self):
         """
@@ -821,6 +888,9 @@ class airSuckClient():
         except KeyboardInterrupt:
             # Pass the keyboard interrupt up the chain to our main execution
             raise KeyboardInterrupt
+        
+        except SystemExit:
+            raise SystemExit
 
 
 #######################
@@ -828,8 +898,6 @@ class airSuckClient():
 #######################
 
 if __name__ == "__main__":
-    # Get the config.
-    asConfig = config.airSuckClientSettings
     
     # Set up our global logger.
     logger = asLog(asConfig['logMode'])
@@ -867,7 +935,10 @@ if __name__ == "__main__":
         
     except KeyboardInterrupt:
         logger.log("Keyboard interrupt.")
-        
+    
+    except SystemExit:
+        logger.log("System exit.")
+    
     except:
         tb = traceback.format_exc()
         logger.log("Unhandled exception in airSuck client:\n%s" %tb)

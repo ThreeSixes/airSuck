@@ -895,6 +895,7 @@ class airSuckClient():
         try:
             # Try to kill dump1090.
             self.__kill1090()
+        
         except:
             pass
         
@@ -996,6 +997,10 @@ if __name__ == "__main__":
         threadClient.daemon = True
         threadClient.start()
         
+        # If we didn't have a configured data source dump a helpful message.
+        if noDS:
+            logger.log("No data sources enabled for the airSuck client. Please enable at least one source in config.py by setting dump1090Enabled and/or aisEnabled to True.")
+    
     except KeyboardInterrupt:
         logger.log("Keyboard interrupt.")
     
@@ -1005,9 +1010,5 @@ if __name__ == "__main__":
     except:
         tb = traceback.format_exc()
         logger.log("Unhandled exception in airSuck client:\n%s" %tb)
-    
-    # If we didn't have a configured data source dump a helpful message.
-    if noDS:
-        logger.log("No data sources enabled for the airSuck client. Please enable at least one source in config.py by setting dump1090Enabled and/or aisEnabled to True.")
     
     logger.log("Shutting down the airSuck client.")

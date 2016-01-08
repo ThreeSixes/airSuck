@@ -17,7 +17,7 @@ sudo mv dump1090 /opt
 ```
 ###Now install airSuck and its dependencies.
 
-Next install the necessary dependencies for airSuck.
+Next install the necessary base dependencies for airSuck.
 ```shell
 sudo apt-get install python supervisor monogodb-server redis-server nodejs npm python-redis
 ```
@@ -78,7 +78,7 @@ Change the connSrvHost line to 127.0.0.1 like so:
 ```python
 'connSrvHost': "127.0.0.1",
 ```
-###Optionally you can activate position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
+###Optionally you can activate manual position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
 If you choose to enable it follow these steps:
 
 Change reportPos to True:
@@ -91,6 +91,51 @@ My example yields a latitude and longitude of 45.520851 and -122.625855 respecti
 ```python
 'myPos': [45.520851, -122.625855, "manual"],
 ```
+###You can also optionally enable GPS support for MLAT or a moving sensor. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
+If you choose to enable GPS support follow these steps:
+
+Install gpsd and gpsd-clients and make sure they start by default.
+```shell
+sudo apt-get install gpsd gpsd-clients
+```
+
+Plug in your GPS device if it's USB you can use this command to find it's device name which is necessary for the next step.
+```shell
+dmesg
+```
+Look for something that looks like ttyUSB. That path is the GPS's USB device. Mine is /dev/ttyUSB0.
+
+Make sure gpsd is configured properly. Make sure you enable gpsd on boot, and for the device use the info gathered in the last step.
+```shell
+sudo dpkg-reconfigure gpsd
+```
+
+Start GPSD and make sure it starts on boot.
+```shell
+sudo /etc/init.d/gpsd start
+```
+
+Activate GPS support in config.py by changing 'gps' from False to True.
+```python
+'gps': True,
+```
+
+If you want multilateration support and have a GPS with PPS output you can add the following lines to /etc/ntp.conf by editing it:
+```text
+# Serial GPS data from GPSD
+server 127.127.28.0
+fudge 127.127.28.0 time1 0.9999 refid GPS
+
+# PPS GPS signals from GPSD
+server 127.127.28.1 prefer
+fudge 127.127.28.1 refid PPS
+```
+
+Now restart NTPD:
+```shell
+sudo /etc/init.d/ntp restart
+```
+
 ###We can now edit node/nodeConfig.js. Only one variable needs to be modified:
 ####
 ```shell
@@ -114,9 +159,10 @@ find /opt/airSuck/ -type d | xargs sudo setfacl -m u:nobody:rx
 Plug in your RTL-SDR and antenna to the machine running airSuck.
 
 ###Start airSuck.
-Assuming all went well previously we can start supervisor
+Assuming all went well previously we can start supervisor and make sure it starts on boot.
 ```shell
-/etc/init.d/supervisor start
+sudo /etc/init.d/supervisor start
+sudo update-rc.d supervisor enable
 ```
 If that fails try this:
 ```shell

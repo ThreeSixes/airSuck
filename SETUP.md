@@ -99,18 +99,18 @@ Install gpsd and gpsd-clients and make sure they start by default.
 sudo apt-get install gpsd gpsd-clients
 ```
 
-Plug in your GPS device if it's USB you can use this command to find it's device name which is necessary for the next step.
+Plug in your GPS device. If it's USB you can use this command to find it's device name which is necessary for the next step.
 ```shell
 dmesg
 ```
 Look for something that looks like ttyUSB. That path is the GPS's USB device. Mine is /dev/ttyUSB0.
 
-Make sure gpsd is configured properly. Make sure you enable gpsd on boot, and for the device use the info gathered in the last step.
+Make sure gpsd is configured properly. GPSD should be started on boot, and for the device use the info gathered in the last step.
 ```shell
 sudo dpkg-reconfigure gpsd
 ```
 
-Start GPSD and make sure it starts on boot.
+Start GPSD.
 ```shell
 sudo /etc/init.d/gpsd start
 ```

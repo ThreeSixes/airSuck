@@ -53,31 +53,74 @@ class airSuckUtil:
     
     def bearing2Cardinal(self, bearing):
         """
-        Get cardinal directionality from a given bearing. Returns a string indicating the cardinal direction.
+        Return the cardinal direction on a 16-point scale given bearing as an int or float.
         """
         
+        # Create default return value.
         retVal = ""
         
-        # Create 45 degree sectors starting at 0 to 22.5 degress, ending at 337.5 to 359 degrees.
-        if (bearing >= 0) and (bearing <= 22.5):
-            retVal = "N"
-        elif (bearing > 22.5) and (bearing <=  67.5):
-            retVal = "NE"
-        elif (bearing > 67.5) and (bearing <=  112.5):
-            retVal = "E"
-        elif (bearing > 112.5) and (bearing <=  157.5):
-            retVal = "SE"
-        elif (bearing > 157.5) and (bearing <=  202.5):
-            retVal = "S"
-        elif (bearing > 202.5) and (bearing <=  247.5):
-            retVal = "SW"
-        elif (bearing > 247.5) and (bearing <=  292.5):
-            retVal = "W"
-        elif (bearing > 292.5) and (bearing <=  337.5):
-            retVal = "NW"
-        elif (bearing > 337.5) and (bearing <  360):
+        try:
+            # Figure out which slice of our 16-piece pie the bearing is in.
+            direction = round(bearing / (360/16))
+        
+        except:
+            # If something went wrong just set direction to some insane value.
+            direction = 500
+          
+        # Now figure out the direction inside each pie slice.
+        if (direction == 0) or (direction == 16):
             retVal = "N"
         
+        elif direction == 1:
+            retVal = "NNE"
+        
+        elif direction == 2:
+            retVal = "NE"
+        
+        elif direction == 3:
+            retVal = "ENE"
+        
+        elif direction == 4:
+            retVal = "E"
+        
+        elif direction == 5:
+            retVal = "ESE"
+        
+        elif direction == 6:
+            retVal = "SE"
+            
+        elif direction == 7:
+            retVal = "SSE"
+            
+        elif direction == 8:
+            retVal = "S"
+            
+        elif direction == 9:
+            retVal = "SSW"
+            
+        elif direction == 10:
+            retVal = "SW"
+            
+        elif direction == 11:
+            retVal = "WSW"
+            
+        elif direction == 12:
+            retVal = "W"
+            
+        elif direction == 13:
+            retVal = "WNW"
+            
+        elif direction == 14:
+            retVal = "NW"
+        
+        elif direction == 15:
+            retVal = "NNW"
+        
+        # If we have garbage data throw an error.
+        if retVal == "":
+            raise RuntimeError("Unable to get cardinal direction from %s." %bearing)
+        
+        # Assuming we didn't explode return the cardinal direciton
         return retVal
     
     def coords2Bearing(self, coordsA, coordsB):

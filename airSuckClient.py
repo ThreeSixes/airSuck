@@ -35,6 +35,7 @@ import traceback
 import Queue
 import atexit
 import signal
+import sys
 from libAirSuck import asLog
 from subprocess import Popen, PIPE, STDOUT
 from pprint import pprint
@@ -93,6 +94,13 @@ class airSuckClient():
         
         # Global dump1090 process holder.
         self.__proc1090 = None
+        
+        # GPSD stuff...
+        # Do we have an initial position?
+        self.__gpsdData = False
+        
+        # Is there anything prohibiting the start of the GPS worker?
+        self.__startGpsWorker = asConfig['gps']
     
     def __clientWatchdog(self):
         """
@@ -303,6 +311,70 @@ class airSuckClient():
                         tb = traceback.format_exc()
                         logger.log("Exception in airSuck client rxWatcher:\n%s" %tb)
     
+    def __gpsWorker(self):
+        """
+        This monitors GPSD for new data and updates our class-wide GPS vars.
+        """
+        
+        logger.log("Starting GPS worker...")
+        
+        # We shouldn't start another GPS worker unless we have an exception.
+        self.__startGpsWorker = False
+        
+        # If loading GPS worked...
+        canHasGps = False
+        
+        try:
+            # If we have a gps set it up.
+            if asConfig['gps']:
+                self.__gps = gps(mode=WATCH_ENABLE)
+                # We're up!
+                canHasGps = True
+            
+            try:
+                # Keep doing the things.
+                while(canHasGps):
+                    # Get the "next" data...
+                    self.__gps.next()
+                    
+                    # Set our flag to let the system know we have an initial reading.
+                    self.__gpsdData = True
+            
+            # If we have an keyboard interrupt or system exit pass it on.
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
+            
+            except SystemExit:
+                raise SystemExit
+            
+            except:
+                # Whatever else happens we want to log.
+                tb = traceback.format_exc()
+                logger.log("GPS worker blew up:\n%s" %tb)
+                
+                # Dump message and wait 30 sec before clearing the fail flag.
+                logger.log("GPS worker sleeping 30 sec.")
+                time.sleep(30.0)
+                
+                # Now we want to try and start again.
+                self.__startGpsWorker = True
+            
+        except:
+            # Flag the gpsWorker thread as down.
+            self.__gpsWorkerRunning = False
+            self.__gpsWorkerFail = True
+            
+            # Whatever else happens we want to log.
+            tb = traceback.format_exc()
+            logger.log("GPS worker blew up trying to activte the GPS:\n%s" %tb)
+            
+            # Dump message and wait 30 sec before clearing the fail flag.
+            logger.log("GPS worker sleeping 30 sec.")
+            time.sleep(30.0)
+            
+            # Now we want to try and start again.
+            self.__startGpsWorker = True
+    
     def __handleBackoffSrv(self, reset=False):
         """
         Handle the backoff algorithm for reconnect delay. Accepts one optional argument, reset which is a boolean value. When reset is true, the backoff value is set back to 1. Returns no data.
@@ -352,19 +424,35 @@ class airSuckClient():
         # Create basic JSON dictionary.
         retVal = {"clientName": asConfig['myName'], "dataOrigin": "airSuckClient", "dts": dtsStr}
         
-        # Handle GPS and related config data here.
-        if asConfig['reportPos']:
+        # If we have gps support enabled...
+        if asConfig['gps']:
             try:
-                # Extract the position from our configuration. We will later add support for GPSD here.
-                clientLat = float(asConfig['myPos'][0])
-                clientLon = float(asConfig['myPos'][1])
-                clientPosMeta = asConfig['myPos'][2]
+                # And if we have an initial reading plus a fix...
+                if self.__gpsdData and (self.__gps.fix.mode > 1):
+                    # Update dictionary with GPS-related data.
+                    retVal.update({"srcLat": self.__gps.fix.latitude, "srcLon": self.__gps.fix.longitude, "srcPosMeta": "gps"})
+                
+                elif asConfig['reportPos']:
+                    try:
+                        # Update dictionary with GPS-related data.
+                        retVal.update({"srcLat": float(asConfig['myPos'][0]), "srcLon": float(asConfig['myPos'][1]), "srcPosMeta": "manual"})
+                    
+                    except:
+                        logger.log("Improperly formatted position data from config.py.")
             
             except:
-                logger.log("Improperly formatted position data from config.py.")
-            
-            # Update dictionary with GPS-related data.
-            retVal.update({"srcLat": clientLat, "srcLon": clientLon, "srcPosMeta": clientPosMeta})
+                tb = traceback.format_exc()
+                logger.log("Failed to get GPS position data:%s" %tb)
+        
+        else:
+            # Handle GPS and related config data here.
+            if asConfig['reportPos']:
+                try:
+                    # Update dictionary with GPS-related data.
+                    retVal.update({"srcLat": float(asConfig['myPos'][0]), "srcLon": float(asConfig['myPos'][1]), "srcPosMeta": "manual"})
+                
+                except:
+                    logger.log("Improperly formatted position data from config.py.")
         
         return retVal
 
@@ -693,6 +781,25 @@ class airSuckClient():
         
         # Keep running and restarting dump1090 unless the program is killed.
         while keepRunning:
+            # If we have GPS enabled and there's no reason we shouldn't start it.
+            if asConfig['gps'] and self.__startGpsWorker:
+                try:
+                    # Start the GPS worker thread.
+                    gpsWorker = threading.Thread(target=self.__gpsWorker)
+                    gpsWorker.daemon = True
+                    gpsWorker.start()
+                
+                except KeyboardInterrupt:
+                    # Pass it on...
+                    raise KeyboardInterrupt
+                
+                except SystemExit:
+                    # Pass it up.
+                    raise SystemExit
+                
+                except:
+                    tb = traceback.format_exc()
+                    logger.log("airSuck client worker blew up starting the GPS worker:\n%s" %tb)
             
             try:
                 # If we're supposed to keep running and the server is connected.
@@ -883,14 +990,12 @@ class airSuckClient():
                 # Raise the exception again.
                 raise SystemExit
     
-    def __exitHandler(self, thisSig, thisFrame):
+    def __exitHandler(self, x=None, y=None):
         """
         When we're instructed to exit these are the things we should do.
         """
-        if asConfig['debug']:
-            logger.log("Caught signal %s. Triggering massive amounts of die." %thisSig)
-        else:
-            logger.log("Caught signal that wants us to die.")
+        
+        logger.log("Caught signal that wants us to die.")
         
         try:
             # Try to kill dump1090.
@@ -909,15 +1014,9 @@ class airSuckClient():
         # Since dump1090 has a bad habit of not dying unless we implement signal
         # handlers for signals that result in the death of the client.
         
-        # Which signals should we die from?
-        reasonsToDie = [signal.SIGTERM, signal.SIGKILL, signal.SIGHUP]
-        
         try:
-            # Let's handle signals that should kill us. :)
-            for aReason in reasonsToDie:
-                # Set up a signal handler for all the fun ways we can be killed...
-                signal.signal(aReason, self.__exitHandler)
-        
+            signal.signal(signal.SIGTERM, self.__exitHandler)
+           
         except:
             tb = traceback.format_exc()
             logger.log("Death signal handler blew up setting signal handlers:\n%s" %tb)

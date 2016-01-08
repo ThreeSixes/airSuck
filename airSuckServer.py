@@ -71,7 +71,7 @@ class airSuckServer():
 			"data": {'mandatory': True, 'type': str}, # Mandatory string containing the data.
 			"clientLat": {'mandatory': False, 'type': float, 'constraints': latConstraint}, # Optoinal float containing the client's latitude.
 			"clientLon": {'mandatory': False, 'type': float, 'constraints': lonConstraint}, # Optional float containing the client's longitude.
-			"clientPosMeta": {'mandatory': False, 'type': str, 'possVals': ['manual']} # Optional string containg metadata about the client's posistion data.
+			"clientPosMeta": {'mandatory': False, 'type': str, 'possVals': ['manual', 'gps']} # Optional string containg metadata about the client's posistion data.
 		}
 	
 	# Send a "ping" to connected hosts.

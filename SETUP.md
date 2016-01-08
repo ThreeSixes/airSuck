@@ -120,7 +120,9 @@ Activate GPS support in config.py by changing 'gps' from False to True.
 'gps': True,
 ```
 
-If you want multilateration support and have a GPS with PPS output you can add the following lines to /etc/ntp.conf by editing it:
+If you want multilateration support and have a GPS with PPS output you can execute these last few steps:
+
+Add the following lines to /etc/ntp.conf by editing it:
 ```text
 # Serial GPS data from GPSD
 server 127.127.28.0
@@ -131,9 +133,14 @@ server 127.127.28.1 prefer
 fudge 127.127.28.1 refid PPS
 ```
 
-Now restart NTPD:
+Restart NTPD:
 ```shell
 sudo /etc/init.d/ntp restart
+```
+
+Add the --mlat switch to 'dump1090Args' under the airSuckClient section of config.py. It should now look something like this:
+```text
+'dump1090Args': "--aggressive --gain 40 --raw --mlat",
 ```
 
 ###We can now edit node/nodeConfig.js. Only one variable needs to be modified:

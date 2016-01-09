@@ -8,7 +8,7 @@ This installation is for a single system only. You can easily configure AirSuck 
 
 ###Install MalcolmRobb's dump1090 fork. You'll also need to install a couple dependencies first.
 ```shell
-sudo apt-get install librtlsdr-dev librtlsdr0 libusb-dev
+sudo apt-get install librtlsdr-dev librtlsdr0 libusb-dev libusb-1.0-0-dev
 git clone https://github.com/MalcolmRobb/dump1090.git
 cd dump1090
 make

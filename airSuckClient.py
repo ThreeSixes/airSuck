@@ -131,6 +131,14 @@ class airSuckClient():
                 # Disconnect.
                 self.__disconnectSouce()
             
+            except KeyboardInterrupt:
+                # Pass the keyboard interrupt exception up the stack.
+                raise KeyboardInterrupt
+            
+            except SystemExit:
+                # pass the system exit exception up the stack.
+                raise SystemExit
+            
             except:
                 tb = traceback.format_exc()
                 logger.log("airSuck client watchdog threw exception:\n%s" %tb)
@@ -194,6 +202,14 @@ class airSuckClient():
                         # Kill dump1090
                         self.__proc1090.kill()
                     
+                    except KeyboardInterrupt:
+                        # Pass the keyboard interrupt exception up the stack.
+                        raise KeyboardInterrupt
+                    
+                    except SystemExit:
+                        # pass the system exit exception up the stack.
+                        raise SystemExit
+                    
                     except:
                         # Do nothing in the event it fails.
                         pass
@@ -221,6 +237,14 @@ class airSuckClient():
                     # Flag dump1090 as down.
                     self.__dump1090Running = False
                     self.__proc1090 = None
+            
+            except KeyboardInterrupt:
+                # Pass the keyboard interrupt exception up the stack.
+                raise KeyboardInterrupt
+            
+            except SystemExit:
+                # pass the system exit exception up the stack.
+                raise SystemExit
             
             except:
                 tb = traceback.format_exc()

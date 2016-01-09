@@ -594,15 +594,19 @@ class airSuckClient():
                 # Get our STDERR output minus the newline char.
                 output = self.__proc1090.stderr.readline().replace("\n", "")
                 
-                # If there's something on the line print it.
-                if output.strip() != "":
-                    logger.log("dump1090 stderr: %s" %output)
+                # If we're debugging...
+                if asConfig['debug']:
+                    # If there's something on the line print it.
+                    if output.strip() != "":
+                        logger.log("dump1090 stderr: %s" %output)
             
             # See if there's any data that wasn't picked up by our loop and print it, too.
             output = self.__proc1090.communicate()[1].replace("\n", "")
             
-            if output.strip() != "":
-                logger.log("dump1090 stderr: %s" %output)
+            # If we're debugging...
+            if asConfig['debug']:
+                if output.strip() != "":
+                    logger.log("dump1090 stderr: %s" %output)
             
         except KeyboardInterrupt:
             raise KeyboardInterrupt

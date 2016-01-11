@@ -109,7 +109,7 @@ Aircraft.prototype.createTableEntry = function() {
       <td>'+((this.category==null) ? '--' : this.category)+'</td>\
       <td>' +((this.icaoAACC==null) ? '--' : this.icaoAACC)+ '</td>\
       <td>'+((this.alt==null) ? '--' : this.alt + ' ft')+'</td>\
-      <td>'+((this.velo==null) ? '--' : this.velo + ' mph')+'</td>\
+      <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
       <td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td>\
       <td>'+((hasPos) ? '*' : '--')+'</td>\
     </tr>\

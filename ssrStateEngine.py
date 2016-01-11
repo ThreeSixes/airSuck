@@ -357,7 +357,7 @@ class SubListener(threading.Thread):
                             if ssrWrapped['df'] in (0, 4, 5, 20, 21):
                                 # XOR the computed and frame CRC values to get a potential ICAO AA
                                 potAA = self.crcInt2Hex(ssrWrapped['frameCrc'] ^ ssrWrapped['cmpCrc'])
-                                                                
+                                
                                 # See if we're aware of the potential valid AA.
                                 data.update(self.pullState(potAA))
                                 

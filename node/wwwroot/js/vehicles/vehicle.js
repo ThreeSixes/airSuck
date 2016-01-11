@@ -59,18 +59,28 @@ function vehicleMarkerRightClickListener(vehName) {
 
 function vehicleMarkerClickListener(vehName) {
   // Listener called from messages.js for access to vehicles array
-  // If our infoWindow is being shown...
+  
+  // Info window functions, check if open and toggle
   if (vehicles[vehName].info.shown) {
     // Close it.
     vehicles[vehName].info.close();
     vehicles[vehName].info.setContent("");
     vehicles[vehName].info.shown = false;
+    // Hide the sidebar details
+    $('#'+vehicles[vehName].addr+'-row-detail').toggle();
   } else {
     // Set data in case we don't have it, open it, and flag it as open.
     vehicles[vehName].info.setContent(vehicles[vehName].setInfoWindow());
     vehicles[vehName].info.open(map, vehicles[vehName].marker);
     vehicles[vehName].info.shown = true;
+    // Show the sidebar details
+    $('#'+vehicles[vehName].addr+'-row-detail').toggle();
   }
+}
+
+function vehicleTableRowClickListener(vehName) {
+    console.log('Changing marker for: '+vehName);
+    vehicles[vehName].setMarkerSelected();
 }
 
 /***************************************************
@@ -126,8 +136,9 @@ class Vehicle {
     this.dirIcoScale = 0.15; // Scale of the path.
     this.ndIcoPath = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"; // Path we want to sue for ADS-B targets we don't have direction data for.
     this.ndIcoSacle = 0.24; // Scale of the path.
-    this.vehColorActive = "#ff0000"; // Color of active aircraft icons (hex)
-    this.vehColorInactive = "#660000"; // Color of nonresponsive aircraft icons (hex)
+    this.vehColorActive = "#ff0000"; // Color of active vehicle icons (hex)
+    this.vehColorInactive = "#660000"; // Color of nonresponsive vehicle icons (hex)
+    this.vehColorSelected = "#ff9900"; // Color of the vehicle icon when selected
     this.marker = null; // Placeholder for the google maps marker
     this.info = null; // Placeholder for the google maps info window
     // gMap polygon path object
@@ -201,6 +212,47 @@ Vehicle.prototype.setMarker = function() {
   
   // Can't set the listeners here, scoping doesn't allow
   // access to the vehicles array.
+}
+
+/***************************************************
+ * FUNCTION CREATES VEHICLE ICONS FOR GMAPS
+ * SPECIFICALLY ENLARGES THE ICON WHEN SELECTED
+ **************************************************/
+Vehicle.prototype.setIconSelected = function() {
+  let newIcon;
+  // If we have heading data for the vehicle
+  if (this.heading != 'undefined') {
+    // Create our icon for a vehicle with heading data.
+    newIcon = new google.maps.Marker({
+      path: this.dirIcoPath,
+      scale: (this.dirIcoScale)*2,
+      strokeWeight: 1.5,
+      strokeColor: this.vehColorSelected,
+      rotation: this.heading
+    });
+  } else {
+    // Create our icon for a vehicle without heading data.
+    newIcon = new google.maps.Marker({
+      path: this.ndIcoPath,
+      scale: (this.ndIcoScale)*2,
+      strokeWeight: 1.5,
+      strokeColor: this.vehColorSelected
+    });
+  }
+  // And return it.
+  return newIcon;
+};
+Vehicle.prototype.setMarkerSelected = function() {
+  // Create our marker.
+  this.marker = new google.maps.Marker({
+    position: new google.maps.LatLng(this.lat, this.lon),
+    icon: this.setIconSelected(),
+    map: map,
+    vehName: this.addr
+  });
+  
+  // Create our info window
+  this.setInfoWindow();
 }
 
 /***************************************************

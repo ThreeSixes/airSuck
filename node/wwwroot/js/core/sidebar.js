@@ -35,6 +35,10 @@ function setupSidebar(){
         for (index=0;index<length;++index) {
             if (debug) {console.log('Adding vehicle icon to sidebar header: ' + vehicleTypes[index].protocol);}
             $('#sidebar-header').append('<i id="button-list-' + vehicleTypes[index].domName + '" class="fa ' + vehicleTypes[index].faIcon + ' sidebar-button"></i>');
+            // set the first icon to active
+            if (index==0) {
+                $('#button-list-'+vehicleTypes[index].domName).addClass('active');
+            }
         }
         // SEARCH - TO DO
         //$('#sidebar-header').append('<i id="button-search" class="fa fa-search sidebar-button"></i>');
@@ -49,7 +53,7 @@ function setupSidebar(){
             // set a table header
             $('#container-list-' + vehicleTypes[index].domName).append('<h1>Vehicles broadcasting over '+vehicleTypes[index].protocol+'</h1>');
             // setup the vehicle table
-            $('#container-list-' + vehicleTypes[index].domName).append('<table id="table-'+vehicleTypes[index].domName+'" class="vehicleTable">');
+            $('#container-list-' + vehicleTypes[index].domName).append('<table id="table-'+vehicleTypes[index].domName+'" class="vehicle-table">');
             vehicleTypes[index].buildTable('#table-'+vehicleTypes[index].domName);
             $('#container-list-' + vehicleTypes[index].domName).append('</table>');
             // hide the container
@@ -64,9 +68,13 @@ function setupSidebar(){
                 // some ninja to get the type since this doesn't have access to the domName attribute when called
                 let domName = this.id.substring(12,this.id.length);
                 $('#container-list-' + domName).show();
+                // deactivate other sidebar buttons
+                $('.sidebar-button').removeClass('active');
+                // activate this button
+                $(this).addClass('active');
             });
         }
-        // TO DO setup the search container
+        // SEARCH - TO DO setup the search container
         /*
         $('#sidebar-body').append('<div id="container-search" class="sidebar-container"></div>');
         $('#container-search').hide();

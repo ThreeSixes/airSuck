@@ -62,8 +62,61 @@ Ship.prototype.parseName = function() {
 Ship.prototype.createTableEntry = function() {
   if (debug) {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
+  let colLength = $('#table-' + this.domName).find('th').length;//number of columns to span for the detail row
+  //console.log('AIS table columns determined for: '+this.addr+' as this many columns: '+colLength);
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#table-'+this.domName).children('tbody').append('<tr id="'+this.addr+'"><td>'+((this.name==null) ? '--' : this.name)+'</td><td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td><td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td><td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td><td>'+((this.destination==null) ? '--' : this.destination)+'</td><td>'+((hasPos) ? '*' : '--')+'</td></tr>');
+  $('#table-'+this.domName).children('tbody').append('\
+    <tr id="'+this.addr+'-row-summary" class="vehicle-table-entry">\
+      <td>'+((this.name==null) ? '--' : this.name)+'</td>\
+      <td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td>\
+      <td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td>\
+      <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
+      <td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td>\
+      <td>'+((this.destination==null) ? '--' : this.destination)+'</td>\
+      <td>'+((hasPos) ? '*' : '--')+'</td>\
+    </tr>\
+    <tr id="'+this.addr+'-row-detail" class="vehicle-table-detail">\
+      <td colspan="'+colLength+'">\
+        <table class="infoTable"><tbody>\
+          <tr>\
+            <td class="tblHeader">Velocity</td>\
+            <td class="tblCell">' +((this.velo==null) ? '--' : this.velo+' kt')+'</td>\
+            <td class="tblHeader">Flag</td>\
+            <td class="tblCell">' +((this.mmsiCC==null) ? '--' : this.mmsiCC)+ '</td>\
+          </tr>\
+          <tr>\
+            <td class="tblHeader">COG / Hdg</td>\
+            <td class="tblCell">' +((this.courseOverGnd==null) ? '--' : this.courseOverGnd)+ ' / ' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
+            <td class="tblHeader">Pos. type</td>\
+            <td class="tblCell">' +((this.epfdMeta==null) ? '--' : this.epfdMeta)+ '</td>\
+          </tr>\
+          <tr>\
+            <td class="tblHeader">Callsign</td>\
+            <td class="tblCell">' +((this.callsign==null) ? '--' : this.callsign)+ '</td>\
+            <td class="tblHeader">Draught</td>\
+            <td class="tblCell">' +((this.draught==null) ? '--' : ((this.draught>0) ? this.draught.toString()+' m' : '--'))+ '</td>\
+          </tr>\
+          <tr>\
+            <td class="tblHeader">Turn rate</td>\
+            <td class="tblCell">' + '--' + '</td>\
+            <td class="tblHeader">Dim.</td>\
+            <td class="tblCell">' +((this.dimToBow>0 && this.dimToStern >0 && this.dimToPort >0 && this.dimToStarboard >0) ? (this.dimToBow+this.dimToStern)+'x'+(this.dimToPort+this.dimToStarboard)+' m' : '--')+ '</td>\
+          </tr>\
+        </tbody></table>\
+      </td>\
+    </tr>');
+    
+  // set the row click function to display the row detail and highlight the ship
+  $('#'+this.addr+'-row-summary').click(function(){
+      if ($(this).next().css('display')=='none') {
+        $(this).next().css('display','table-row');
+      } else {
+        $(this).next().css('display','none');
+      }
+      // swap the visibility
+      //$(this).next().toggle();
+    });
+  
 };
 
 /***************************************************
@@ -73,7 +126,14 @@ Ship.prototype.updateTableEntry = function() {
   if (debug) {console.log('Updating table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
-  $('#'+this.addr).html('<td>'+this.name+'</td><td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td><td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td><td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td><td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td><td>'+((this.destination==null) ? '--' : this.destination)+'</td><td>'+((hasPos) ? '*' : '--')+'</td>');
+  $('#'+this.addr+'-row-summary').html('\
+    <td>'+this.name+'</td>\
+    <td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td>\
+    <td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td>\
+    <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
+    <td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td>\
+    <td>'+((this.destination==null) ? '--' : this.destination)+'</td>\
+    <td>'+((hasPos) ? '*' : '--')+'</td>');
 };
 
 /***************************************************

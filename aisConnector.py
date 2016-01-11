@@ -404,7 +404,7 @@ if __name__ == "__main__":
 		# Spin up our client threads.
 		for thisName, connData in config.aisConnSettings['connClientList'].iteritems():
 			logger.log("Spinning up thread for %s" %thisName)
-			client = dataSource(config.aisConnSettings['myName'], cofnig.thisName, connData, enqueueOn)
+			client = dataSource(thisName, config.aisConnSettings['myName'], connData, enqueueOn)
 			client.daemon = True
 			client.start()
 			threadList.append(client)

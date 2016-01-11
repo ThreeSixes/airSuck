@@ -43,31 +43,6 @@ html, body {
   height: 100%;
 }
 
-.infoTable {
-  border: 0px;
-}
-
-.vehInfoHeader {
-  text-align: center;
-  font-weight: bold;
-}
-
-.tblHeader {
-  font-weight: bold;
-  border: 0px;
-}
-
-.tblCell {
-  border: 0px;
-}
-
-.tblEmerg {
-  font-weight: bold;
-  border: 0px;
-  background-color: #ffff00;
-  color: #ff0000;
-}
-
 #mapStyleBox {
   text-align: left;
   font-family: Roboto, Arial, sans-serif;

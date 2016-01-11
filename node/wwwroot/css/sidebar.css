@@ -63,19 +63,71 @@
     cursor:pointer;
 }
 
-#button-vehicle-info, #button-vehicle-list, #button-search {}
+.sidebar-button.active, .sidebar-button:hover {
+    color:#ff9900;
+}
 
 /* Sub-containers within #sidebar-body */
 
 .sidebar-container {}
 
-#container-list-AIS, #container-list-SSR, #container-search {}
 
 /* Vehicle List Container */
 
 .vehicle-table {
     width:100%;
+    max-height:300px;
+    overflow:auto;
+    border-collapse:collapse;
 }
 
-.vehicle-table-entry {}
+.vehicle-table tbody {
+}
 
+.vehicle-table th {
+    height:30px;
+}
+
+.vehicle-table td {
+    padding:5px;
+}
+
+.vehicle-table-entry {
+    border-top:1px solid #e6e6e6;
+}
+
+.vehicle-table-entry:hover {background-color: #f2f2f2}
+
+.vehicle-table-detail {
+    display:none;
+}
+
+/* MISC */
+.hide {display:none;}
+
+
+/* Imported from original gMaps info window table */
+.infoTable {
+  border: 0px;
+}
+
+.vehInfoHeader {
+  text-align: center;
+  font-weight: bold;
+}
+
+.tblHeader {
+  font-weight: bold;
+  border: 0px;
+}
+
+.tblCell {
+  border: 0px;
+}
+
+.tblEmerg {
+  font-weight: bold;
+  border: 0px;
+  background-color: #ffff00;
+  color: #ff0000;
+}

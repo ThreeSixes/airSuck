@@ -13,7 +13,7 @@
 
 // Register vehicle type
 if(debug){console.log('Registering vehicle type: AIS');}
-registerVehicleType('airAIS','AIS','fa-ship',function(msgJSON) {return new Ship(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Type</th><th>Flag</th><th>Velocity</th><th>Course</th><th>Destination</th><th>Pos</th></tr>');});
+registerVehicleType('airAIS','AIS','fa-ship',function(msgJSON) {return new Ship(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Flag</th><th>Velocity</th><th>Course</th><th>Destination</th><th>Pos</th></tr>');});
 
 /***************************************************
  * AIS OBJECT DECLARATION
@@ -68,7 +68,6 @@ Ship.prototype.createTableEntry = function() {
   $('#table-'+this.domName).children('tbody').append('\
     <tr id="'+this.addr+'-row-summary" class="vehicle-table-entry">\
       <td>'+((this.name==null) ? '--' : this.name)+'</td>\
-      <td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td>\
       <td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td>\
       <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
       <td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td>\
@@ -102,6 +101,16 @@ Ship.prototype.createTableEntry = function() {
             <td class="tblHeader">Dim.</td>\
             <td class="tblCell">' +((this.dimToBow>0 && this.dimToStern >0 && this.dimToPort >0 && this.dimToStarboard >0) ? (this.dimToBow+this.dimToStern)+'x'+(this.dimToPort+this.dimToStarboard)+' m' : '--')+ '</td>\
           </tr>\
+          <tr>\
+            <td class="tblHeader">Type</td>\
+            <td class="tblCell">' + ((this.mmsiType==null) ? '--' : this.mmsiType) + '</td>\
+            <td class="tblHeader"></td>\
+            <td class="tblCell"></td>\
+          </tr>\
+          <tr>\
+            <td class="tblHeader">Nav. Stat.</td>\
+            <td class="tblCell" colspan=3>' + ((this.navStatMeta==null) ? '--' : this.navStatMeta + ' (' + this.navStat + ')') + '</td>\
+          </tr>\
         </tbody></table>\
       </td>\
     </tr>');
@@ -128,7 +137,6 @@ Ship.prototype.updateTableEntry = function() {
   if (this.lat) {hasPos=true;}else{hasPos=false;}
   $('#'+this.addr+'-row-summary').html('\
     <td>'+this.name+'</td>\
-    <td>'+((this.shipType == null) ? '--' : ((this.shipType == 0) ? '--' : this.shipType))+'</td>\
     <td>'+((this.mmsiCC==null) ? '--' : this.mmsiCC)+'</td>\
     <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
     <td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td>\

@@ -94,6 +94,15 @@ Aircraft.prototype.createTableEntry = function() {
   let hasPos;
   let colLength = $('#table-' + this.domName).find('th').length;//number of columns to span for the detail row
   if (this.lat) {hasPos=true;}else{hasPos=false;}
+  
+  // Handle mode A stuff out-of-band.
+  if (this.aSquawkMeta != null) {
+    var aSquawkMetaStr = '<tr>\
+          <td class="tblHeader">Squawk meta</td>\
+          <td class="tblCell" colspan=3>'+this.aSquawkMeta+'</td>\
+        </tr>';
+  }
+  
   $('#table-'+this.domName).children('tbody').append('\
     <tr id="'+this.addr+'-row-summary" class="vehicle-table-entry">\
       <td>'+this.name+'</td>\
@@ -107,37 +116,40 @@ Aircraft.prototype.createTableEntry = function() {
     <tr id="'+this.addr+'-row-detail" class="vehicle-table-detail">\
       <td colspan="'+colLength+'">\
         <table class="infoTable"><tbody>\
-          <tr>\
-            <td class="tblHeader">Category</td>\
-            <td class="tblCell">' +((this.category==null) ? '--' : this.category)+ '</td>\
-            <td class="tblHeader">Flight status</td>\
-            <td class="tblCell">' +((this.fs==null) ? '--' : this.fs)+ '</td>\
-          </tr>\
-          <tr>\
-            <td class="tblHeader">Velocity</td>\
-            <td class="tblCell">' +((this.velo==null) ? '--' : this.velo+' kt')+ '</td>\
-            <td class="tblHeader">Heading</td>\
-            <td class="tblCell">' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
-          </tr>\
-          <tr>\
-            <td class="tblHeader">Altitude</td>\
-            <td class="tblCell">' +((this.alt==null) ? '--' : this.alt+' ft')+ '</td>\
-            <td class="tblHeader">Climb rate</td>\
-            <td class="tblCell">' +((this.vertRate==null) ? '--' : (this.vertRate>0) ? '+'+this.vertRate+' ft/min' : this.vertRate+' ft/min')+ '</td>\
-          </tr>\
-          <tr>\
-            <td class="tblHeader">Position</td>\
-            <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(7) + ', ' + this.lon.toFixed(7))+ '</td>\
-          </tr>\
-          <tr>\
-            <td class="tblHeader">Air/Gnd</td>\
-            <td class="tblCell">' +((this.vertStat==null) ? '--' : this.vertStat)+ '</td>\
-            <td class="tblHeader">Supersonic</td>\
-            <td class="tblCell">' +((this.supersonic==null) ? '--' : ((this.supersonic==1) ? 'Yes' : 'No'))+ '</td>\
-          </tr>\
+           <tr>\
+        <td class="tblHeader">Air/Gnd</td>\
+        <td class="tblCell">' +((this.vertStat==null) ? '--' : this.vertStat)+ '</td>\
+        <td class="tblHeader">Flight status</td>\
+        <td class="tblCell">' +((this.fs==null) ? '--' : this.fs)+ '</td>\
+      </tr>\
+      <tr>\
+        <td class="tblHeader">Velocity</td>\
+        <td class="tblCell">' +((this.velo==null) ? '--' : this.velo+' kt')+ '</td>\
+        <td class="tblHeader">Heading</td>\
+        <td class="tblCell">' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
+      </tr>\
+      <tr>\
+        <td class="tblHeader">Altitude</td>\
+        <td class="tblCell">' +((this.alt==null) ? '--' : this.alt+' ft')+ '</td>\
+        <td class="tblHeader">Climb rate</td>\
+        <td class="tblCell">' +((this.vertRate==null) ? '--' : (this.vertRate>0) ? '+'+this.vertRate+' ft/min' : this.vertRate+' ft/min')+ '</td>\
+      </tr>\
+      <tr>\
+        <td class="tblHeader">Position</td>\
+        <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(7) + ', ' + this.lon.toFixed(7))+ '</td>\
+      </tr>\
+      <tr>\
+        <td class="tblHeader">Supersonic</td>\
+        <td class="tblCell">' +((typeof this.supersonic==="undefined") ? '--' : ((this.supersonic===true) ? 'Yes' : 'No'))+ '</td>\
+        <td class="tblHeader"></td>\
+        <td class="tblCell"></td>\
+      </tr>\
+      '+((aSquawkMetaStr==null) ? '' : aSquawkMetaStr)+'\
         </tbody></table>\
       </td>\
-    </tr>');
+    </tr>'
+  );
+  
 console.log("I am : "+this.supersonic);
   // set the row click function to display the row detail and highlight the plane
   $('#'+this.addr+'-row-summary').click(function(){
@@ -183,11 +195,20 @@ Aircraft.prototype.updateTableEntry = function() {
     <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
     <td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td>\
     <td>'+((hasPos) ? '*' : '--')+'</td>');
+  
+  // Handle mode A stuff out-of-band.
+  if (this.aSquawkMeta != null) {
+    var aSquawkMetaStr = '<tr>\
+          <td class="tblHeader">Squawk meta</td>\
+          <td class="tblCell" colspan=3>'+this.aSquawkMeta+'</td>\
+        </tr>';
+  }
+  
   // update the detail table
   $('#'+this.addr+'-row-detail').find('.infoTable').html('\
       <tr>\
-        <td class="tblHeader">Category</td>\
-        <td class="tblCell">' +((this.category==null) ? '--' : this.category)+ '</td>\
+        <td class="tblHeader">Air/Gnd</td>\
+        <td class="tblCell">' +((this.vertStat==null) ? '--' : this.vertStat)+ '</td>\
         <td class="tblHeader">Flight status</td>\
         <td class="tblCell">' +((this.fs==null) ? '--' : this.fs)+ '</td>\
       </tr>\
@@ -208,10 +229,9 @@ Aircraft.prototype.updateTableEntry = function() {
         <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(7) + ', ' + this.lon.toFixed(7))+ '</td>\
       </tr>\
       <tr>\
-        <td class="tblHeader">Air/Gnd</td>\
-        <td class="tblCell">' +((this.vertStat==null) ? '--' : this.vertStat)+ '</td>\
         <td class="tblHeader">Supersonic</td>\
-        <td class="tblCell">' +((this.supersonic==null||this.supersonic==false) ? '--' : this.supersonic)+ '</td>\
-      </tr>');
-  
+        <td class="tblCell">' +((this.supersonic==null) ? '--' : ((this.supersonic===true) ? 'Yes' : 'No'))+ '</td>\
+        <td class="tblHeader"></td>\
+        <td class="tblCell"></td>\
+      </tr>'+((aSquawkMetaStr==null) ? '' : aSquawkMetaStr));
 };

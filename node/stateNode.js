@@ -54,8 +54,63 @@ function log(eventText) {
 
 // Serve index.html if a browser asks for it.
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/wwwroot/index.html');
+  // Path to index.html.
+  var indexFile = __dirname + '/wwwroot/index.html';
+  
+  // Figure out the browser's UA...
+  var ua = req.headers['user-agent'];
+  $ = {};
+  var indexContents = "";
+  
+  // Make sure we're not using Firefox. FF requires different infomration for strict mode.
+  if (/firefox/i.test(ua)) {
+    // Replace script tags with someing FireFox can use.
+    // When Firefox's implementation of javascript strict mode matures and joins the rest of the world, we can get rid of this.
+    var fs = require('fs');
+    var indexContents = "";
+    
+    indexContents = String(fs.readFileSync(indexFile));
+    
+    var newContents = indexContents.replace(/type=\"text\/javascript\"/gi, 'type="text/javascript;version=1.7"');
+    
+    // Set content type and send.
+    res.set('Content-Type', 'text/html');
+    res.send(newContents);
+
+  } else {
+    // Send file as-is.
+    res.sendFile(indexFile);
+  }
 });
+/*
+// Serve index.html if a browser asks for it.
+app.get('/', function(req, res){
+  // Path to index.html.
+  var indexFile = __dirname + '/wwwroot/index.html';
+  
+  // Figure out the browser's UA...
+  var ua = req.headers['user-agent'],
+  $ = {};
+  
+  // Make sure we're not using Firefox. FF requires different infomration for strict mode.
+  if (/firefox/i.test(ua)) {
+    // Replace script tags with someing FireFox can use.
+    // When Firefox's implementation of javascript strict mode matures and joins the rest of the world, we can get rid of this.
+    var fs = require('fs')
+    var result = fs.readFile(__dirname + 'index.html');
+    result.replace(/ type="text\/javascript"/g, ' type="text/javascript;version=1.8"');
+    
+    // Set content type and send.
+    res.set('Content-Type', 'text/html');
+    res.send(result);
+
+  } else {
+    // Send file as-is.
+    res.sendFile(indexFile);
+  }
+});
+*/
+
 
 // Serve our wwwroot folder as the web root.
 app.use('/', express.static(__dirname + '/wwwroot'));

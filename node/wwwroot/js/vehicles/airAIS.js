@@ -113,7 +113,7 @@ Ship.prototype.createTableEntry = function() {
           </tr>\
           <tr>\
             <td class="tblHeader">Data src.</td>\
-            <td class="tblCell" colspan=3>' +this.lastSrc+ ' \\ ' +this.lastClientName+ '</td>\
+            <td class="tblCell" colspan=3>' +this.lastClientName+ ' -&gt; ' +this.lastSrc+ '</td>\
           </tr>\
         </tbody></table>\
       </td>\

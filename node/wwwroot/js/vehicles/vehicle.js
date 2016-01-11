@@ -327,7 +327,8 @@ Vehicle.prototype.destroy = function(){
   if(debug){console.log('Destroying vehicle: ' + this.parseName());}
   
   // Remove table entries
-  $('#'+this.addr).remove();
+  $('#'+this.addr+'-row-summary').remove();
+  $('#'+this.addr+'-row-detail').remove();
   
   // Default destructor processes
   if(this.info != null){this.info.close();}// close the gMap info window

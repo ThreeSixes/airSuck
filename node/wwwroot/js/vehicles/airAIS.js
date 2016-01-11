@@ -80,14 +80,14 @@ Ship.prototype.createTableEntry = function() {
           <tr>\
             <td class="tblHeader">Velocity</td>\
             <td class="tblCell">' +((this.velo==null) ? '--' : this.velo+' kt')+'</td>\
-            <td class="tblHeader">Flag</td>\
-            <td class="tblCell">' +((this.mmsiCC==null) ? '--' : this.mmsiCC)+ '</td>\
+            <td class="tblHeader">Type</td>\
+            <td class="tblCell">' + ((this.mmsiType==null) ? '--' : this.mmsiType) + '</td>\
           </tr>\
           <tr>\
             <td class="tblHeader">COG / Hdg</td>\
             <td class="tblCell">' +((this.courseOverGnd==null) ? '--' : this.courseOverGnd)+ ' / ' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
-            <td class="tblHeader">Pos. type</td>\
-            <td class="tblCell">' +((this.epfdMeta==null) ? '--' : this.epfdMeta)+ '</td>\
+            <td class="tblHeader">Turn rate</td>\
+            <td class="tblCell">' + '--' + '</td>\
           </tr>\
           <tr>\
             <td class="tblHeader">Callsign</td>\
@@ -96,16 +96,14 @@ Ship.prototype.createTableEntry = function() {
             <td class="tblCell">' +((this.draught==null) ? '--' : ((this.draught>0) ? this.draught.toString()+' m' : '--'))+ '</td>\
           </tr>\
           <tr>\
-            <td class="tblHeader">Turn rate</td>\
-            <td class="tblCell">' + '--' + '</td>\
+            <td class="tblHeader">Pos. type</td>\
+            <td class="tblCell">' +((this.epfdMeta==null) ? '--' : this.epfdMeta)+ '</td>\
             <td class="tblHeader">Dim.</td>\
             <td class="tblCell">' +((this.dimToBow>0 && this.dimToStern >0 && this.dimToPort >0 && this.dimToStarboard >0) ? (this.dimToPort+this.dimToStarboard)+ 'x' +(this.dimToBow+this.dimToStern)+' m' : '--')+ '</td>\
           </tr>\
           <tr>\
-            <td class="tblHeader">Type</td>\
-            <td class="tblCell">' + ((this.mmsiType==null) ? '--' : this.mmsiType) + '</td>\
-            <td class="tblHeader"></td>\
-            <td class="tblCell"></td>\
+            <td class="tblHeader">Position</td>\
+            <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(7) + ', ' + this.lon.toFixed(7))+ '</td>\
           </tr>\
           <tr>\
             <td class="tblHeader">Nav. Stat.</td>\

@@ -123,8 +123,8 @@ Aircraft.prototype.createTableEntry = function() {
         <td class="tblCell">' +((this.fs==null) ? '--' : this.fs)+ '</td>\
       </tr>\
       <tr>\
-        <td class="tblHeader">Velocity</td>\
-        <td class="tblCell">' +((this.velo==null) ? '--' : this.velo+' kt')+ '</td>\
+        <td class="tblHeader">Supersonic</td>\
+        <td class="tblCell">' +((typeof this.supersonic==="undefined") ? '--' : ((this.supersonic===true) ? 'Yes' : 'No'))+ '</td>\
         <td class="tblHeader">Heading</td>\
         <td class="tblCell">' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
       </tr>\
@@ -137,12 +137,6 @@ Aircraft.prototype.createTableEntry = function() {
       <tr>\
         <td class="tblHeader">Position</td>\
         <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(7) + ', ' + this.lon.toFixed(7))+ '</td>\
-      </tr>\
-      <tr>\
-        <td class="tblHeader">Supersonic</td>\
-        <td class="tblCell">' +((typeof this.supersonic==="undefined") ? '--' : ((this.supersonic===true) ? 'Yes' : 'No'))+ '</td>\
-        <td class="tblHeader"></td>\
-        <td class="tblCell"></td>\
       </tr>\
       <tr>\
         <td class="tblHeader">Data src.</td>\
@@ -216,8 +210,8 @@ Aircraft.prototype.updateTableEntry = function() {
         <td class="tblCell">' +((this.fs==null) ? '--' : this.fs)+ '</td>\
       </tr>\
       <tr>\
-        <td class="tblHeader">Velocity</td>\
-        <td class="tblCell">' +((this.velo==null) ? '--' : this.velo+' kt')+ '</td>\
+        <td class="tblHeader">Supersonic</td>\
+        <td class="tblCell">' +((typeof this.supersonic==="undefined") ? '--' : ((this.supersonic===true) ? 'Yes' : 'No'))+ '</td>\
         <td class="tblHeader">Heading</td>\
         <td class="tblCell">' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
       </tr>\
@@ -230,12 +224,6 @@ Aircraft.prototype.updateTableEntry = function() {
       <tr>\
         <td class="tblHeader">Position</td>\
         <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(7) + ', ' + this.lon.toFixed(7))+ '</td>\
-      </tr>\
-      <tr>\
-        <td class="tblHeader">Supersonic</td>\
-        <td class="tblCell">' +((this.supersonic==null) ? '--' : ((this.supersonic===true) ? 'Yes' : 'No'))+ '</td>\
-        <td class="tblHeader"></td>\
-        <td class="tblCell"></td>\
       </tr>\
       <tr>\
         <td class="tblHeader">Data src.</td>\

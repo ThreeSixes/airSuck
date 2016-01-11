@@ -103,7 +103,7 @@ Ship.prototype.createTableEntry = function() {
           </tr>\
           <tr>\
             <td class="tblHeader">Position</td>\
-            <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(7) + ', ' + this.lon.toFixed(7))+ '</td>\
+            <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(4) + ', ' + this.lon.toFixed(4))+ '</td>\
           </tr>\
           <tr>\
             <td class="tblHeader">Nav. Stat.</td>\

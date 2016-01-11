@@ -60,6 +60,7 @@ class SubListener(threading.Thread):
         self.__desiredData = {
             'dts': 'dts',
             'channel': 'lastChannel',
+            'clientName': 'lastClientName',
             'courseOverGnd': 'courseOverGnd',
             'dataOrigin': 'dataOrigin',
             'heading': 'heading',

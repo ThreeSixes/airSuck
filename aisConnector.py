@@ -47,7 +47,7 @@ alive = True
 ####################
 
 class dataSource(threading.Thread):
-	def __init__(self, myName, AISSrc, enqueue=True):
+	def __init__(self, myName, srcName, AISSrc, enqueue=True):
 		"""
 		Takes two required arguments and one optional: myName (client-identifying string), AISSrc (AISSrc source dictionary), optinally enqueue which should be True or False (by default it will enqueue data, otherwise will print it).
 		A generic class that represents a given AIS data source
@@ -61,6 +61,7 @@ class dataSource(threading.Thread):
 		
 		# Extend properties to be class-wide.
 		self.__myName = myName
+		self.__srcName = srcName
 		self.__AISSrc = AISSrc
 		self.__enqueue = enqueue
 		self.__watchdogFail = False
@@ -295,7 +296,7 @@ class dataSource(threading.Thread):
 				dtsStr = dtsStr + ".000000"
 			
 			# Set this entry up with some initial data.
-			thisEntry = {'entryPoint': 'aisConnector', 'dataOrigin': 'aisConn', 'type': 'airAIS', 'dts': dtsStr, 'src': self.__myName, 'data': thisLine, 'isFrag': False, 'isAssembled': False}
+			thisEntry = {'entryPoint': 'aisConnector', 'dataOrigin': 'aisConn', 'type': 'airAIS', 'dts': dtsStr, 'src': self.__srcName, 'clientName': self.__myName, 'data': thisLine, 'isFrag': False, 'isAssembled': False}
 			
 			# If we have position data for this source...
 			if 'srcPos' in self.__AISSrc:
@@ -403,7 +404,7 @@ if __name__ == "__main__":
 		# Spin up our client threads.
 		for thisName, connData in config.aisConnSettings['connClientList'].iteritems():
 			logger.log("Spinning up thread for %s" %thisName)
-			client = dataSource(thisName, connData, enqueueOn)
+			client = dataSource(config.aisConnSettings['myName'], cofnig.thisName, connData, enqueueOn)
 			client.daemon = True
 			client.start()
 			threadList.append(client)

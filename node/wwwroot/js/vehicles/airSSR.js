@@ -144,13 +144,16 @@ Aircraft.prototype.createTableEntry = function() {
         <td class="tblHeader"></td>\
         <td class="tblCell"></td>\
       </tr>\
+      <tr>\
+        <td class="tblHeader">Data src.</td>\
+        <td class="tblCell" colspan=3>' +this.lastSrc+ ' \\ ' +this.lastClientName+ '</td>\
+      </tr>\
       '+((aSquawkMetaStr==null) ? '' : aSquawkMetaStr)+'\
         </tbody></table>\
       </td>\
     </tr>'
   );
   
-console.log("I am : "+this.supersonic);
   // set the row click function to display the row detail and highlight the plane
   $('#'+this.addr+'-row-summary').click(function(){
     /* bugs known:
@@ -233,5 +236,9 @@ Aircraft.prototype.updateTableEntry = function() {
         <td class="tblCell">' +((this.supersonic==null) ? '--' : ((this.supersonic===true) ? 'Yes' : 'No'))+ '</td>\
         <td class="tblHeader"></td>\
         <td class="tblCell"></td>\
+      </tr>\
+      <tr>\
+        <td class="tblHeader">Data src.</td>\
+        <td class="tblCell" colspan=3>' +this.lastSrc+ ' \\ ' +this.lastClientName+ '</td>\
       </tr>'+((aSquawkMetaStr==null) ? '' : aSquawkMetaStr));
 };

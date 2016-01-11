@@ -111,6 +111,10 @@ Ship.prototype.createTableEntry = function() {
             <td class="tblHeader">Nav. Stat.</td>\
             <td class="tblCell" colspan=3>' + ((this.navStatMeta==null) ? '--' : this.navStatMeta) + '</td>\
           </tr>\
+          <tr>\
+            <td class="tblHeader">Data src.</td>\
+            <td class="tblCell" colspan=3>' +this.lastSrc+ ' \\ ' +this.lastClientName+ '</td>\
+          </tr>\
         </tbody></table>\
       </td>\
     </tr>\

@@ -99,7 +99,7 @@ Ship.prototype.createTableEntry = function() {
             <td class="tblHeader">Turn rate</td>\
             <td class="tblCell">' + '--' + '</td>\
             <td class="tblHeader">Dim.</td>\
-            <td class="tblCell">' +((this.dimToBow>0 && this.dimToStern >0 && this.dimToPort >0 && this.dimToStarboard >0) ? (this.dimToBow+this.dimToStern)+'x'+(this.dimToPort+this.dimToStarboard)+' m' : '--')+ '</td>\
+            <td class="tblCell">' +((this.dimToBow>0 && this.dimToStern >0 && this.dimToPort >0 && this.dimToStarboard >0) ? (this.dimToPort+this.dimToStarboard)+ 'x' +(this.dimToBow+this.dimToStern)+' m' : '--')+ '</td>\
           </tr>\
           <tr>\
             <td class="tblHeader">Type</td>\
@@ -109,12 +109,13 @@ Ship.prototype.createTableEntry = function() {
           </tr>\
           <tr>\
             <td class="tblHeader">Nav. Stat.</td>\
-            <td class="tblCell" colspan=3>' + ((this.navStatMeta==null) ? '--' : this.navStatMeta + ' (' + this.navStat + ')') + '</td>\
+            <td class="tblCell" colspan=3>' + ((this.navStatMeta==null) ? '--' : this.navStatMeta) + '</td>\
           </tr>\
         </tbody></table>\
       </td>\
-    </tr>');
-    
+    </tr>\
+  ');
+  
   // set the row click function to display the row detail and highlight the ship
   $('#'+this.addr+'-row-summary').click(function(){
       if ($(this).next().css('display')=='none') {

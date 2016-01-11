@@ -133,7 +133,7 @@ Aircraft.prototype.createTableEntry = function() {
             <td class="tblHeader">Air/Gnd</td>\
             <td class="tblCell">' +((this.vertStat==null) ? '--' : this.vertStat)+ '</td>\
             <td class="tblHeader">Supersonic</td>\
-            <td class="tblCell">' +((this.supersonic==null) ? '--' : ((this.supersonic) ? 'Yes' : 'No')+ '</td>\
+            <td class="tblCell">' +((this.supersonic==null) ? '--' : ((this.supersonic) ? 'Yes' : 'No'))+ '</td>\
           </tr>\
         </tbody></table>\
       </td>\

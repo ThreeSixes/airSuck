@@ -89,7 +89,7 @@ Ship.prototype.createTableEntry = function() {
       <td colspan="'+colLength+'">\
         <table class="infoTable"><tbody>\
           <tr>\
-            <td class="tblHeader">Type</td>\
+            <td class="tblHeader">MMSI Type</td>\
             <td class="tblCell">' + ((this.mmsiType==null) ? '--' : this.mmsiType) + '</td>\
             <td class="tblHeader">Dim.</td>\
             <td class="tblCell">' +((this.dimToBow>0 && this.dimToStern >0 && this.dimToPort >0 && this.dimToStarboard >0) ? (this.dimToPort+this.dimToStarboard)+ 'x' +(this.dimToBow+this.dimToStern)+' m' : '--')+ '</td>\
@@ -111,6 +111,10 @@ Ship.prototype.createTableEntry = function() {
             <td class="tblCell">' +((this.epfdMeta==null) ? '--' : this.epfdMeta)+ '</td>\
             <td class="tblHeader">ETA</td>\
             <td class="tblCell">' +((this.etaStr==null) ? '--' : this.etaStr)+ '</td>\
+          </tr>\
+          <tr>\
+            <td class="tblHeader">Ship type</td>\
+            <td class="tblCell" colspan=3>' + ((this.shipTypeMeta==null) ? '--' : this.shipTypeMeta) + '</td>\
           </tr>\
           <tr>\
             <td class="tblHeader">Position</td>\
@@ -172,14 +176,14 @@ Ship.prototype.updateTableEntry = function() {
     <td colspan="'+colLength+'">\
       <table class="infoTable"><tbody>\
         <tr>\
-          <td class="tblHeader">Type</td>\
+          <td class="tblHeader">MMSI Type</td>\
           <td class="tblCell">' + ((this.mmsiType==null) ? '--' : this.mmsiType) + '</td>\
           <td class="tblHeader">Dim.</td>\
           <td class="tblCell">' +((this.dimToBow>0 && this.dimToStern >0 && this.dimToPort >0 && this.dimToStarboard >0) ? (this.dimToPort+this.dimToStarboard)+ 'x' +(this.dimToBow+this.dimToStern)+' m' : '--')+ '</td>\
         </tr>\
         <tr>\
           <td class="tblHeader">COG / Hdg</td>\
-          <td class="tblCell">' +((this.courseOverGnd==null) ? '--' : this.courseOverGnd)+ ' / ' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
+          <td class="tblCell">' +((this.courseOverGnd==null) ? '--' : this.courseOverGnd)+ ' / ' +((this.heading==null || this.heading==511) ? '--' : this.heading+' deg')+ '</td>\
           <td class="tblHeader">Turn rate</td>\
           <td class="tblCell">' + '--' + '</td>\
         </tr>\
@@ -195,6 +199,10 @@ Ship.prototype.updateTableEntry = function() {
           <td class="tblHeader">ETA</td>\
           <td class="tblCell">' +etaStr+ '</td>\
         </tr>\
+        <tr>\
+            <td class="tblHeader">Ship type</td>\
+            <td class="tblCell" colspan=3>' + ((this.shipTypeMeta==null) ? '--' : this.shipTypeMeta) + '</td>\
+          </tr>\
         <tr>\
           <td class="tblHeader">Position</td>\
           <td colspan=3 class="tblCell">' +((this.lat==null) ? '--' : this.lat.toFixed(4) + ', ' + this.lon.toFixed(4))+ '</td>\

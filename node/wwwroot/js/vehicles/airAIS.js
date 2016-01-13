@@ -62,8 +62,19 @@ Ship.prototype.parseName = function() {
 Ship.prototype.createTableEntry = function() {
   if (debug) {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
+  let etaStr = "--";
   let colLength = $('#table-' + this.domName).find('th').length;//number of columns to span for the detail row
   //console.log('AIS table columns determined for: '+this.addr+' as this many columns: '+colLength);
+  
+  // Work out our ETA info.
+  if (this.etaMonth!=null || this.etaDay!=null || this.etaHour!=null || this.etaMinute!=null) {
+    // Build date and time string with -- indicating something that's intentionally not specified.
+    ((this.etaMonth!=null && this.etaMonth > 0) ? etaStr = this.zerofill(this.etaMonth, 2) + "/" : etaStr = "--/");
+    ((this.etaDay!=null && this.etaDay > 0) ? etaStr = etaStr + this.zerofill(this.etaDay, 2) + " " : etaStr = etaStr + "-- ");
+    ((this.etaHour!=null && this.etaHour < 24) ? etaStr = etaStr + this.zerofill(this.etaHour, 2) + ":" : etaStr = etaStr + "--:");
+    ((this.etaMintue!=null && this.etaMinute < 60) ? etaStr = etaStr + this.zerofill(this.etaMinute, 2) : etaStr = etaStr + "--");
+  }
+  
   if (this.lat) {hasPos=true;}else{hasPos=false;}
   $('#table-'+this.domName).children('tbody').append('\
     <tr id="'+this.addr+'-row-summary" class="vehicle-table-entry">\
@@ -98,8 +109,8 @@ Ship.prototype.createTableEntry = function() {
           <tr>\
             <td class="tblHeader">Pos. type</td>\
             <td class="tblCell">' +((this.epfdMeta==null) ? '--' : this.epfdMeta)+ '</td>\
-            <td class="tblHeader"></td>\
-            <td class="tblCell"></td>\
+            <td class="tblHeader">ETA</td>\
+            <td class="tblCell">' +((this.etaStr==null) ? '--' : this.etaStr)+ '</td>\
           </tr>\
           <tr>\
             <td class="tblHeader">Position</td>\
@@ -137,7 +148,18 @@ Ship.prototype.createTableEntry = function() {
 Ship.prototype.updateTableEntry = function() {
   if (debug) {console.log('Updating table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
+  let etaStr = "--";
   let colLength = $('#table-' + this.domName).find('th').length;//number of columns to span for the detail row
+  
+  // Work out our ETA info.
+  if (this.etaMonth!=null || this.etaDay!=null || this.etaHour!=null || this.etaMinute!=null) {
+    // Build date and time string with -- indicating something that's intentionally not specified.
+    ((this.etaMonth!=null && this.etaMonth > 0) ? etaStr = this.zerofill(this.etaMonth, 2) + "/" : etaStr = "--/");
+    ((this.etaDay!=null && this.etaDay > 0) ? etaStr = etaStr + this.zerofill(this.etaDay, 2) + " " : etaStr = etaStr + "-- ");
+    ((this.etaHour!=null && this.etaHour < 24) ? etaStr = etaStr + this.zerofill(this.etaHour, 2) + ":" : etaStr = etaStr + "--:");
+    ((this.etaMintue!=null && this.etaMinute < 60) ? etaStr = etaStr + this.zerofill(this.etaMinute, 2) : etaStr = etaStr + "--");
+  }
+  
   if (this.lat) {hasPos=true;}else{hasPos=false;}
   $('#'+this.addr+'-row-summary').html('\
     <td>'+this.name+'</td>\
@@ -170,8 +192,8 @@ Ship.prototype.updateTableEntry = function() {
         <tr>\
           <td class="tblHeader">Pos. type</td>\
           <td class="tblCell">' +((this.epfdMeta==null) ? '--' : this.epfdMeta)+ '</td>\
-          <td class="tblHeader"></td>\
-          <td class="tblCell"></td>\
+          <td class="tblHeader">ETA</td>\
+          <td class="tblCell">' +etaStr+ '</td>\
         </tr>\
         <tr>\
           <td class="tblHeader">Position</td>\

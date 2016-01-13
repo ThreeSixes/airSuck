@@ -295,7 +295,7 @@ Vehicle.prototype.setInfoWindow = function() {
     content: this.parseName(),
     shown: false
   });
-}
+};
 
 /***************************************************
  * FUNCTIONS UPDATE THE VEHICLE INFO AND TABLE ENTRY
@@ -318,6 +318,28 @@ Vehicle.prototype.update = function(msgJSON){
   this.updateTableEntry();
   // move the maps position
   this.movePosition();
+};
+
+/***************************************************
+ * SUPPORT ZERO-FILLING NUMBERS. THIS CAN OR SHOULD
+ * BE MOVED EVENTUALLY TO A BETTER PLACE.
+ **************************************************/
+Vehicle.prototype.zerofill = function(number, numberOfDigits){
+  // Set return value.
+  var retVal = number.toString();
+  // Figure out the length of the number in digits.
+  var numLen = retVal.length;
+  
+  // Figure out the minimum size of the number.
+  if (numLen < numberOfDigits) {
+    // Add zeros.
+    for (var i = 0;  i < (numberOfDigits - numLen); i++) {
+      // Prepend a string zero.
+      retVal = "0" + retVal;
+    }
+  }
+  
+  return retVal;
 };
 
 /***************************************************

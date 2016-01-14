@@ -129,10 +129,10 @@ Aircraft.prototype.createTableEntry = function() {
         <td class="tblCell">' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
       </tr>\
       <tr>\
-        <td class="tblHeader">Altitude</td>\
-        <td class="tblCell">' +((this.alt==null) ? '--' : this.alt+' ft')+ '</td>\
         <td class="tblHeader">Climb rate</td>\
         <td class="tblCell">' +((this.vertRate==null) ? '--' : (this.vertRate>0) ? '+'+this.vertRate+' ft/min' : this.vertRate+' ft/min')+ '</td>\
+        <td class="tblHeader"></td>\
+        <td class="tblCell"></td>\
       </tr>\
       <tr>\
         <td class="tblHeader">Position</td>\
@@ -216,10 +216,10 @@ Aircraft.prototype.updateTableEntry = function() {
         <td class="tblCell">' +((this.heading==null) ? '--' : this.heading+' deg')+ '</td>\
       </tr>\
       <tr>\
-        <td class="tblHeader">Altitude</td>\
-        <td class="tblCell">' +((this.alt==null) ? '--' : this.alt+' ft')+ '</td>\
         <td class="tblHeader">Climb rate</td>\
         <td class="tblCell">' +((this.vertRate==null) ? '--' : (this.vertRate>0) ? '+'+this.vertRate+' ft/min' : this.vertRate+' ft/min')+ '</td>\
+        <td class="tblHeader"></td>\
+        <td class="tblCell"></td>\
       </tr>\
       <tr>\
         <td class="tblHeader">Position</td>\

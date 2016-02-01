@@ -60,7 +60,7 @@ function setupSidebar(){
             $('#container-list-' + vehicleTypes[index].domName).hide();
             
             // attach listeners to buttons
-            // single vehicle button
+            // vehicle type button click
             $('#button-list-' + vehicleTypes[index].domName).click(function(){
                 // hide all sidebar containers
                 $('.sidebar-container').hide();

@@ -79,7 +79,14 @@ function vehicleMarkerClickListener(vehName) {
 }
 
 function vehicleTableRowClickListener(vehName) {
-    console.log('Changing marker for: '+vehName);
+    // check the string for validity
+    if (vehName == 'undefined') {
+        if(debug){console.log('Error: ID passed to vehicleTableRowClickListener is invalid.');}
+        return false;
+    } else if (vehName.substring(0,2) != 'veh') {
+        vehName = 'veh'+vehName;//missing veh at the beginning, add
+    }
+    if(debug){console.log('Changing marker for: '+vehName);}
     vehicles[vehName].setMarkerSelected();
 }
 
@@ -130,15 +137,18 @@ class Vehicle {
     this.lastPos = "none";
     this.lastUpdate = new Date().getTime();
     this.active = true;// set true if the vehicle is currently active
+    this.selected = false;// records whether the vehicle has been selected in the sidebar or by clicking the icon
     this.maxAge = 1000;// default vehicle expiration time in milliseconds since last contact
     // gMap icon stuff
     this.dirIcoPath = "m 0,0 -20,50 20,-20 20,20 -20,-50"; // Path we want to use for ADS-B targets we have direction data for.
-    this.dirIcoScale = 0.15; // Scale of the path.
+    this.dirIcoScale = 0.15; // Current scale of the path
+    this.dirIcoDefaultScale = 0.15; // Default scale of the path
     this.ndIcoPath = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"; // Path we want to sue for ADS-B targets we don't have direction data for.
-    this.ndIcoSacle = 0.24; // Scale of the path.
+    this.ndIcoScale = 0.24; // Current scale of the path.
+    this.ndIcoDefaultScale = 0.24; // Default scale of the path.
     this.vehColorActive = "#ff0000"; // Color of active vehicle icons (hex)
     this.vehColorInactive = "#660000"; // Color of nonresponsive vehicle icons (hex)
-    this.vehColorSelected = "#ff9900"; // Color of the vehicle icon when selected
+    this.vehColorSelected = "#ff00ff"; // Color of the vehicle icon when selected
     this.marker = null; // Placeholder for the google maps marker
     this.info = null; // Placeholder for the google maps info window
     // gMap polygon path object
@@ -179,7 +189,7 @@ Vehicle.prototype.setIcon = function() {
       path: this.dirIcoPath,
       scale: this.dirIcoScale,
       strokeWeight: 1.5,
-      strokeColor: (this.active == true) ? this.vehColorActive : this.vehColorInactive,
+      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive),
       rotation: this.heading
     });
   } else {
@@ -188,7 +198,7 @@ Vehicle.prototype.setIcon = function() {
       path: this.ndIcoPath,
       scale: this.ndIcoScale,
       strokeWeight: 1.5,
-      strokeColor: (this.active == true) ? this.vehColorActive : this.vehColorInactive
+      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive)
     });
   }
   // And return it.
@@ -218,71 +228,58 @@ Vehicle.prototype.setMarker = function() {
  * FUNCTION CREATES VEHICLE ICONS FOR GMAPS
  * SPECIFICALLY ENLARGES THE ICON WHEN SELECTED
  **************************************************/
-Vehicle.prototype.setIconSelected = function() {
-  let newIcon;
-  // If we have heading data for the vehicle
-  if (this.heading != 'undefined') {
-    // Create our icon for a vehicle with heading data.
-    newIcon = new google.maps.Marker({
-      path: this.dirIcoPath,
-      scale: (this.dirIcoScale)*2,
-      strokeWeight: 1.5,
-      strokeColor: this.vehColorSelected,
-      rotation: this.heading
-    });
-  } else {
-    // Create our icon for a vehicle without heading data.
-    newIcon = new google.maps.Marker({
-      path: this.ndIcoPath,
-      scale: (this.ndIcoScale)*2,
-      strokeWeight: 1.5,
-      strokeColor: this.vehColorSelected
-    });
-  }
-  // And return it.
-  return newIcon;
-};
 Vehicle.prototype.setMarkerSelected = function() {
-  // Create our marker.
-  this.marker = new google.maps.Marker({
-    position: new google.maps.LatLng(this.lat, this.lon),
-    icon: this.setIconSelected(),
-    map: map,
-    vehName: this.addr
-  });
+  // set the selected flag
+  this.selected = true;
+  // enlarge the icon
+  this.dirIcoScale = this.dirIcoScale*1.5;
+  this.ndIcoScale = this.ndIcoScale*1.5;
   
-  // Create our info window
-  this.setInfoWindow();
+  // use the move function to update the icon
+  this.movePosition();
+}
+Vehicle.prototype.setMarkerHover = function() {
+  // set the selected flag
+  this.selected = true;
+  // use the move function to update the icon
+  this.movePosition();
+}
+Vehicle.prototype.setMarkerUnselected = function() {
+  // set the selected flag
+  this.selected = false;
+  // shrink the icon
+  this.dirIcoScale = this.dirIcoDefaultScale;
+  this.ndIcoScale = this.ndIcoDefaultScale;
+
+  // use the move function to update the icon
+  this.movePosition();
 }
 
 /***************************************************
  * FUNCTION MOVES THE VEHICLE MARKER AND INFO POSITIONS
  **************************************************/
 Vehicle.prototype.movePosition = function() {
-    // Figure out where we are in 2D space to determine whether or not we should move the marker.
+    // Figure out where we are in 2D space
     let thisPos = this.lat + "," + this.lon;
-    // If we have new position daa...
-    if (this.lastPos != thisPos) {
-      
-      // Update the path object with the new position
-      // copy the path object
-      let pathObject = this.pathPoly.getPath();
-      // update with the new path
-      pathObject.push(new google.maps.LatLng(this.lat, this.lon));
-      // push back to the polyline
-      this.pathPoly.setPath(pathObject);
-      // set the polyline color
-      this.pathPoly.setOptions({strokeColor: this.stkColor});
-      
-      // Update the marker
-      // Modify the icon to have the correct rotation, and to indicate there is bearing data.
-      this.marker.setIcon(this.setIcon());
-      // Move the marker.
-      this.marker.setPosition(new google.maps.LatLng(this.lat, this.lon));
-      
-      // Record the new position for testing on next update
-      this.lastPos = thisPos;
-    } else {return;}
+    
+    // Update the path object with the new position
+    // copy the path object
+    let pathObject = this.pathPoly.getPath();
+    // update with the new path
+    pathObject.push(new google.maps.LatLng(this.lat, this.lon));
+    // push back to the polyline
+    this.pathPoly.setPath(pathObject);
+    // set the polyline color
+    this.pathPoly.setOptions({strokeColor: this.stkColor});
+    
+    // Update the marker
+    // Modify the icon to have the correct rotation, and to indicate there is bearing data.
+    this.marker.setIcon(this.setIcon());
+    // Move the marker.
+    this.marker.setPosition(new google.maps.LatLng(this.lat, this.lon));
+    
+    // Record the new position for testing on next update
+    this.lastPos = thisPos;
 };
 
 /***************************************************

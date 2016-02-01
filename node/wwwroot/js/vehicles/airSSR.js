@@ -29,10 +29,13 @@ class Aircraft extends Vehicle {
     // Icon variables
     this.dirIcoPath = "m 0,0 -20,50 20,-20 20,20 -20,-50"; // Path we want to use for ADS-B targets we have direction data for.
     this.dirIcoScale = 0.15; // Scale of the path.
+    this.dirIcoDefaultScale = 0.15; // Default scale of the path
     this.ndIcoPath = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"; // Path we want to sue for ADS-B targets we don't have direction data for.
     this.ndIcoSacle = 0.24; // Scale of the path.
+    this.ndIcoDefaultScale = 0.24; // Default scale of the path.
     this.vehColorActive = "#ff0000"; // Color of active aircraft icons (hex)
     this.vehColorInactive = "#660000"; // Color of nonresponsive aircraft icons (hex)
+    this.vehColorSelected = "#00ffff"; // Color of the vehicle icon when selected
     this.stkColor = "#FFFFFF"; // Color of the path
     // set the name string
     this.name = this.parseName();
@@ -150,29 +153,49 @@ Aircraft.prototype.createTableEntry = function() {
   
   // set the row click function to display the row detail and highlight the plane
   $('#'+this.addr+'-row-summary').click(function(){
-    /* bugs known:
-     * 1) clicking the icon and the table row can get out of sync, this has to do
-     * with the lack of access to the vehicles array in the listener function. The
-     * array has a flag set for .info.shown which would solve for this bug, but alas
-     * no access in this listener function...
-     * 
-     */
+    // get vehicle name from the row ID
+      let vehName = this.id.substring(0,this.id.length-12);//ID is parsed correctly
 
     if ($(this).next().css('display')=='none') {
       // details aren't shown, change the plane's icon color & size
-      /* Not yet working - issue in the listener and access to the vehicles array
-      // get vehicle name from the row ID
-      let vehName = this.id.substring(0,this.id.length-12);
-      // call the click listener
-      vehicleTableRowClickListener(vehName);
-      */
+      // select the icon
+      vehicles['veh'+vehName].setMarkerSelected();
+      // display the info table      
       $(this).next().css('display','table-row'); 
     } else {
       // details are shown, return the plane's icon color & size to normal
-      // to do once the issue above is resolved
+      // unselect the icon
+      vehicles['veh'+vehName].setMarkerUnselected();
+      // close the info table
       $(this).next().css('display','none');
     }
   });
+  
+  // set the row hover function to highlight the airplane
+  $('#'+this.addr+'-row-summary').mouseenter(function(){
+    // mouse in function, highlight the icon
+    // check to see if the info table is already shown, if so do nothing
+    if ($(this).next().css('display')=='none') {
+      // table isn't shown, adjust the icon
+      // get vehicle name from the row ID and set the marker selected
+      let vehName = this.id.substring(0,this.id.length-12);
+      vehicles['veh'+vehName].setMarkerHover();
+    }
+    // table is shown, do nothing
+    return;
+  }).mouseleave(function(){
+    // mouse out function, unhighlight the icon
+    // check to see if the info table is already shown, if so do nothing
+    if ($(this).next().css('display')=='none') {
+      // table isn't shown, unhighlight the icon
+      // get vehicle name from the row ID and set the marker unselected
+      let vehName = this.id.substring(0,this.id.length-12);
+      vehicles['veh'+vehName].setMarkerUnselected();  
+    }
+    // table is shown, do nothing
+    return;
+  });
+  
   
 };
 

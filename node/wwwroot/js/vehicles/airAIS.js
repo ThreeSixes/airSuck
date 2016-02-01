@@ -29,11 +29,14 @@ class Ship extends Vehicle {
     this.maxAge = 5 * (60 * 1000); // How long to retain a ship after losing contact (miliseconds)
     // gMap icon stuff
     this.dirIcoPath = "m 0,0 -20,50 40,0 -20,-50"; // Path we want to use for AIS targets that we have direction data for.
-    this.dirIcoScale = 0.15; // Scale of the icon.
+    this.dirIcoScale = 0.15; // Current scale of the icon.
+    this.dirIcoDefaultScale = 0.15; // Default scale of the icon.
     this.ndIcoPath = "m 0,0 -20,20 20,20 20,-20 -20,-20"; // Path we want to use for AIS targets that we don't have direction data for.
-    this.ndIcoScale = 0.21; // Scale of the icon.
+    this.ndIcoScale = 0.21; // Current scale of the icon.
+    this.ndIcoDefaultScale = 0.21; // Default scale of the icon.
     this.vehColorActive = "#0000ff"; // Color of active ship icons (hex)
     this.vehColorInactive = "#000066"; // Color of nonresponsive ship icons (hex)
+    this.vehColorSelected = "#00ffff"; // Color of selected ship icons (hex)
     this.stkColor = "#00ffff"; // Color of the path
     // set the name string
     this.name = this.parseName();
@@ -133,17 +136,50 @@ Ship.prototype.createTableEntry = function() {
     </tr>\
   ');
   
-  // set the row click function to display the row detail and highlight the ship
+  // set the row click function to display the row detail and highlight the plane
   $('#'+this.addr+'-row-summary').click(function(){
-      if ($(this).next().css('display')=='none') {
-        $(this).next().css('display','table-row');
-      } else {
-        $(this).next().css('display','none');
-      }
-      // swap the visibility
-      //$(this).next().toggle();
-    });
+    // get vehicle name from the row ID
+      let vehName = this.id.substring(0,this.id.length-12);//ID is parsed correctly
+
+    if ($(this).next().css('display')=='none') {
+      // details aren't shown, change the plane's icon color & size
+      // select the icon
+      vehicles['veh'+vehName].setMarkerSelected();
+      // display the info table      
+      $(this).next().css('display','table-row'); 
+    } else {
+      // details are shown, return the plane's icon color & size to normal
+      // unselect the icon
+      vehicles['veh'+vehName].setMarkerUnselected();
+      // close the info table
+      $(this).next().css('display','none');
+    }
+  });
   
+  // set the row hover function to highlight the airplane
+  $('#'+this.addr+'-row-summary').mouseenter(function(){
+    // mouse in function, highlight the icon
+    // check to see if the info table is already shown, if so do nothing
+    if ($(this).next().css('display')=='none') {
+      // table isn't shown, adjust the icon
+      // get vehicle name from the row ID and set the marker selected
+      let vehName = this.id.substring(0,this.id.length-12);
+      vehicles['veh'+vehName].setMarkerHover();
+    }
+    // table is shown, do nothing
+    return;
+  }).mouseleave(function(){
+    // mouse out function, unhighlight the icon
+    // check to see if the info table is already shown, if so do nothing
+    if ($(this).next().css('display')=='none') {
+      // table isn't shown, unhighlight the icon
+      // get vehicle name from the row ID and set the marker unselected
+      let vehName = this.id.substring(0,this.id.length-12);
+      vehicles['veh'+vehName].setMarkerUnselected();  
+    }
+    // table is shown, do nothing
+    return;
+  });
 };
 
 /***************************************************
@@ -232,7 +268,7 @@ Ship.prototype.setIcon = function() {
       path: this.dirIcoPath,
       scale: this.dirIcoScale,
       strokeWeight: 1.5,
-      strokeColor: (this.active == true) ? this.vehColorActive : this.vehColorInactive,
+      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive),
       rotation: this.courseOverGnd
     });
   } else {
@@ -241,7 +277,7 @@ Ship.prototype.setIcon = function() {
       path: this.ndIcoPath,
       scale: this.ndIcoScale,
       strokeWeight: 1.5,
-      strokeColor: (this.active == true) ? this.vehColorActive : this.vehColorInactive
+      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive)
     });
   }
   // And return it.

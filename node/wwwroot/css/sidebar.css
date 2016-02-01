@@ -96,7 +96,9 @@
     border-top:1px solid #e6e6e6;
 }
 
-.vehicle-table-entry:hover {background-color: #f2f2f2}
+tr.vehicle-table-entry:hover {background-color: #f2f2f2}
+
+tr.vehicle-table-entry {cursor:pointer;}
 
 .vehicle-table-detail {
     display:none;

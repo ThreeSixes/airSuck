@@ -176,6 +176,29 @@ stateMongo = {
     'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data. 
 }
 
+
+##############################
+# Federated system connector #
+##############################
+
+# Federated system connector settings.
+federatedSysConn = {
+    'enabled': True, # Do we want to run the federated system connector? True = Yes, False = No
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
+    'myName': genName, # The name of this machine to send with data we transmit to other federated systems.
+    'listen': True, # Do we want to listen for incoming connections?
+    'listenPort': 8093, # Port number we want the federated system connectorto receive connecitons on.
+    'listenHost': '0.0.0.0', # Address we want the federated system connector to listen on.
+    'keepalive': 15.0, # Keepalive seconds.
+    'endpoints': { # All the other systems we want to connect to.
+        # Data directionality for the listener. Valid options are tx (send only), rx (receive only), and both (tansmit and receive).
+        #'<name>': {'direction': 'both', 'type': 'client'},
+        # Client mode connection.
+        #'<name>': {'direction': 'both', 'type': 'server', 'host': '<host>', 'port': 8093}
+    },
+    'debug': True # Debug?
+}
+
 ##########################################################################################################################
 # The Redis services can be on a single server or multiple servers. The queues are broken out like this for flexibility. #
 ##########################################################################################################################

@@ -24,6 +24,7 @@ Support for ACARS data and using the FAA downloadable aircraft database to provi
   - airSuckServer.py - A server script that recieves data from airSuckClient.py. 
   - aisConnector.py - Handles connections to one or more AIS NMEA TCP source to recieve AIS data.
   - dump1090ConnClt.py - Handles connections to one or more dump1090 instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
+  - federatedSysConn.py - Connects airSuck instances together to facilitate sharing data streams.
   - mongoDump.py - Stores incoming raw data from sources in a database for storage and reprocessing if necessary.
   - aisStateEngine.py - Handles processing of stateful AIS data to build vessel and station data, locaions, callsigns, IMOs, etc. This process dumps AIS on a pub/sub queue for halding by other processes, and on a reliable queue for storage in MongoDB.
   - ssrStateEngine.py - Handles processing of stateful ADS-B data to build aircraft location data, call signs, etc. This process dumps aircraft state updates on a pub/sub queue for handling by other processes, and on a reliable queue for storage in MongoDB.

@@ -3,7 +3,7 @@ asLog by ThreeSixes (https://github.com/ThreeSixes)
 
 This project is licensed under GPLv3. See COPYING for dtails.
 
-This file is part of the airSuck project (https://github.com/ThreeSixes/airSuck).
+This file was originally part of the airSuck project (https://github.com/ThreeSixes/airSuck).
 """
 
 # Imports
@@ -20,7 +20,7 @@ class asLog():
     
     def __init__(self, loggingMode="stdout"):
         """
-        Class constructor
+        asLog constructor
         """
         
         # Check for acceptable logging mode.
@@ -35,8 +35,6 @@ class asLog():
     
     def __logStdout(self, message):
         """
-        __logStdout(message)
-        
         Log a message to stdout with a UTC timestamp.
         """
         # Get timestamp.
@@ -51,8 +49,6 @@ class asLog():
     
     def __logSyslog(self, message, sev=syslog.LOG_NOTICE):
         """
-        __logSyslog(message, [sev])
-        
         Log a message to syslog.
         """
         
@@ -61,8 +57,6 @@ class asLog():
     
     def log(self, message):
         """
-        log(message)
-        
         Log a message.
         """
         

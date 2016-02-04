@@ -23,7 +23,7 @@ var sidebarLoaded = false;
  **************************************************/
 // Load config options
 $.getScript("js/config.js",function(){
-   if (debug) {
+   if(debug=='all') {
      //debug set, create the screen debug elements
      $('body').append('<form><input type="text" class="dbgBx" id="debugBx" value="Debug stream..." /><input type="text" class="msgBx" id="message" value="Waiting for message data..." /></form>');
    }
@@ -51,7 +51,7 @@ $.getScript("socket.io/socket.io.js",function(){
      // Load any custom vehicles
      let index;
      for(index=0;index<loadCustomVehicles.length;index++) {
-         if (debug) {console.log('Loading custom vehicle: ' + loadCustomVehicles[index]);}
+         if(debug=='all') {console.log('Loading custom vehicle: ' + loadCustomVehicles[index]);}
          $.getScript("js/vehicles/" + loadCustomVehicles[index]);
      }
      

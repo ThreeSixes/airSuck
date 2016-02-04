@@ -12,7 +12,7 @@
  **********************************************************/
 
 // Register vehicle type
-if(debug){console.log('Registering vehicle type: AIS');}
+if(debug=='all'){console.log('Registering vehicle type: AIS');}
 registerVehicleType('airAIS','AIS','fa-ship',function(msgJSON) {return new Ship(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Flag</th><th>Velocity</th><th>Course</th><th>Destination</th><th>Pos</th></tr>');});
 
 /***************************************************
@@ -28,16 +28,16 @@ class Ship extends Vehicle {
     this.domName = 'AIS';
     this.maxAge = 5 * (60 * 1000); // How long to retain a ship after losing contact (miliseconds)
     // gMap icon stuff
-    this.dirIcoPath = "m 0,0 -20,50 40,0 -20,-50"; // Path we want to use for AIS targets that we have direction data for.
-    this.dirIcoScale = 0.15; // Current scale of the icon.
-    this.dirIcoDefaultScale = 0.15; // Default scale of the icon.
-    this.ndIcoPath = "m 0,0 -20,20 20,20 20,-20 -20,-20"; // Path we want to use for AIS targets that we don't have direction data for.
-    this.ndIcoScale = 0.21; // Current scale of the icon.
-    this.ndIcoDefaultScale = 0.21; // Default scale of the icon.
-    this.vehColorActive = "#0000ff"; // Color of active ship icons (hex)
-    this.vehColorInactive = "#000066"; // Color of nonresponsive ship icons (hex)
-    this.vehColorSelected = "#00ffff"; // Color of selected ship icons (hex)
-    this.stkColor = "#00ffff"; // Color of the path
+    this.marker.dirIcoPath = "m 0,0 -20,50 40,0 -20,-50"; // Path we want to use for AIS targets that we have direction data for.
+    this.marker.dirIcoScale = 0.15; // Current scale of the icon.
+    this.marker.dirIcoDefaultScale = 0.15; // Default scale of the icon.
+    this.marker.ndIcoPath = "m 0,0 -20,20 20,20 20,-20 -20,-20"; // Path we want to use for AIS targets that we don't have direction data for.
+    this.marker.ndIcoScale = 0.21; // Current scale of the icon.
+    this.marker.ndIcoDefaultScale = 0.21; // Default scale of the icon.
+    this.marker.vehColorActive = "#0000ff"; // Color of active ship icons (hex)
+    this.marker.vehColorInactive = "#000066"; // Color of nonresponsive ship icons (hex)
+    this.marker.vehColorSelected = "#00ffff"; // Color of selected ship icons (hex)
+    this.marker.stkColor = "#00ffff"; // Color of the path
     // set the name string
     this.name = this.parseName();
     // create the table entry
@@ -63,7 +63,7 @@ Ship.prototype.parseName = function() {
  * FUNCTION ADDS VEHICLE TO THE INFO TABLE
  **************************************************/
 Ship.prototype.createTableEntry = function() {
-  if (debug) {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
+  if(debug=='all') {console.log('Creating new table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   let etaStr = "--";
   let colLength = $('#table-' + this.domName).find('th').length;//number of columns to span for the detail row
@@ -186,7 +186,7 @@ Ship.prototype.createTableEntry = function() {
  * FUNCTION UPDATES VEHICLE IN THE INFO TABLE
  **************************************************/
 Ship.prototype.updateTableEntry = function() {
-  if (debug) {console.log('Updating table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
+  if(debug=='all') {console.log('Updating table entry for ship: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   let etaStr = "--";
   let colLength = $('#table-' + this.domName).find('th').length;//number of columns to span for the detail row
@@ -262,23 +262,24 @@ Ship.prototype.updateTableEntry = function() {
  **************************************************/
 Ship.prototype.setIcon = function() {
    // If we have heading data for the vehicle
+   let newIcon;
   if (this.courseOverGnd != null) {
-    // Create our icon for a vehicle with heading data.
-    var newIcon = new google.maps.Marker({
-      path: this.dirIcoPath,
-      scale: this.dirIcoScale,
+    //create GMaps symbol icon with heading data
+    newIcon = {
+      path:this.marker.dirIcoPath,
+      scale:this.marker.dirIcoScale,
+      rotation: this.courseOverGnd,
       strokeWeight: 1.5,
-      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive),
-      rotation: this.courseOverGnd
-    });
+      strokeColor:(this.marker.selected == true) ? this.marker.vehColorSelected : ((this.active == true) ? this.marker.vehColorActive : this.marker.vehColorInactive)
+    };
   } else {
-    // Create our icon for a vehicle without heading data.
-    var newIcon = new google.maps.Marker({
-      path: this.ndIcoPath,
-      scale: this.ndIcoScale,
+  //create a GMaps symbol icon w/o heading data
+    newIcon = {
+      path:this.marker.ndIcoPath,
+      scale:this.marker.ndIcoScale,
       strokeWeight: 1.5,
-      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive)
-    });
+      strokeColor:(this.marker.selected == true) ? this.marker.vehColorSelected : ((this.active == true) ? this.marker.vehColorActive : this.marker.vehColorInactive)
+    };
   }
   // And return it.
   return newIcon;

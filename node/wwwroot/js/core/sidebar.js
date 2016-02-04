@@ -16,11 +16,11 @@ function setupSidebar(){
     // check for an existing sidebar, if none exists, add one
     if ($('#sidebar').length) {
         // sidebar exists, ignore
-        if (debug) {console.log('Sidebar setup called but sidebar exists, ignoring.');}
+        if(debug=='all') {console.log('Sidebar setup called but sidebar exists, ignoring.');}
         // Flag sidebar as loaded for giggles.
         sidebarLoaded = true;
     } else {
-        if (debug) {console.log('Sidebar setup called, setting up sidebar.');}
+        if(debug=='all') {console.log('Sidebar setup called, setting up sidebar.');}
         // no sidebar, set it up in the body
         $('body').append('<div id="sidebar" class="sidebar"></div>');
         // setup the sidebar structure
@@ -31,9 +31,9 @@ function setupSidebar(){
         // setup the sidebar header - 1 button for each vehicle type + search
         let index;
         let length = vehicleTypes.length;
-        if (debug) {console.log('Sidebar found '+length+' vehicle types.');}
+        if(debug=='all') {console.log('Sidebar found '+length+' vehicle types.');}
         for (index=0;index<length;++index) {
-            if (debug) {console.log('Adding vehicle icon to sidebar header: ' + vehicleTypes[index].protocol);}
+            if(debug=='all') {console.log('Adding vehicle icon to sidebar header: ' + vehicleTypes[index].protocol);}
             $('#sidebar-header').append('<i id="button-list-' + vehicleTypes[index].domName + '" class="fa ' + vehicleTypes[index].faIcon + ' sidebar-button"></i>');
             // set the first icon to active
             if (index==0) {
@@ -48,7 +48,7 @@ function setupSidebar(){
         
         // setup the sidebar body containers and related tables - one for each vehicle type + search
         for (index=0;index<length;++index) {
-            if (debug) {console.log('Adding vehicle table to sidebar body: ' + vehicleTypes[index].protocol);}
+            if(debug=='all') {console.log('Adding vehicle table to sidebar body: ' + vehicleTypes[index].protocol);}
             $('#sidebar-body').append('<div id="container-list-' + vehicleTypes[index].domName + '" class="sidebar-container"></div>');
             // set a table header
             $('#container-list-' + vehicleTypes[index].domName).append('<h1>Vehicles broadcasting over '+vehicleTypes[index].protocol+'</h1>');

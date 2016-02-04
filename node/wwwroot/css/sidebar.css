@@ -98,6 +98,8 @@
 
 tr.vehicle-table-entry:hover {background-color: #f2f2f2}
 
+tr.selected {background-color:#f2f2f2}
+
 tr.vehicle-table-entry {cursor:pointer;}
 
 .vehicle-table-detail {

@@ -11,7 +11,7 @@
  * Deps: jQuery
  **********************************************************/
 // Register vehicle type
-if(debug){console.log('Registering vehicle type: SSR');}
+if(debug=='all'){console.log('Registering vehicle type: SSR');}
 registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Cat.</th><th>Flag</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Pos</th></tr>');});
 
 /***************************************************
@@ -93,7 +93,7 @@ Aircraft.prototype.parseName = function() {
  * so we don't duplicate with the update function
  **************************************************/
 Aircraft.prototype.createTableEntry = function() {
-  if (debug) {console.log('Creating new table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
+  if(debug=='all') {console.log('Creating new table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   let colLength = $('#table-' + this.domName).find('th').length;//number of columns to span for the detail row
   if (this.lat) {hasPos=true;}else{hasPos=false;}
@@ -203,7 +203,7 @@ Aircraft.prototype.createTableEntry = function() {
  * FUNCTION UPDATES VEHICLE IN THE INFO TABLE
  **************************************************/
 Aircraft.prototype.updateTableEntry = function() {
-  if (debug) {console.log('Updating table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
+  if(debug=='all') {console.log('Updating table entry for aircraft: '+this.addr+' in table: #table-' + this.domName);}
   let hasPos;
   if (this.lat) {hasPos=true;}else{hasPos=false;}
   // update the summary

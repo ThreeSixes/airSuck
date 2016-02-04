@@ -17,7 +17,7 @@
  **************************************************/
 // Expire vehicles.
 function expireVehicles() {
-  if (debug){console.log("Expiration check running");}
+  if(debug=='all'){console.log("Expiration check running");}
   let key;
   for (key in vehicles) {
     // Get the state of the vehicle and take appropriate action
@@ -25,11 +25,11 @@ function expireVehicles() {
     if (vehicles[key]!=null) {
       switch (vehicles[key].checkExpiration()) {
           case 'Halflife':
-            if (debug) {console.log('Halflife determined for vehicle: '+vehicles[key].parseName());}
+            if(debug=='all') {console.log('Halflife determined for vehicle: '+vehicles[key].parseName());}
             vehicles[key].setHalflife();
             break;
           case 'Expired':
-            if (debug) {console.log('Expiration determined for vehicle: '+vehicles[key].parseName());}
+            if(debug=='all') {console.log('Expiration determined for vehicle: '+vehicles[key].parseName());}
             // Vehicle expired, cleanup the vehicles things...
             vehicles[key].destroy();
             // Nullify the entry since ECMAScript 6 doesn't let us use destroy
@@ -81,12 +81,12 @@ function vehicleMarkerClickListener(vehName) {
 function vehicleTableRowClickListener(vehName) {
     // check the string for validity
     if (vehName == 'undefined') {
-        if(debug){console.log('Error: ID passed to vehicleTableRowClickListener is invalid.');}
+        if(debug=='all'){console.log('Error: ID passed to vehicleTableRowClickListener is invalid.');}
         return false;
     } else if (vehName.substring(0,2) != 'veh') {
         vehName = 'veh'+vehName;//missing veh at the beginning, add
     }
-    if(debug){console.log('Changing marker for: '+vehName);}
+    if(debug=='all'){console.log('Changing marker for: '+vehName);}
     vehicles[vehName].setMarkerSelected();
 }
 
@@ -119,7 +119,7 @@ function degreeToCardinal(degree) {
     case 15:return 'NNW';break;
     case 16:return 'N';break;
     default:
-      if (debug){console.log('degreeToBearing: error in calculating bearing');}
+      if(debug=='all'){console.log('degreeToBearing: error in calculating bearing');}
       return null;
       break;
   }
@@ -131,7 +131,7 @@ function degreeToCardinal(degree) {
 
 class Vehicle {
   constructor(msgJSON,protocol){
-    if(debug){console.log('Vehicle constructor executed for vehicle: ' + msgJSON.addr + ', Using protocol: ' + protocol);}
+    if(debug=='all'){console.log('Vehicle constructor executed for vehicle: ' + msgJSON.addr + ', Using protocol: ' + protocol);}
     this.addr = msgJSON.addr;
     this.protocol = protocol;// communications protocol used (AIS,SSR)
     this.lastPos = "none";
@@ -139,18 +139,23 @@ class Vehicle {
     this.active = true;// set true if the vehicle is currently active
     this.selected = false;// records whether the vehicle has been selected in the sidebar or by clicking the icon
     this.maxAge = 1000;// default vehicle expiration time in milliseconds since last contact
+    this.marker = new google.maps.Marker();// blank marker object to hold graphics data and later the marker object
     // gMap icon stuff
-    this.dirIcoPath = "m 0,0 -20,50 20,-20 20,20 -20,-50"; // Path we want to use for ADS-B targets we have direction data for.
-    this.dirIcoScale = 0.15; // Current scale of the path
-    this.dirIcoDefaultScale = 0.15; // Default scale of the path
-    this.ndIcoPath = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"; // Path we want to sue for ADS-B targets we don't have direction data for.
-    this.ndIcoScale = 0.24; // Current scale of the path.
-    this.ndIcoDefaultScale = 0.24; // Default scale of the path.
-    this.vehColorActive = "#ff0000"; // Color of active vehicle icons (hex)
-    this.vehColorInactive = "#660000"; // Color of nonresponsive vehicle icons (hex)
-    this.vehColorSelected = "#ff00ff"; // Color of the vehicle icon when selected
-    this.marker = null; // Placeholder for the google maps marker
-    this.info = null; // Placeholder for the google maps info window
+    this.marker.active = true;// set true if the vehicle is currently active
+    this.marker.selected = false;// records whether the vehicle has been selected in the sidebar or by clicking the icon
+    this.marker.dirIcoPath = "m 0,0 -20,50 20,-20 20,20 -20,-50"; // Path we want to use for ADS-B targets we have direction data for.
+    this.marker.dirIcoScale = 0.15; // Current scale of the path
+    this.marker.dirIcoDefaultScale = 0.15; // Default scale of the path
+    this.marker.ndIcoPath = "m 15,15 a 15,15 0 1 1 -30,0 15,15 0 1 1 30,0 z"; // Path we want to sue for ADS-B targets we don't have direction data for.
+    this.marker.ndIcoScale = 0.24; // Current scale of the path.
+    this.marker.ndIcoDefaultScale = 0.24; // Default scale of the path.
+    this.marker.vehColorActive = "#ff0000"; // Color of active vehicle icons (hex)
+    this.marker.vehColorInactive = "#660000"; // Color of nonresponsive vehicle icons (hex)
+    this.marker.vehColorSelected = "#00ffff"; // Color of the vehicle icon when selected
+    this.marker.$super = this;// reference to access the parent vehicle from marker event listeners
+    // infoWindow stuff
+    this.info = new google.maps.InfoWindow(); // Placeholder for the google maps info window
+    this.info.$super = this;// reference to access the parent vehicle from marker event listeners
     // gMap polygon path object
     this.pathPoly = new google.maps.Polyline({
       map: map,
@@ -184,22 +189,23 @@ Vehicle.prototype.setIcon = function() {
   let newIcon;
   // If we have heading data for the vehicle
   if (this.heading != 'undefined') {
-    // Create our icon for a vehicle with heading data.
-    newIcon = new google.maps.Marker({
-      path: this.dirIcoPath,
-      scale: this.dirIcoScale,
+    // create a GMaps symbol icon
+    newIcon = {
+      path:this.marker.dirIcoPath,
+      scale:this.marker.dirIcoScale,
       strokeWeight: 1.5,
-      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive),
-      rotation: this.heading
-    });
+      rotation: this.heading,
+      strokeColor:(this.marker.selected == true) ? this.marker.vehColorSelected : ((this.marker.active == true) ? this.marker.vehColorActive : this.marker.vehColorInactive)
+    };
+    
   } else {
-    // Create our icon for a vehicle without heading data.
-    newIcon = new google.maps.Marker({
-      path: this.ndIcoPath,
-      scale: this.ndIcoScale,
+    // create a GMaps symbol icon with no rotation / heading data
+    newIcon = {
+      path:this.marker.ndIcoPath,
+      scale:this.marker.ndIcoScale,
       strokeWeight: 1.5,
-      strokeColor: (this.selected == true) ? this.vehColorSelected : ((this.active == true) ? this.vehColorActive : this.vehColorInactive)
-    });
+      strokeColor:(this.marker.selected == true) ? this.marker.vehColorSelected : ((this.marker.active == true) ? this.marker.vehColorActive : this.marekr.vehColorInactive)
+    };
   }
   // And return it.
   return newIcon;
@@ -209,19 +215,33 @@ Vehicle.prototype.setIcon = function() {
  * FUNCTION ADDS A GMAPS MARKER TO THE VEHICLE
  **************************************************/
 Vehicle.prototype.setMarker = function() {
-  // Create our marker.
-  this.marker = new google.maps.Marker({
-    position: new google.maps.LatLng(this.lat, this.lon),
-    icon: this.setIcon(),
-    map: map,
-    vehName: this.addr
-  });
+  // Set marker map aspects, retain existing data in the marker
+  this.marker.setPosition(new google.maps.LatLng(this.lat, this.lon));
+  this.marker.setIcon(this.setIcon());
+  //this.marker.rotation=this.heading;
+  this.marker.setMap(map);
+  this.marker.vehName = this.addr;
   
   // Create our info window
   this.setInfoWindow();
   
-  // Can't set the listeners here, scoping doesn't allow
-  // access to the vehicles array.
+  // Trying listener again
+  this.marker.addListener('mouseover',function(){
+    // mouse over marker, use selected color
+    this.$super.setMarkerHover();
+    this.$super.movePosition();
+    // select the table entry
+    $('#'+this.$super.addr+'-row-summary').addClass('selected');
+  });
+  this.marker.addListener('mouseout',function(){
+    // mouse exiting marker, unselect marker
+    // need pre-check for being selected in sidebar
+    this.$super.setMarkerUnselected();
+    this.$super.movePosition();
+    // deselect the table entry
+    $('#'+this.$super.addr+'-row-summary').removeClass('selected');
+  });
+  
 }
 
 /***************************************************
@@ -230,26 +250,26 @@ Vehicle.prototype.setMarker = function() {
  **************************************************/
 Vehicle.prototype.setMarkerSelected = function() {
   // set the selected flag
-  this.selected = true;
+  this.marker.selected = true;
   // enlarge the icon
-  this.dirIcoScale = this.dirIcoScale*1.5;
-  this.ndIcoScale = this.ndIcoScale*1.5;
+  this.marker.dirIcoScale = this.marker.dirIcoScale*1.5;
+  this.marker.ndIcoScale = this.marker.ndIcoScale*1.5;
   
   // use the move function to update the icon
   this.movePosition();
 }
 Vehicle.prototype.setMarkerHover = function() {
   // set the selected flag
-  this.selected = true;
+  this.marker.selected = true;
   // use the move function to update the icon
   this.movePosition();
 }
 Vehicle.prototype.setMarkerUnselected = function() {
   // set the selected flag
-  this.selected = false;
+  this.marker.selected = false;
   // shrink the icon
-  this.dirIcoScale = this.dirIcoDefaultScale;
-  this.ndIcoScale = this.ndIcoDefaultScale;
+  this.marker.dirIcoScale = this.marker.dirIcoDefaultScale;
+  this.marker.ndIcoScale = this.marker.ndIcoDefaultScale;
 
   // use the move function to update the icon
   this.movePosition();
@@ -259,6 +279,10 @@ Vehicle.prototype.setMarkerUnselected = function() {
  * FUNCTION MOVES THE VEHICLE MARKER AND INFO POSITIONS
  **************************************************/
 Vehicle.prototype.movePosition = function() {
+    if(debug=='all'){
+      console.log('...movePosition called...');
+    }
+    
     // Figure out where we are in 2D space
     let thisPos = this.lat + "," + this.lon;
     
@@ -275,6 +299,8 @@ Vehicle.prototype.movePosition = function() {
     // Update the marker
     // Modify the icon to have the correct rotation, and to indicate there is bearing data.
     this.marker.setIcon(this.setIcon());
+    // Update the infowindow
+    this.setInfoWindow();
     // Move the marker.
     this.marker.setPosition(new google.maps.LatLng(this.lat, this.lon));
     
@@ -285,13 +311,28 @@ Vehicle.prototype.movePosition = function() {
 /***************************************************
  * FUNCTION ADDS A GMAPS INFO WINDOW TO THE VEHICLE
  **************************************************/
-Vehicle.prototype.setInfoWindow = function() {
-  // Create our info window.
-  this.info = new google.maps.InfoWindow({
-    position:new google.maps.LatLng(this.lat, this.lon),
-    content: this.parseName(),
-    shown: false
+Vehicle.prototype.setInfoWindow = function() {  
+  // Set info window properties
+  this.info.setPosition(new google.maps.LatLng(this.lat, this.lon));
+  this.info.setContent(this.parseName());
+  
+  // Add listener to set infowindow content
+  google.maps.event.addListener(this.marker, "click", function()
+  {
+    if(debug=='dev'){
+      console.log('Setting InfoWindow data for: '+this.$super.addr);
+    }
+    this.$super.info.setContent(this.$super.parseName());
   });
+  // Add listener to close the info window
+  google.maps.event.addListener(this.info, "closeclick", function()
+  {
+    if(debug=='dev'){
+      console.log('InfoWindow closed for: '+this.$super.addr);
+    }
+    $('#'+this.$super.addr+'-row-detail').css('display','none');
+  });
+  
 };
 
 /***************************************************
@@ -300,7 +341,7 @@ Vehicle.prototype.setInfoWindow = function() {
  * custom vehicle types
  **************************************************/
 Vehicle.prototype.updateTableEntry = function(){
-  if (debug){console.log('Error: Function updateTableEntry not set for protocol: '+this.protocol);}
+  if(debug=='all'){console.log('Error: Function updateTableEntry not set for protocol: '+this.protocol);}
   return;
 };
 
@@ -308,7 +349,7 @@ Vehicle.prototype.update = function(msgJSON){
   // update data in the object
   $.extend(true, this, msgJSON);
   // if not set to active, reactivate
-  if (this.active == false) {this.active=true;}
+  if (this.marker.active == false) {this.marker.active=true;}
   // update the last update parameter
   this.lastUpdate = Date.now();
   // update the vehicle entry in its' table
@@ -343,7 +384,7 @@ Vehicle.prototype.zerofill = function(number, numberOfDigits){
  * VEHICLE DESTRUCTOR
  **************************************************/
 Vehicle.prototype.destroy = function(){
-  if(debug){console.log('Destroying vehicle: ' + this.parseName());}
+  if(debug=='all'){console.log('Destroying vehicle: ' + this.parseName());}
   
   // Remove table entries
   $('#'+this.addr+'-row-summary').remove();
@@ -361,7 +402,7 @@ Vehicle.prototype.destroy = function(){
  **************************************************/
 Vehicle.prototype.setHalflife = function(){
   // Deactivate vehicle and change the icon for it.
-  this.active = false;
+  this.marker.active = false;
   if(this.marker!=null){this.marker.setIcon(this.setIcon());}
 };
 
@@ -375,7 +416,7 @@ Vehicle.prototype.checkExpiration = function(){
   // Return Active, Halflife, or Expired
   if (vehDelta >= this.maxAge) {
     return('Expired');
-  } else if ((vehDelta >= (this.maxAge/2)) && (this.active == true)) {
+  } else if ((vehDelta >= (this.maxAge/2)) && (this.marker.active == true)) {
     return('Halflife');
   } else {
     return('Active');

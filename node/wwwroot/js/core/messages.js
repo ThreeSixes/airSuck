@@ -18,16 +18,16 @@
 function handleMessage(msg){
   if (!mapLoaded) {
     // Return early - the map isn't loaded yet
-    if(debug){console.log("Maps not loaded. Discarding aircraft data.");}
+    if(debug=='all'){console.log("Maps not loaded. Discarding aircraft data.");}
     return;
   }
   if (!sidebarLoaded) {
     // Return early - the map isn't loaded yet
-    if(debug){console.log("Sidebar not loaded. Discarding aircraft data.");}
+    if(debug=='all'){console.log("Sidebar not loaded. Discarding aircraft data.");}
     return;
   }
   // Dump the JSON string to the message box.
-  if(debug){$('#' + messageBx).attr('value',msg);}
+  if(debug=='all'){$('#' + messageBx).attr('value',msg);}
   
   // JSONify the JSON string.
   let msgJSON = JSON.parse(msg);
@@ -48,7 +48,7 @@ function handleMessage(msg){
     let length = vehicleTypes.length;
     for (index=0;index<length;++index) {
       if (msgJSON.type == vehicleTypes[index].protocol) {
-        if (debug){console.log('New vehicle found, type registered: ' + msgJSON.type);}
+        if(debug=='all'){console.log('New vehicle found, type registered: ' + msgJSON.type);}
         // add the new vehicle (constructor should call registered update functions)
         vehicles[vehName] = vehicleTypes[index].constructor(msgJSON);
         
@@ -65,7 +65,7 @@ function handleMessage(msg){
         break;
       } else if (index==length) {
         // vehicle type not registered, drop data
-        if (debug){console.log('New vehicle found, type not registered: ' + msgJSON.type + ' Dropping data.')}
+        if(debug=='all'){console.log('New vehicle found, type not registered: ' + msgJSON.type + ' Dropping data.')}
       }
     }
   }

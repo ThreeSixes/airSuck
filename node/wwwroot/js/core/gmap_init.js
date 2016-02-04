@@ -15,7 +15,7 @@
  **************************************************/
 // Initialize the Google map.
 function initMap() {
-  if(debug){console.log("Maps loading...");}
+  if(debug=='all'){console.log("Maps loading...");}
   
   // Attempt to detect user location if turned on
   if (useLocation) {
@@ -25,7 +25,7 @@ function initMap() {
         // update the lat and lng if we can detect them
         defaultLng = location.longitude;
         defaultLat = location.latitude;
-        if(debug){console.log("Got lat/lng: " + defaultLat + ", " + defaultLng);}
+        if(debug=='all'){console.log("Got lat/lng: " + defaultLat + ", " + defaultLng);}
       }
     } );
   }

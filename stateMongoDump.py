@@ -43,8 +43,21 @@ def toDatetime(strDateTime):
     """
     Convert utcnow() datetime string back to a datetime object.
     """
+    retVal = None
     
-    return datetime.datetime.strptime(strDateTime, "%Y-%m-%d %H:%M:%S.%f")
+    try:
+        # Check the length of the string since frames received on the second sometimes lack the %f portion of the data.
+        if (len(strDateTime) == 19):
+            strDateTime = strDateTime + ".000000"
+        
+        # Attempt to convert the date.
+        retVal = datetime.datetime.strptime(strDateTime, "%Y-%m-%d %H:%M:%S.%f")
+    
+    except:
+        tb = traceback.format_exc()
+        logger.log("Failed to convert string to datetime:\n%s" %tb)
+    
+    return retVal
 
 # Decapsulate the JSON data.
 def dejsonify(msg):

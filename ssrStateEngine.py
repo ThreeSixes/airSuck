@@ -118,8 +118,10 @@ class SubListener(threading.Thread):
                 # If it's new...
                 if isNew == 1:
                     
-                    # Log new contact.
-                    logger.log("New SSR contact: %s" %objName)
+                    # If we're debugging...
+                    if config.ssrStateEngine['debug']:
+                        # Log new contact.
+                        logger.log("New SSR contact: %s" %objName)
                     
                     # Make sure we have a numeric ICAO AA at this point.
                     #if 'icaoAAInt' in cacheData:

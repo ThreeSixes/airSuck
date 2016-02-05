@@ -187,7 +187,7 @@ class dataSource(threading.Thread):
 		self.__myWatchdog.start()
 	
 	# Disconnect the source and re-create the socket object.
-	def __disconnectSouce(self):
+	def __disconnectSource(self):
 		"""
 		Disconnect from our host.
 		"""

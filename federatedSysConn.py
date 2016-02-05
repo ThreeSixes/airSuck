@@ -28,6 +28,58 @@ import traceback
 from libAirSuck import asLog
 from pprint import pprint
 
+#########################
+# Client/server objects #
+#########################
+
+def fedSysClietnt():
+    def __init__(self, clientConfig, rxQueue, txQueue, logger):
+        """
+        Federated system connector generic client. Requires the client's configuration, a receive queue, a transmit queue, and an asLog instance for logging.
+        """
+        
+        # My name.
+        #self.__myName = clientConfig[]?????
+        
+        # Which queues should we use?
+        self.__rxQ = rxQueue
+        self.__txQ = txQueue
+        
+        # Hold the client's debugging state.
+        self.__debugOn = False
+    
+    def setDebug(self, debug):
+        """
+        Turn on or off debugging for a given client.
+        """
+        
+        # Set debugging.
+        self.__debugOn = debug
+    
+    def __worker(self):
+        """
+        Principal worker.
+        """
+        
+        try:
+            # Do nothing for now.
+            time.sleep(10)
+        
+        except Exception as e:
+            # Pass the exception up the stack.
+            raise e
+    
+    def run(self):
+        """
+        Start the client.
+        """
+        
+        try:
+            self.__worker()
+        
+        except Exception as e:
+            raise e
+
 
 ####################################
 # Federated system connector class #
@@ -218,14 +270,16 @@ class fedSysConn():
                 self.__fscWatchdog.cancel()
             
             except:
-                # Don't do anything.
+                # Don't care if the operation blows up because sometimes that object causes an epic problem and is no longer an object. I think this comment should be just a bit longer.
                 pass
             
+            # Close the listening socket.
             try:
                 # Stop istening.
                 self.__listenSock.close()
             
             except:
+                # Same as the long-ass comment in the previous try/except block.
                 pass
 
 

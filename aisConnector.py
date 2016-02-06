@@ -173,6 +173,10 @@ class dataSource(threading.Thread):
 				elif v[0] == errno.ETIMEDOUT:
 					logger.log("%s %s:%s connection timed out." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				
+				# DNS or address error.
+				elif v[0] == -2:
+					logger.log("%s %s:%s DNS resolution failure or invalid address." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
+				
 				# Something else happened.
 				else:
 					logger.log("%s %s:%s unhandled socket error: %s (%s)" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"], v[1], v[0]))

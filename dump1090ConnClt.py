@@ -54,8 +54,8 @@ class dataSource(threading.Thread):
 		threading.Thread.__init__(self)
 		
 		# Extend properties to be class-wide.
-		self.myName = myName
-		self.dump1090Src = dump1090Src
+		self.__myName = myName
+		self.__dump1090Src = dump1090Src
 		self.__ssrParser = ssrParse()
 		self.__watchdogFail = False
 		self.__backoff = 1.0
@@ -74,7 +74,7 @@ class dataSource(threading.Thread):
 		
 		try:
 			# Check to see if our last entry was inside the timeout window.
-			if self.__lastEntry >= self.dump1090Src['threadTimeout']:
+			if self.__lastEntry >= self.__dump1090Src['threadTimeout']:
 				# Puke if we have been running for too long without data.
 				raise IOError()
 			else:
@@ -90,7 +90,7 @@ class dataSource(threading.Thread):
 			self.__myWatchdog.cancel()
 			
 			# Prion the error message
-			logger.log("%s watchdog: No data recieved in %s sec." %(self.myName, str(self.dump1090Src['threadTimeout'])))
+			logger.log("%s watchdog: No data recieved in %s sec." %(self.__myName, str(self.__dump1090Src['threadTimeout'])))
 			
 			# Close the connection.
 			self.__dump1090Sock.close()
@@ -131,13 +131,13 @@ class dataSource(threading.Thread):
 		# Keep trying to connect until it works.
 		while notConnected:
 			# Print message
-			logger.log("%s connecting to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
+			logger.log("%s connecting to %s:%s." %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"]))
 			
 			# Attempt to connect.
 			try:
 				# Connect up
-				self.__dump1090Sock.connect((self.dump1090Src["host"], self.dump1090Src["port"]))
-				logger.log("%s connected." %self.myName)
+				self.__dump1090Sock.connect((self.__dump1090Src["host"], self.__dump1090Src["port"]))
+				logger.log("%s connected." %self.__myName)
 				
 				# We connected so now we can move on.
 				notConnected = False
@@ -150,30 +150,44 @@ class dataSource(threading.Thread):
 				
 				# Reset the backoff value
 				self.__handleBackoff(True)
+			
+			except socket.error, v:
 				
-			except Exception as e:
-				if type(e) == socket.error:
-					# If we weren't able to connect, dump a message
-					if e.errno == errno.ECONNREFUSED:
-						#Print some messages
-						logger.log("%s refused connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
-					
-					elif e.errno == errno.ECONNRESET:
-						#Print some messages
-						logger.log("%s reset connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
-					
-					else:
-						# Dafuhq happened!?
-						tb = traceback.format_exc()
-						logger.log("%s socket error.\n%s" %(self.myName, tb))
+				# Connection refused.
+				if v[0] == errno.ECONNREFUSED:
+					logger.log("%s %s:%s refused connection." %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"]))
+				
+				# Connection refused.
+				elif v[0] == errno.ECONNRESET:
+					logger.log("%s %s:%s reset connection." %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"]))
+				
+				# Connection timeout.
+				elif v[0] == errno.ETIMEDOUT:
+					logger.log("%s %s:%s connection timed out." %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"]))
+				
+				# DNS or address error.
+				elif v[0] == -2:
+					logger.log("%s %s:%s DNS resolution failure or invalid address." %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"]))
+				
+				# Something else happened.
 				else:
-					# Dafuhq happened!?
-					tb = traceback.format_exc()
-					logger.log("%s went boom connecting.\n%s" %(self.myName, tb))
+					logger.log("%s %s:%s unhandled socket error: %s (%s)" %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"], v[1], v[0]))
 				
 				# In the event our connect fails, try again after the configured delay
-				logger.log("%s sleeping %s sec." %(self.myName, str(self.dump1090Src["reconnectDelay"] * self.__backoff)))
-				time.sleep(self.dump1090Src["reconnectDelay"] * self.__backoff)
+				logger.log("%s sleeping %s sec." %(self.__myName, (self.__dump1090Src["reconnectDelay"] * self.__backoff)))
+				time.sleep(self.__dump1090Src["reconnectDelay"] * self.__backoff)
+				
+				# Handle backoff.
+				self.__handleBackoff()
+			
+			except Exception:
+				# Dafuhq happened!?
+				tb = traceback.format_exc()
+				logger.log("%s went boom connecting.\n%s" %(self.__myName, tb))
+				
+				# In the event our connect fails, try again after the configured delay
+				logger.log("%s sleeping %s sec." %(self.__myName, str(self.__dump1090Src["reconnectDelay"] * self.__backoff)))
+				time.sleep(self.__dump1090Src["reconnectDelay"] * self.__backoff)
 				
 				# Handle backoff.
 				self.__handleBackoff()
@@ -192,14 +206,14 @@ class dataSource(threading.Thread):
 		Disconnect from our host.
 		"""
 		
-		logger.log("%s disconnecting." %self.myName)
+		logger.log("%s disconnecting." %self.__myName)
 		
 		try:	
 			# Close the connection.
 			self.__dump1090Sock.close()
 		except:
 			tb = traceback.format_exc()
-			logger.log("%s threw exception disconnecting.\n%s" %(self.myName, tb))
+			logger.log("%s threw exception disconnecting.\n%s" %(self.__myName, tb))
 			
 		# Reset the lastEntry counter.
 		self.__lastEntry = 0
@@ -216,10 +230,10 @@ class dataSource(threading.Thread):
 		
 		dataSource worker.
 		"""
-		myName = self.myName
-		dump1090Src = self.dump1090Src
+		myName = self.__myName
+		dump1090Src = self.__dump1090Src
 		
-		logger.log("%s running." %self.myName)
+		logger.log("%s running." %self.__myName)
 		
 		# Do stuff.
 		while (True):
@@ -236,7 +250,7 @@ class dataSource(threading.Thread):
 					
 					# If we're debugging yet.
 					if config.d1090ConnSettings['debug']:
-						logger.log("Got line %s from %s." %(thisLine, self.myName))
+						logger.log("Got line %s from %s." %(thisLine, self.__myName))
 					
 					# Create our data entry dict.
 					thisEntry = {}
@@ -246,22 +260,22 @@ class dataSource(threading.Thread):
 						dtsStr = dtsStr + ".000000"
 					
 					# Add metadata.
-					thisEntry.update({'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': config.d1090ConnSettings['myName'], 'entryPoint': 'dump1090ConnClt', 'data': thisLine, 'clientName': self.myName})
+					thisEntry.update({'dataOrigin': 'dump1090', 'type': 'airSSR', 'dts': dtsStr, 'src': config.d1090ConnSettings['myName'], 'entryPoint': 'dump1090ConnClt', 'data': thisLine, 'clientName': self.__myName})
 					
 					# If we have position data for this source...
-					if 'srcPos' in self.dump1090Src:
+					if 'srcPos' in self.__dump1090Src:
 						# If we have a list...
-						if type(self.dump1090Src['srcPos']) == list:
+						if type(self.__dump1090Src['srcPos']) == list:
 							
 							# If our list has two elements...
-							if len(self.dump1090Src['srcPos']) == 3:
+							if len(self.__dump1090Src['srcPos']) == 3:
 								
 								# If we have good position data add it to any outgoing data.
-								thisEntry.update({"srcLat": self.dump1090Src['srcPos'][0], "srcLon": self.dump1090Src['srcPos'][1], "srcPosMeta": self.dump1090Src['srcPos'][2]})
+								thisEntry.update({"srcLat": self.__dump1090Src['srcPos'][0], "srcLon": self.__dump1090Src['srcPos'][1], "srcPosMeta": self.__dump1090Src['srcPos'][2]})
 					
 					# If we're debugging...
 					if config.d1090ConnSettings['debug']:
-						logger.log("%s queueing: %s." %(thisLine, self.myName))
+						logger.log("%s queueing: %s." %(thisLine, self.__myName))
 					
 					# Try to queue our data.
 					submitted = h1090.handleADSBDict(thisEntry)
@@ -282,14 +296,14 @@ class dataSource(threading.Thread):
 					else:
 						# Dafuhq happened!?
 						tb = traceback.format_exc()
-						logger.log("%s went boom processing data.\n%s" %(self.myName, tb))
+						logger.log("%s went boom processing data.\n%s" %(self.__myName, tb))
 						
 						# Close the connection.
 						self.__disconnectSource()
 				else:
 					# Dafuhq happened!?
 					tb = traceback.format_exc()
-					logger.log("%s went boom processing data.\n%s" %(self.myName, tb))
+					logger.log("%s went boom processing data.\n%s" %(self.__myName, tb))
 					
 					# Close the connection.
 					self.__disconnectSouce()
@@ -320,7 +334,7 @@ class dataSource(threading.Thread):
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:
 						#Print some messages
-						logger.log("%s refused connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
+						logger.log("%s refused connection to %s:%s." %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"]))
 						data = False
 						line = ""
 						
@@ -328,7 +342,7 @@ class dataSource(threading.Thread):
 					
 					elif e.errno == errno.ECONNRESET:
 						#Print some messages
-						logger.log("%s reset connection to %s:%s." %(self.myName, self.dump1090Src["host"], self.dump1090Src["port"]))
+						logger.log("%s reset connection to %s:%s." %(self.__myName, self.__dump1090Src["host"], self.__dump1090Src["port"]))
 						data = False
 						line = ""
 						
@@ -337,19 +351,19 @@ class dataSource(threading.Thread):
 					else:
 						# Dafuhq happened!?
 						tb = traceback.format_exc()
-						logger.log("%s choked reading buffer with socket error.\n%s" %(self.myName, tb))
+						logger.log("%s choked reading buffer with socket error.\n%s" %(self.__myName, tb))
 						data = False
 						line = ""
 				
 				else:
 					tb = traceback.format_exc()
-					logger.log("%s choked reading buffer.\n%s" %(self.myName, tb))
+					logger.log("%s choked reading buffer.\n%s" %(self.__myName, tb))
 					data = False
 					line = ""
 			
 			# See if our watchdog is working.
 			if self.__watchdogFail:
-				logger.log("%s watchdog terminating readLines." %self.myName)
+				logger.log("%s watchdog terminating readLines." %self.__myName)
 				data = False
 				break
 

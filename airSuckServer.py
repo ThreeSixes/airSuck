@@ -246,9 +246,6 @@ class airSuckServer():
 			retVal = json.loads(thisStr)
 		
 		except ValueError:
-			# If it doesn't work just set retVal to none.
-			retVal = None
-			
 			if config.airSuckSrvSettings['debug']:
 				tb = traceback.format_exc()
 				logger.log("Failed to parse JSON data.\nString: %s\n%s" %(thisStr, tb))
@@ -257,9 +254,6 @@ class airSuckServer():
 				logger.log("Failed to parse JSON data.")
 		
 		except Exception as e:
-			# If it doesn't work just set retVal to none.
-			retVal = None
-			
 			tb = traceback.format_exc()
 			logger.log("Unhandled exception parsing JSON:\n%s\nString: %s" %(thisStr, tb))
 			

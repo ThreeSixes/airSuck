@@ -283,9 +283,12 @@ class airSuckServer():
 		Try to do something useful with incoming data from our TCP socket. Accepts one argument: the incoming data. Returns nothing.
 		"""
 		
+		# Create temporary holder for data.
+		thisEntry = {}
+		
 		try:
-			# Create a holder for our entry which is none by default.
-			thisEntry = self.__jsonStr2Dict(data)
+			# Update our data holder with values from the data string.
+			thisEntry.update(self.__jsonStr2Dict(data))
 			
 			try:
 				# Type-correct our JSON data and make sure it's all there.

@@ -162,6 +162,8 @@ class dataSource(threading.Thread):
 				# Get the error number.
 				errNum = v[0]
 				
+				pprint(v)
+				
 				# Connection refused.
 				if errNum == errno.ECONNREFUSED:
 					logger.log("%s %s:%s refused connection." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))

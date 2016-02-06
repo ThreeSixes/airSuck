@@ -159,6 +159,9 @@ class dataSource(threading.Thread):
 				self.__handleBackoff(True)
 				
 			except Exception as e:
+				if config.aisConnSettings['debug']:
+					logger.log("Exception type: %s" %type(e))
+					
 				if 'errno' in e:
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:

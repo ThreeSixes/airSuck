@@ -138,7 +138,7 @@ class dataSource(threading.Thread):
 		# Keep trying to connect until it works.
 		while notConnected:
 			# Print message
-			logger.log("%s connecting to %s:%s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
+			logger.log("%s connecting to %s:%s..." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 			
 			# Attempt to connect.
 			try:
@@ -170,7 +170,7 @@ class dataSource(threading.Thread):
 				elif errNum == errno.ECONNRESET:
 					logger.log("%s %s:%s reset connection." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				
-				# Connection refused.
+				# Connection timeout.
 				elif errNum == errno.ETIMEDOUT:
 					logger.log("%s %s:%s connection timed out." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				

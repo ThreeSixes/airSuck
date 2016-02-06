@@ -665,17 +665,41 @@ class airSuckClient():
             # Pass it up the stack.
             raise SystemExit
         
-        except Exception as e:
-            if 'errno' in e:
-                # If we weren't able to connect, dump a message
-                if e.errno == errno.ECONNREFUSED:
-                    #Print some messages
-                    logger.log("airSuck client failed to connect to %s:%s." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+        except socket.error, v:
+            # Connection refused.
+            if v[0] == errno.ECONNREFUSED:
+                logger.log("%s:%s refused connection." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+            
+            # Connection refused.
+            elif v[0] == errno.ECONNRESET:
+                logger.log("%s:%s reset connection." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
                 
-                else:
-                    # Dafuhq happened!?
-                    tb = traceback.format_exc()
-                    logger.log("airSuck client went boom connecting:\n%s" %tb)
+            # Connection timeout.
+            elif v[0] == errno.ETIMEDOUT:
+                logger.log("Connection to %s:%s timed out." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+            
+            # DNS or address error.
+            elif v[0] == -2:
+                logger.log("%s:%s DNS resolution failure or invalid address." %(asConfig['connSrvHost'], asConfig['connSrvPort']))
+            
+            # Something else happened.
+            else:
+                logger.log("%s:%s unhandled socket error: %s (%s)" %(asConfig['connSrvHost'], asConfig['connSrvPort'], v[1], v[0]))
+            
+            # Set backoff delay.
+            boDelay = asConfig['reconnectDelay'] * self.__backoffSrv
+            
+            # In the event our connect fails, try again after the configured delay
+            logger.log("airSuck client sleeping %s sec." %boDelay)
+            time.sleep(boDelay)
+            
+            # Handle backoff.
+            self.__handleBackoffSrv()
+        
+        except Exception as e:
+            # Dafuhq happened!?
+            tb = traceback.format_exc()
+            logger.log("airSuck client went boom connecting:\n%s" %tb)
                 
             # Set backoff delay.
             boDelay = asConfig['reconnectDelay'] * self.__backoffSrv

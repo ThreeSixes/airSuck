@@ -238,7 +238,8 @@ class airSuckServer():
 		"""
 		Convert a given JSON string to a dict. If the conversion fails this function returns null, otherwise it returns a dict.
 		"""
-		retVal = ""
+		# A blank dict to hold our data.
+		retVal = {}
 		
 		try:
 			# Get a dict from the incoming JSON string.
@@ -290,18 +291,19 @@ class airSuckServer():
 			# Update our data holder with values from the data string.
 			thisEntry.update(self.__jsonStr2Dict(data))
 			
-			try:
-				# Type-correct our JSON data and make sure it's all there.
-				thisEntry.update(self.__verifyJSON(thisEntry))
-			
-			except:
-				# If we're debugging...
-				if config.airSuckSrvSettings['debug']:
-					tb = traceback.format_exc()
-					logger.log("AirSuck server blew up verifying JSON:\n%s" %tb)
-			
-			# If we got a blank string back __jsonStr2Dict() blew up.
-			if thisEntry != "":
+			# If we don't have a blank dict...
+			if len(thisEntry) > 0:
+				try:
+					# Type-correct our JSON data and make sure it's all there.
+					thisEntry.update(self.__verifyJSON(thisEntry))
+				
+				except:
+					# If we're debugging...
+					if config.airSuckSrvSettings['debug']:
+						tb = traceback.format_exc()
+						logger.log("AirSuck server blew up verifying JSON:\n%s" %tb)
+				
+				# Add chain-of-custody data.
 				thisEntry.update({'entryPoint': 'airSuckServer', 'src': config.airSuckSrvSettings['myName']})
 				
 				# If we're supposed to debug...

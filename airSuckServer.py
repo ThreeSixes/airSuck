@@ -314,9 +314,7 @@ class airSuckServer():
 			else:
 				if config.airSuckSrvSettings['debug']:
 					tb = traceback.format_exc()
-					logger.log("Unable to proces incoming JSON data:\n%s" %tb)
-				else:
-					logger.log("Unable to proces incoming JSON data.")
+					logger.log("Unable to handle incoming JSON data:\n%s" %tb)
 		
 		except:
 			tb = traceback.format_exc()

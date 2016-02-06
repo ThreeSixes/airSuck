@@ -174,6 +174,13 @@ class dataSource(threading.Thread):
 				else:
 					logger.log("%s %s:%s unhandled socket error: %s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"], errNum))
 				
+				# In the event our connect fails, try again after the configured delay
+				logger.log("%s sleeping %s sec." %(self.__myName, (self.__AISSrc["reconnectDelay"] * self.__backoff)))
+				time.sleep(self.__AISSrc["reconnectDelay"] * self.__backoff)
+				
+				# Handle backoff.
+				self.__handleBackoff()
+				
 			except Exception as e:
 				# Dafuhq happened!?
 				tb = traceback.format_exc()

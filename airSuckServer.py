@@ -292,8 +292,10 @@ class airSuckServer():
 				thisEntry.update(self.__verifyJSON(thisEntry))
 			
 			except:
-				tb = traceback.format_exc()
-				logger.log("AirSuck server blew up verifying JSON:\n%s" %tb)
+				# If we're debugging...
+				if config.airSuckSrvSettings['debug']:
+					tb = traceback.format_exc()
+					logger.log("AirSuck server blew up verifying JSON:\n%s" %tb)
 			
 			# If we got a blank string back __jsonStr2Dict() blew up.
 			if thisEntry != "":

@@ -162,7 +162,7 @@ class dataSource(threading.Thread):
 				if config.aisConnSettings['debug']:
 					logger.log("Exception type: %s" %type(e))
 					
-				if 'errno' in e:
+				if type(e) == 'socket.error':
 					# If we weren't able to connect, dump a message
 					if e.errno == errno.ECONNREFUSED:
 						#Print some messages

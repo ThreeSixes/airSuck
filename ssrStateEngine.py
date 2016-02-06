@@ -694,6 +694,10 @@ class SubListener(threading.Thread):
                 
                 raise KeyboardInterrupt
             
+            except redis.ConnectionError:
+                logger.log("Redis connection died.\nWaiting 0.5 seconds before starting again.")
+                time.sleep(0.5)
+            
             except:
                 tb = traceback.format_exc()
                 logger.log("Worker blew up:\n%s" %tb)

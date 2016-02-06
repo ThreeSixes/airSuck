@@ -30,6 +30,7 @@ from pprint import pprint
 from libAirSuck import aisParse
 from libAirSuck import asLog
 from libAirSuck import handlerAIS
+from pprint import pprint
 
 ##########
 # Config #
@@ -159,26 +160,22 @@ class dataSource(threading.Thread):
 				self.__handleBackoff(True)
 			
 			except socket.error, v:
-				# Get the error number.
-				errNum = v[0]
-				
-				pprint(v)
 				
 				# Connection refused.
-				if errNum == errno.ECONNREFUSED:
+				if v[0] == errno.ECONNREFUSED:
 					logger.log("%s %s:%s refused connection." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				
 				# Connection refused.
-				elif errNum == errno.ECONNRESET:
+				elif v[0] == errno.ECONNRESET:
 					logger.log("%s %s:%s reset connection." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				
 				# Connection timeout.
-				elif errNum == errno.ETIMEDOUT:
+				elif v[0] == errno.ETIMEDOUT:
 					logger.log("%s %s:%s connection timed out." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				
 				# Something else happened.
 				else:
-					logger.log("%s %s:%s unhandled socket error: %s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"], errNum))
+					logger.log("%s %s:%s unhandled socket error: %s (%s)" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"], v[1], v[0]))
 				
 				# In the event our connect fails, try again after the configured delay
 				logger.log("%s sleeping %s sec." %(self.__myName, (self.__AISSrc["reconnectDelay"] * self.__backoff)))
@@ -187,7 +184,7 @@ class dataSource(threading.Thread):
 				# Handle backoff.
 				self.__handleBackoff()
 				
-			except Exception as e:
+			except Exception:
 				# Dafuhq happened!?
 				tb = traceback.format_exc()
 				logger.log("%s went boom connecting.\n%s" %(self.__myName, tb))

@@ -157,21 +157,27 @@ class dataSource(threading.Thread):
 				
 				# Reset the backoff value
 				self.__handleBackoff(True)
+			
+			except socket.error, v:
+				# Get the error number.
+				errNum = v[0]
+				
+				# Connection refused.
+				if errNum == errno.ECONNREFUSED:
+					logger.log("%s %s:%s refused connection." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
+				
+				# Connection refused.
+				elif errNum == errno.ECONNRESET:
+					logger.log("%s %s:%s reset connection." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
+				
+				# Something else happened.
+				else:
+					logger.log("%s %s:%s unhandled socket error: %s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"], errNum))
 				
 			except Exception as e:
-				if config.aisConnSettings['debug']:
-					logger.log("Exception type: %s" %type(e))
-					
-				if type(e) == 'socket.error':
-					# If we weren't able to connect, dump a message
-					if e.errno == errno.ECONNREFUSED:
-						#Print some messages
-						logger.log("%s failed to connect to %s:%s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
-				
-				else:
-					# Dafuhq happened!?
-					tb = traceback.format_exc()
-					logger.log("%s went boom connecting.\n%s" %(self.__myName, tb))
+				# Dafuhq happened!?
+				tb = traceback.format_exc()
+				logger.log("%s went boom connecting.\n%s" %(self.__myName, tb))
 				
 				# In the event our connect fails, try again after the configured delay
 				logger.log("%s sleeping %s sec." %(self.__myName, (self.__AISSrc["reconnectDelay"] * self.__backoff)))

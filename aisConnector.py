@@ -170,6 +170,10 @@ class dataSource(threading.Thread):
 				elif errNum == errno.ECONNRESET:
 					logger.log("%s %s:%s reset connection." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
 				
+				# Connection refused.
+				elif errNum == errno.ETIMEDOUT:
+					logger.log("%s %s:%s connection timed out." %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"]))
+				
 				# Something else happened.
 				else:
 					logger.log("%s %s:%s unhandled socket error: %s" %(self.__myName, self.__AISSrc["host"], self.__AISSrc["port"], errNum))

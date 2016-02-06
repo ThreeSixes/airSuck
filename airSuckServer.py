@@ -248,10 +248,10 @@ class airSuckServer():
 		except ValueError:
 			if config.airSuckSrvSettings['debug']:
 				tb = traceback.format_exc()
-				logger.log("Failed to parse JSON data.\nString: %s\n%s" %(thisStr, tb))
+				logger.log("Failed to parse incoming JSON data.\nString: %s\n%s" %(thisStr, tb))
 			
 			else:
-				logger.log("Failed to parse JSON data.")
+				logger.log("Failed to parse incoming JSON data.")
 		
 		except Exception as e:
 			tb = traceback.format_exc()

@@ -36,6 +36,7 @@ import Queue
 import atexit
 import signal
 import sys
+import errno
 from libAirSuck import asLog
 from subprocess import Popen, PIPE, STDOUT
 from pprint import pprint

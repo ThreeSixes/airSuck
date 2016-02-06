@@ -316,6 +316,13 @@ class airSuckServer():
 				# If it worked reset the lastADSB counter.
 				if (not d1090Status) and config.airSuckSrvSettings['debug']:
 					logger.log("Failed to queue %s." %thisEntry)
+			
+			else:
+				if config.airSuckSrvSettings['debug']:
+					tb = traceback.format_exc()
+					logger.log("Unable to proces incoming JSON data:\n%s" %tb)
+				else:
+					logger.log("Unable to proces incoming JSON data.")
 		
 		except:
 			tb = traceback.format_exc()

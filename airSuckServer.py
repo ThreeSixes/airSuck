@@ -340,7 +340,7 @@ class airSuckServer():
 			# Add our listener socket to our connection list.
 			self.__conns.append(self.__listenSock)
 		
-		except :
+		except:
 			tb = traceback.format_exc()
 			logger.log("Exception while trying to open incoming socket:\n%s" %tb)
 		

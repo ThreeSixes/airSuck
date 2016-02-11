@@ -607,12 +607,25 @@ class SubListener(threading.Thread):
                                                             
                                                             # If we don't have a heading compute or we've already derived one compute it again assuimng we didn't just get a new one from ADS-B.
                                                             if (not ('heading' in data) or derivedHeading) and not ('heading' in ssrWrapped):
+                                                                try:
+                                                                    # Get the bearing based on the location we have.
+                                                                    newHeading = self.__asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
+                                                                    # Add the heading to the traffic data
+                                                                    data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
                                                                 
-                                                                # Get the bearing based on the location we have.
-                                                                newHeading = self.__asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
-                                                                # Add the heading to the traffic data
-                                                                data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
-                                                        
+                                                                except ValueError as e:
+                                                                    # If we got a value error trying to grab the bearing...
+                                                                    if e == "math domain error":
+                                                                        logger.log("Math domain error trying to compute heading for %s" %ssrWrapped['icaoAAHx'])
+                                                                    
+                                                                    else:
+                                                                        tb = traceback.format_exc()
+                                                                        logger.log("Value error computing heading for %s:\n%s" %(ssrWrapped['icaoAAHx'], tb))
+                                                                
+                                                                except:
+                                                                    tb = traceback.format_exc()
+                                                                    logger.log("Error computing heading for %s:\n%s" %(ssrWrapped['icaoAAHx'], tb))
+                                                    
                                                     # Set location data.
                                                     data.update({"lat": locData[0], "lon": locData[1], "locationMeta": locMeta})
                                             

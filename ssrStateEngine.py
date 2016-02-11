@@ -614,6 +614,7 @@ class SubListener(threading.Thread):
                                                                     data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
                                                                 
                                                                 except ValueError as e:
+                                                                    logger.log("Value error's e: %s" %e)
                                                                     # If we got a value error trying to grab the bearing...
                                                                     if e == "math domain error":
                                                                         logger.log("Math domain error trying to compute heading for %s" %ssrWrapped['icaoAAHx'])

@@ -115,8 +115,8 @@ class SubListener(threading.Thread):
             # Update or create cached data, if we have more than just a name
             if type(cacheData) == dict:
                 
-                # If it's new...
-                if isNew == 1:
+                # If we have a new contact and we're debugging.
+                if (isNew == 1) and (config.ssrStateEngine['debug']):
                     
                     # Log new contact.
                     logger.log("New SSR contact: %s" %objName)

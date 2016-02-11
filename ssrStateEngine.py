@@ -118,10 +118,8 @@ class SubListener(threading.Thread):
                 # If it's new...
                 if isNew == 1:
                     
-                    # If we're debugging...
-                    if config.ssrStateEngine['debug']:
-                        # Log new contact.
-                        logger.log("New SSR contact: %s" %objName)
+                    # Log new contact.
+                    logger.log("New SSR contact: %s" %objName)
                     
                     # Make sure we have a numeric ICAO AA at this point.
                     #if 'icaoAAInt' in cacheData:
@@ -609,12 +607,25 @@ class SubListener(threading.Thread):
                                                             
                                                             # If we don't have a heading compute or we've already derived one compute it again assuimng we didn't just get a new one from ADS-B.
                                                             if (not ('heading' in data) or derivedHeading) and not ('heading' in ssrWrapped):
+                                                                try:
+                                                                    # Get the bearing based on the location we have.
+                                                                    newHeading = self.__asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
+                                                                    # Add the heading to the traffic data
+                                                                    data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
                                                                 
-                                                                # Get the bearing based on the location we have.
-                                                                newHeading = self.__asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
-                                                                # Add the heading to the traffic data
-                                                                data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
-                                                        
+                                                                except ValueError as e:
+                                                                    # If we got a value error trying to grab the bearing...
+                                                                    if e == "math domain error":
+                                                                        logger.log("Math domain error trying to compute heading for %s" %ssrWrapped['icaoAAHx'])
+                                                                    
+                                                                    else:
+                                                                        tb = traceback.format_exc()
+                                                                        logger.log("Value error computing heading for %s:\n%s" %(ssrWrapped['icaoAAHx'], tb))
+                                                                
+                                                                except:
+                                                                    tb = traceback.format_exc()
+                                                                    logger.log("Error computing heading for %s:\n%s" %(ssrWrapped['icaoAAHx'], tb))
+                                                    
                                                     # Set location data.
                                                     data.update({"lat": locData[0], "lon": locData[1], "locationMeta": locMeta})
                                             
@@ -693,10 +704,6 @@ class SubListener(threading.Thread):
                 self.__keepRunning = False
                 
                 raise KeyboardInterrupt
-            
-            except redis.ConnectionError:
-                logger.log("Redis connection died. Waiting 0.5 seconds before starting again.")
-                time.sleep(0.5)
             
             except:
                 tb = traceback.format_exc()

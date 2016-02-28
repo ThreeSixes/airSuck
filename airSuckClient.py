@@ -1124,7 +1124,7 @@ if __name__ == "__main__":
     # If we're debugging...
     if asConfig['debug']:
         # Dump our config.
-        pprint(asConfig)
+        logger.log("Configuration:\n%s" %asConfig)
     
     # Set up our global objects.
     asc = airSuckClient()

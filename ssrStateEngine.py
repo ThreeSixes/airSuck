@@ -608,13 +608,17 @@ class SubListener(threading.Thread):
                                                             # If we don't have a heading compute or we've already derived one compute it again assuimng we didn't just get a new one from ADS-B.
                                                             if (not ('heading' in data) or derivedHeading) and not ('heading' in ssrWrapped):
                                                                 try:
+                                                                    
+                                                                    # If we're debugging.
+                                                                    if config.ssrStateEngine['debug']:
+                                                                        logger.log("Computing heading for %s using coords." %ssrWrapped['icaoAAHx'])
+                                                                    
                                                                     # Get the bearing based on the location we have.
                                                                     newHeading = self.__asu.coords2Bearing([data['lat'], data['lon']], [locData[0], locData[1]])
                                                                     # Add the heading to the traffic data
                                                                     data.update({"heading": newHeading, "headingMeta": "GPSDerived"})
                                                                 
                                                                 except ValueError as e:
-                                                                    logger.log("Value error's e: %s" %e)
                                                                     # If we got a value error trying to grab the bearing...
                                                                     if e == "math domain error":
                                                                         logger.log("Math domain error trying to compute heading for %s" %ssrWrapped['icaoAAHx'])

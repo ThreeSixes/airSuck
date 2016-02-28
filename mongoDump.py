@@ -39,7 +39,7 @@ mDB = connMongo[config.connMongo['dbName']]
 mDBColl = mDB[config.connMongo['coll']]
 
 # Convert datetime objects expressed as a string back to datetime
-def str2Datetime(self, strDateTime):
+def str2Datetime(strDateTime):
     """
     Convert utcnow() datetime string back to a datetime object.
     """
@@ -85,7 +85,7 @@ if config.connMongo['enabled'] == True:
                     else:
                             # We have data so we should break it out of JSON formatting.
                             xDqd = dejsonify(dQd)
-                            xDqd['dts'] = toDatetime(xDqd['dts'])
+                            xDqd['dts'] = str2Datetime(xDqd['dts'])
                             serializeADSB(xDqd)
                     
             except KeyboardInterrupt:

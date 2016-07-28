@@ -26,6 +26,7 @@ var loadCustomVehicles = ['airSSR.js','airAIS.js'];//order determines the sideba
 var vehExpireCheckInterval = 1 * 1000; // Frequency to check for expired vehicles (miliseconds)
 var vehicleTypes = []; // Array for registering vehicle types (AIS, SSR)
 var vehicles = []; // Main array holding vehicles - replacing vehData array with vehicle objects
+var spinnerAnim = ["+", "&#45;", "&#92;", "&#124;", "&#47;"]; // Spinner animation.
 
 /***************************************************
  * VEHICLE PATH ALTITUDE COLORING

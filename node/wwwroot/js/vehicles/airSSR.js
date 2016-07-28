@@ -12,7 +12,7 @@
  **********************************************************/
 // Register vehicle type
 if(debug){console.log('Registering vehicle type: SSR');}
-registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Cat.</th><th>Flag</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Pos</th></tr>');});
+registerVehicleType('airSSR','SSR','fa-plane',function(msgJSON) {return new Aircraft(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Cat.</th><th>Flag</th><th>Altitude</th><th>Velocity</th><th>Heading</th><th>Pos</th><th>Sig</th></tr>');});
 
 /***************************************************
  * SSR OBJECT DECLARATION
@@ -53,6 +53,15 @@ Aircraft.prototype.update = function(msgJSON){
   $.extend(true, this, msgJSON);
   // if not set to active, reactivate
   if (this.active == false) {this.active=true;}
+  
+    // Handle the animation. If the state is lower than the length.
+  if (this.spinState < (spinnerAnim.length - 1)) {
+    // Increment the animation counter.
+    this.spinState++;
+  } else {
+    // Reset counter at 1. We do this to make sure we have > 1 frame from the target.
+    this.spinState = 1;
+  }
   
   // set the path color if we have an altitude
   if (this.alt != 'undefined' && this.alt != null) {
@@ -115,6 +124,7 @@ Aircraft.prototype.createTableEntry = function() {
       <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
       <td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td>\
       <td>'+((hasPos) ? '*' : '--')+'</td>\
+      <td>'+spinnerAnim[this.spinState]+'</td>\
     </tr>\
     <tr id="'+this.addr+'-row-detail" class="vehicle-table-detail">\
       <td colspan="'+colLength+'">\
@@ -214,7 +224,8 @@ Aircraft.prototype.updateTableEntry = function() {
     <td>'+((this.alt==null) ? '--' : this.alt + ' ft')+'</td>\
     <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
     <td>'+((this.heading==null) ? '--' : degreeToCardinal(this.heading))+'</td>\
-    <td>'+((hasPos) ? '*' : '--')+'</td>');
+    <td>'+((hasPos) ? '*' : '--')+'</td>\
+    <td>'+spinnerAnim[this.spinState]+'</td>');
   
   // Handle mode A stuff out-of-band.
   if (this.aSquawkMeta != null) {

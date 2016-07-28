@@ -13,7 +13,7 @@
 
 // Register vehicle type
 if(debug){console.log('Registering vehicle type: AIS');}
-registerVehicleType('airAIS','AIS','fa-ship',function(msgJSON) {return new Ship(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Flag</th><th>Velocity</th><th>Course</th><th>Destination</th><th>Pos</th></tr>');});
+registerVehicleType('airAIS','AIS','fa-ship',function(msgJSON) {return new Ship(msgJSON);},function(container) {$(container).append('<tr><th>ID</th><th>Flag</th><th>Velocity</th><th>Course</th><th>Destination</th><th>Pos</th><th>Sig</th></tr>');});
 
 /***************************************************
  * AIS OBJECT DECLARATION
@@ -87,6 +87,7 @@ Ship.prototype.createTableEntry = function() {
       <td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td>\
       <td>'+((this.destination==null) ? '--' : this.destination)+'</td>\
       <td>'+((hasPos) ? '*' : '--')+'</td>\
+      <td>'+spinnerAnim[this.spinState]+'</td>\
     </tr>\
     <tr id="'+this.addr+'-row-detail" class="vehicle-table-detail">\
       <td colspan="'+colLength+'">\
@@ -207,7 +208,8 @@ Ship.prototype.updateTableEntry = function() {
     <td>'+((this.velo==null) ? '--' : this.velo + ' kt')+'</td>\
     <td>'+((this.courseOverGnd==null) ? '--' : degreeToCardinal(this.courseOverGnd))+'</td>\
     <td>'+((this.destination==null) ? '--' : this.destination)+'</td>\
-    <td>'+((hasPos) ? '*' : '--')+'</td>');
+    <td>'+((hasPos) ? '*' : '--')+'</td>\
+    <td>'+spinnerAnim[this.spinState]+'</td>');
   $('#'+this.addr+'-row-detail').html('\
     <td colspan="'+colLength+'">\
       <table class="infoTable"><tbody>\

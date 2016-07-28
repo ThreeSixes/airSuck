@@ -132,6 +132,7 @@ function degreeToCardinal(degree) {
 class Vehicle {
   constructor(msgJSON,protocol){
     if(debug){console.log('Vehicle constructor executed for vehicle: ' + msgJSON.addr + ', Using protocol: ' + protocol);}
+    this.spinState = 0; // This is just for tracking the spinner animation state.
     this.addr = msgJSON.addr;
     this.protocol = protocol;// communications protocol used (AIS,SSR)
     this.lastPos = "none";
@@ -309,6 +310,16 @@ Vehicle.prototype.update = function(msgJSON){
   $.extend(true, this, msgJSON);
   // if not set to active, reactivate
   if (this.active == false) {this.active=true;}
+  
+  // Handle the animation. If the state is lower than the length.
+  if (this.spinState < (spinnerAnim.length - 1)) {
+    // Increment the animation counter.
+    this.spinState++;
+  } else {
+    // Reset counter at 1. We do this to make sure we have > 1 frame from the target.
+    this.spinState = 1;
+  }
+  
   // update the last update parameter
   this.lastUpdate = Date.now();
   // update the vehicle entry in its' table

@@ -54,11 +54,11 @@ Aircraft.prototype.update = function(msgJSON){
   // if not set to active, reactivate
   if (this.active == false) {this.active=true;}
   
-    // Handle the animation. If the state is lower than the length.
-  if (this.spinState < (spinnerAnim.length - 1)) {
+  // Handle the animation. If the state is lower than the length.
+  if (this.spinState < (spinnerAnim.length - 2)) {
     // Increment the animation counter.
     this.spinState++;
-  } else {
+  } else if (this.spinState == (spinnerAnim.length - 2)) {
     // Reset counter at 1. We do this to make sure we have > 1 frame from the target.
     this.spinState = 1;
   }

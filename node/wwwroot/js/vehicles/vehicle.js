@@ -26,6 +26,7 @@ function expireVehicles() {
       switch (vehicles[key].checkExpiration()) {
           case 'Halflife':
             if (debug) {console.log('Halflife determined for vehicle: '+vehicles[key].parseName());}
+            // Set halflife mode.
             vehicles[key].setHalflife();
             break;
           case 'Expired':
@@ -312,10 +313,10 @@ Vehicle.prototype.update = function(msgJSON){
   if (this.active == false) {this.active=true;}
   
   // Handle the animation. If the state is lower than the length.
-  if (this.spinState < (spinnerAnim.length - 1)) {
+  if (this.spinState < (spinnerAnim.length - 2)) {
     // Increment the animation counter.
     this.spinState++;
-  } else {
+  } else if (this.spinState == (spinnerAnim.length - 2)) {
     // Reset counter at 1. We do this to make sure we have > 1 frame from the target.
     this.spinState = 1;
   }
@@ -373,6 +374,7 @@ Vehicle.prototype.destroy = function(){
 Vehicle.prototype.setHalflife = function(){
   // Deactivate vehicle and change the icon for it.
   this.active = false;
+  // Set the icon.
   if(this.marker!=null){this.marker.setIcon(this.setIcon());}
 };
 
@@ -381,14 +383,24 @@ Vehicle.prototype.setHalflife = function(){
  * SET TO HALFLIFE, EXPIRED, OR REMAIN ACTIVE
  **************************************************/
 Vehicle.prototype.checkExpiration = function(){
+  // Are we already active?
+  var initActive = this.active;
   // Compute the time delta
   let vehDelta = Date.now() - this.lastUpdate;
   // Return Active, Halflife, or Expired
   if (vehDelta >= this.maxAge) {
     return('Expired');
   } else if ((vehDelta >= (this.maxAge/2)) && (this.active == true)) {
+    // Set to inactive animation.
+    this.spinState = spinnerAnim.length - 1;
     return('Halflife');
   } else {
+    // If we changed active states reset the spinner.
+    if (initActive != this.active) {
+      // Set animation back to first frame.
+      this.spinState = 1;
+    }
+    
     return('Active');
   }
 };

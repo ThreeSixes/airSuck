@@ -310,7 +310,11 @@ Vehicle.prototype.update = function(msgJSON){
   // update data in the object
   $.extend(true, this, msgJSON);
   // if not set to active, reactivate
-  if (this.active == false) {this.active=true;}
+  if (this.active == false) {
+    this.active = true;
+    // Reset so the counter bounces up to 1.
+    this.spinState = 0;
+  }
   
   // Handle the animation. If the state is lower than the length.
   if (this.spinState < (spinnerAnim.length - 2)) {
@@ -383,8 +387,6 @@ Vehicle.prototype.setHalflife = function(){
  * SET TO HALFLIFE, EXPIRED, OR REMAIN ACTIVE
  **************************************************/
 Vehicle.prototype.checkExpiration = function(){
-  // Are we already active?
-  var initActive = this.active;
   // Compute the time delta
   let vehDelta = Date.now() - this.lastUpdate;
   // Return Active, Halflife, or Expired
@@ -395,12 +397,8 @@ Vehicle.prototype.checkExpiration = function(){
     this.spinState = spinnerAnim.length - 1;
     return('Halflife');
   } else {
-    // If we changed active states reset the spinner.
-    if (initActive != this.active) {
-      // Set animation back to first frame.
-      this.spinState = 1;
-    }
-    
+    // Reset animation.
+    if (this.spinState == (spinnerAnim.length - 1)) {this.spinState = 1;}
     return('Active');
   }
 };

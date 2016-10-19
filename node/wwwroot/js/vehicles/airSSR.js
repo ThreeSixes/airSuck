@@ -52,7 +52,11 @@ Aircraft.prototype.update = function(msgJSON){
   // update data in the object **do this first**
   $.extend(true, this, msgJSON);
   // if not set to active, reactivate
-  if (this.active == false) {this.active=true;}
+  if (this.active == false) {
+    this.active = true;
+    // Reset so the counter bounces up to 1.
+    this.spinState = 0;
+  }
   
   // Handle the animation. If the state is lower than the length.
   if (this.spinState < (spinnerAnim.length - 2)) {

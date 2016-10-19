@@ -397,8 +397,6 @@ Vehicle.prototype.checkExpiration = function(){
     this.spinState = spinnerAnim.length - 1;
     return('Halflife');
   } else {
-    // Reset animation.
-    if (this.spinState == (spinnerAnim.length - 1)) {this.spinState = 1;}
     return('Active');
   }
 };

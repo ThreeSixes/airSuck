@@ -34,6 +34,7 @@ genLogMode   = "stdout" # Set the default logging mode to standard out. You can 
 # Remote client settings. #
 ###########################
 
+
 # airSuck client - for submitting AIS or SSR data to a remote server running the Dump 1090 Connector Server.
 airSuckClientSettings = {
     'myName': genName, # A descriptive name for this data source.
@@ -153,6 +154,15 @@ aisSettings = {
 #########################################
 # Settings for MongoDB storage engines. #
 #########################################
+
+# Aircraft registration database (optional)
+acRegMongo = {
+    'enabled': False, # Do we want to use this?
+    'host': genMongoHost, # MongoDB server that holds state data.
+    'port': genMongoPort, # Port number for the mongoDB instance.
+    'dbName': "faaReg", # Database name.
+    'coll': "liveAircraft", # Collection name for connector data.
+}
 
 # Raw connector data MongoDB storage engine settings
 connMongo = {

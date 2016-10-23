@@ -156,7 +156,7 @@ aisSettings = {
 #########################################
 
 # Aircraft registration database (optional)
-acRegMongo = {
+ssrRegMongo = {
     'enabled': False, # Do we want to use this?
     'host': genMongoHost, # MongoDB server that holds state data.
     'port': genMongoPort, # Port number for the mongoDB instance.

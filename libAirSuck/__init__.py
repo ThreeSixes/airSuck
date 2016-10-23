@@ -13,3 +13,4 @@ from aisParse import aisParse
 from asLog import asLog
 from handler1090 import handler1090
 from handlerAIS import handlerAIS
+from ssrReg import ssrReg

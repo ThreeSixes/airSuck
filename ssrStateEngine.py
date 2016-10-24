@@ -27,6 +27,7 @@ import traceback
 from libAirSuck import cprMath
 from libAirSuck import airSuckUtil
 from libAirSuck import asLog
+from libAirSuck import ssrReg
 from pprint import pprint
 
 
@@ -56,6 +57,9 @@ class SubListener(threading.Thread):
         self.__sRQ = None
         self.__redHash = None
         self.__psObj = None
+        
+        # SSR registration
+        self.__ssrReg = ssrReg(config, logger)
         
         # Keep running.
         self.__keepRunning = True
@@ -91,6 +95,9 @@ class SubListener(threading.Thread):
             'heading': 1,
             'velo': 1
         }
+        
+        # Filter this data out before sending it on to the state database.
+        self.__stateFilter = ['aSquawkMeta', 'regData', 'regAuthority', 'regAircraft', 'regName', 'regEngine']
     
     def updateState(self, objName, cacheData):
         """
@@ -114,6 +121,14 @@ class SubListener(threading.Thread):
             
             # Update or create cached data, if we have more than just a name
             if type(cacheData) == dict:
+                if isNew == 1:
+                    try:
+                        # Get registration data if we have it.
+                        cacheData.update(self.__ssrReg.getRegData(objName))
+                    
+                    except:
+                        tb = traceback.format_exc()
+                        logger.log("Error getting registration data:\n%s" %tb)
                 
                 # If we have a new contact and we're debugging.
                 if (isNew == 1) and (config.ssrStateEngine['debug']):
@@ -307,9 +322,13 @@ class SubListener(threading.Thread):
         # If we actually want to store the state data in MongoDB...
         if config.stateMongo['enabled'] == True:
             
-            # We don't want to store mode a metadata in the DB, so just pull it off the dict.
-            if 'aSquawkMeta' in statusData:
-                statusData.pop('aSquawkMeta', None)
+            for undesirable in self.__stateFilter:
+                try:
+                    # Try to pull each undesirable item.
+                    statusData.pop(undesirable, None)
+                except:
+                    #DGAF, keep going.
+                    None
             
             jsonData = json.dumps(statusData)
             self.__sRQ.rpush(config.stateRel['qName'], jsonData)

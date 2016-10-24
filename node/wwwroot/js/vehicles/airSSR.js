@@ -119,6 +119,22 @@ Aircraft.prototype.createTableEntry = function() {
         </tr>';
   }
   
+  // Handle registration stuff out of band.
+  if (this.regData == "True") {
+    this.regMetaStr = '<tr>\
+          <td class="tblHeader">Reg. tail number</td>\
+          <td class="tblCell" colspan="3">'+this.regTail+' (' + this.regAuthority + ')</td>\
+          </tr>\
+          <tr>\
+          <td class="tblHeader">Reg. name</td>\
+          <td class="tblCell" colspan=3>'+this.regName+'</td>\
+          </tr>\
+          <tr>\
+          <td class="tblHeader">Reg. aircraft</td>\
+          <td class="tblCell" colspan=3>'+this.regAircraft+'</td>\
+          </tr>';
+  }
+  
   $('#table-'+this.domName).children('tbody').append('\
     <tr id="'+this.addr+'-row-summary" class="vehicle-table-entry">\
       <td>'+this.name+'</td>\
@@ -160,6 +176,7 @@ Aircraft.prototype.createTableEntry = function() {
         <td class="tblCell" colspan=3>' +this.lastClientName+ ' -&gt; ' +this.lastSrc+ '</td>\
       </tr>\
       '+((aSquawkMetaStr==null) ? '' : aSquawkMetaStr)+'\
+      '+((this.regMetaStr==null) ? '' : this.regMetaStr)+'\
         </tbody></table>\
       </td>\
     </tr>'
@@ -266,5 +283,7 @@ Aircraft.prototype.updateTableEntry = function() {
       <tr>\
         <td class="tblHeader">Data src.</td>\
         <td class="tblCell" colspan=3>' +this.lastClientName+ ' -&gt; ' +this.lastSrc+ '</td>\
-      </tr>'+((aSquawkMetaStr==null) ? '' : aSquawkMetaStr));
+      </tr>\
+      '+((aSquawkMetaStr==null) ? '' : aSquawkMetaStr)+'\
+      '+((this.regMetaStr==null) ? '' : this.regMetaStr));
 };

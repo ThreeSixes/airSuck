@@ -38,6 +38,12 @@ stateMongo = pymongo.MongoClient(config.stateMongo['host'], config.stateMongo['p
 mDB = stateMongo[config.stateMongo['dbName']]
 mDBColl = mDB[config.stateMongo['coll']]
 
+# Set up record buffer.
+insertBuff = []
+
+# Keep running?
+keepRunning = True
+
 # Convert datetime objects expressed as a string back to datetime
 def toDatetime(strDateTime):
     """
@@ -61,25 +67,32 @@ def toDatetime(strDateTime):
 
 # Decapsulate the JSON data.
 def dejsonify(msg):
-        return json.loads(msg)
+    return json.loads(msg)
 
 # Insert records into specified mongo instance
 def serializeState(entry):
-        mDBColl.insert(entry)
+    mDBColl.insert(entry)
 
 # If the mongo state dumper is enabled...
 if config.stateMongo['enabled'] == True:
+    # Limits?
+    timeLimit = datetime.timedelta(seconds=config.stateMongo['insertDelay'])
+
+    # What time is it now?
+    timeThen = datetime.datetime.now()
+    timeNow = datetime.datetime.now()
 
     # Infinite fucking loop.
     logger.log("Dumping state data from queue to MongoDB.")
-    while(True) :
+    while(keepRunning):
             try:
                     # Pull oldest entry from the queue.
                     dQd = rQ.rpop(config.stateRel['qName'])
                     
                     # If we have no data sleep for our configured delay to save CPU.
-                    if(dQd == None):
+                    if (dQd == None):
                         time.sleep(checkDelay)
+                    
                     else:
                         # We have data so we should break it out of JSON formatting.
                         xDqd = dejsonify(dQd)
@@ -100,14 +113,35 @@ if config.stateMongo['enabled'] == True:
                             if xDqd['oddTs'] != 'None':
                                 xDqd['oddTs'] = toDatetime(xDqd['oddTs'])
                         
-                        serializeState(xDqd)
-                    
+                        # Add record to buffer.
+                        insertBuff.append(xDqd)
+                        
+                        # What time is it now?
+                        timeNow = datetime.datetime.now()
+                        
+                        # Time to store?
+                        if (timeNow - timeThen) > timeLimit:
+                            # Bulk insert
+                            serializeState(insertBuff)
+                            
+                            # Reset our then.
+                            timeThen = datetime.datetime.now()
+                            
+                            # Nuke buffered records because we've theoretically alread serialized them.
+                            insertBuff[:] = []
+            
             except KeyboardInterrupt:
-                quit()
+                keepRunning = False
+                
+                try:
+                    # Store records.
+                    serializeState(insertBuff)
+                except:
+                    None
+                
             except:
                 tb = traceback.format_exc()
                 logger.log("Failed to pull from the Redis queue. Sleeping %s sec\n%s" %(checkDelay, tb))
-                
 
 else:
     logger.log("Connector mongoDB engine not enabled in configuration.")

@@ -179,7 +179,8 @@ connMongo = {
     'port': genMongoPort, # Port number for the mongoDB instance.
     'dbName': "airSuck", # Database name.
     'coll': "airConn", # Collection name for connector data.
-    'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data.
+    'checkDelay': 0.1, # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data.
+    'insertDelay': 5.0 # Delay in seconds before executing bulk insert operations to save on disk IO. Default is 5.0
 }
 
 # State data MongoDB storage engine settings
@@ -190,7 +191,8 @@ stateMongo = {
     'port': genMongoPort, # Port number for the mongoDB instance.
     'dbName': "airSuck", # Database name.
     'coll': "airState", # Collection name for connector data.
-    'checkDelay': 0.1 # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data. 
+    'checkDelay': 0.1, # Delay between checks where we don't have data. This is in seconds and prevents the process from chewing up CPU when there is little or no data.
+    'insertDelay': 5.0 # Delay in seconds before executing bulk insert operations to save on disk IO. Default is 5.0
 }
 
 ##########################################################################################################################

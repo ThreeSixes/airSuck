@@ -38,6 +38,12 @@ connMongo = pymongo.MongoClient(config.connMongo['host'], config.connMongo['port
 mDB = connMongo[config.connMongo['dbName']]
 mDBColl = mDB[config.connMongo['coll']]
 
+# Set up record buffer.
+insertBuff = []
+
+# Keep running?
+keepRunning = True
+
 # Convert datetime objects expressed as a string back to datetime
 def str2Datetime(strDateTime):
     """
@@ -72,9 +78,16 @@ logger = asLog(config.connMongo['logMode'])
 
 # If this mongo engine is enabled...
 if config.connMongo['enabled'] == True:
+    # Limits?
+    timeLimit = datetime.timedelta(seconds=config.connMongo['insertDelay'])
+
+    # What time is it now?
+    timeThen = datetime.datetime.now()
+    timeNow = datetime.datetime.now()
+    
     # Infinite fucking loop.
     logger.log("Dumping connector data from queue to MongoDB.")
-    while(True) :
+    while(keepRunning) :
             try:
                     # Pull oldest entry from the queue.
                     dQd = rQ.rpop(config.connRel['qName'])
@@ -86,12 +99,36 @@ if config.connMongo['enabled'] == True:
                             # We have data so we should break it out of JSON formatting.
                             xDqd = dejsonify(dQd)
                             xDqd['dts'] = str2Datetime(xDqd['dts'])
-                            serializeADSB(xDqd)
-                    
+                            
+                            # Add record to buffer.
+                            insertBuff.append(xDqd)
+                            
+                            # What time is it now?
+                            timeNow = datetime.datetime.now()
+                            
+                            # Time to store?
+                            if (timeNow - timeThen) > timeLimit:
+                                # Bulk insert
+                                serializeADSB(insertBuff)
+                                
+                                # Reset our then.
+                                timeThen = datetime.datetime.now()
+                                
+                                # Nuke buffered records because we've theoretically alread serialized them.
+                                insertBuff[:] = []
+            
             except KeyboardInterrupt:
-                quit()
+                keepRunning = False
+                
+                try:
+                    # Store records.
+                    serializeADSB(insertBuff)
+                except:
+                    None
+            
             except:
                 tb = traceback.format_exc()
-                logger.log("Failed to pull from the Redis queue. Sleeping %s sec.\n%s" %(checkDelay, tb))
+                logger.log("Failed to pull from the Redis queue. Sleeping %s sec\n%s" %(checkDelay, tb))
+
 else:
     logger.log("The connector mongoDB engine is not enabled in the configuration.")

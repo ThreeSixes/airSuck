@@ -15,7 +15,7 @@
    - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, cprMath.py, handler1090.py, and handlerAIS.py.
  - Metadata from the FAA aircraft registration database can be imported and passed along.
 
-Support for ACARS data and using the FAA downloadable aircraft database to provide additional aircraft data are planned in future releases. 
+Support for ACARS data is planned in future releases. 
 
 
 ###File list:

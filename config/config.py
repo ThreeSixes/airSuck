@@ -158,10 +158,17 @@ aisSettings = {
 # Aircraft registration database (optional)
 ssrRegMongo = {
     'enabled': False, # Do we want to use this?
+    'logMode': genLogMode, # Use the generic logging mode specified in the quick-and-diry section. This can be changed per application.
     'host': genMongoHost, # MongoDB server that holds state data.
     'port': genMongoPort, # Port number for the mongoDB instance.
     'dbName': "faaReg", # Database name.
     'coll': "liveAircraft", # Collection name for connector data.
+    'faaDataURL': "http://registry.faa.gov/database/ReleasableAircraft.zip", # Location from which we can downlaod FAA data.
+    'tempZip': "faa.zip", # Temporary file name for the FAA database.
+    'tempPath': "/tmp/faaIngest/", # Path to temporarily store FAA data. Path should end in a /
+    'masterFile': "MASTER.txt", # Name of the master file.
+    'acFile': "ACFTREF.txt", # Name of the aircraft registration file.
+    'engFile': "ENGINE.txt" # Name of the engine registration file.
 }
 
 # Raw connector data MongoDB storage engine settings

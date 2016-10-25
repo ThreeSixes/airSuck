@@ -13,6 +13,7 @@
  - Data streams are easy-to-integrate JSON.
  - The libAirSuck package can be used in part or entirely by other python projects to process telemetry data.
    - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, cprMath.py, handler1090.py, and handlerAIS.py.
+ - Metadata from the FAA aircraft registration database can be imported and passed along.
 
 Support for ACARS data and using the FAA downloadable aircraft database to provide additional aircraft data are planned in future releases. 
 
@@ -28,6 +29,7 @@ Support for ACARS data and using the FAA downloadable aircraft database to provi
   - aisStateEngine.py - Handles processing of stateful AIS data to build vessel and station data, locaions, callsigns, IMOs, etc. This process dumps AIS on a pub/sub queue for halding by other processes, and on a reliable queue for storage in MongoDB.
   - ssrStateEngine.py - Handles processing of stateful ADS-B data to build aircraft location data, call signs, etc. This process dumps aircraft state updates on a pub/sub queue for handling by other processes, and on a reliable queue for storage in MongoDB.
   - stateMongoDump.py - Stores state data in MongoDB for later processing.
+  - faaIngest.py - Downloads and ingests FAA aircraft database.
   - node/stateNode.js - Node.js server for passing state JSON to a browser or other service. Requires Node.js and the following Node.js packages: redis, express, socket.io, node-syslog
 
 Libraries:
@@ -38,6 +40,7 @@ Libraries:
   - libAirSuck/airSuckUtil.py - Collection of tools for unit conversion, algorithms and functions for geographic data processing.
   - libAirSuck/handler1090.py - An abstracted class to handle verifying and queueing dump1090-formatted ADS-B data. This is used by both airSuckServer.py and dump1090Connector.py.
   - libAirSuck/handlerAIS.py - An abstracted class to handle verifying and queueing AIS data akin to handler1090.py.
+  - libAirSuck/ssrReg.py - An abstracted class to handle looking up aircraft in the FAA registration database.
 
 Clients:
   - sub2Dump1090.py - Feeds aggregated SSR data on the pub/sub queue from dump1090Connector.py and other sources back into dump1090 instances for testing purposes.

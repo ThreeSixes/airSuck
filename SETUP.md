@@ -55,6 +55,21 @@ sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
 sudo cp supvervisor/airSuck-stateNode.py /etc/supervisor/conf.d/
 ```
 
+###OPTIONAL: Setting up the FAA database ingestion engine. This will add metadata about aircraft to the webpage.
+To add FAA aircraft registration data to the database run the download script to prime the system:
+
+```shell
+/opt/airSuck/faaIngest.py
+```
+
+Now, have the software execute once a day in the morning.
+```shell
+crontab -e
+```
+
+Add the following line to your crontab. This has it execute at 5 AM every day.
+0 5 * * * /opt/airSuck/faaIngest.py
+
 ###Editing config.py - since this a single-host installation minimal configuration will be required.
 **WARNING:** This configuration file is actually Python code which depends on the arrangment of the whitespace at the beginning of each line. Don't remove spaces or tabs before configuration variables.
 
@@ -78,6 +93,21 @@ Change the connSrvHost line to 127.0.0.1 like so:
 ```python
 'connSrvHost': "127.0.0.1",
 ```
+
+If you've enabled the FAA database make sure you activate lookup by changing the line here:
+```python
+# Aircraft registration database (optional)
+ssrRegMongo = {
+    'enabled': False, # Do we want to use this?
+```
+
+to this:
+```python
+# Aircraft registration database (optional)
+ssrRegMongo = {
+    'enabled': True, # Do we want to use this?
+```
+
 ###Optionally you can activate manual position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
 If you choose to enable it follow these steps:
 

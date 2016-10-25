@@ -487,7 +487,7 @@ class importFaaDb:
             self.__processMaster()
             
             # Swap the database.
-            self.__migrateDB()
+            self.__migrateDb()
         
         except:
             tb = traceback.format_exc()

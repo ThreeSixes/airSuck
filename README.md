@@ -1,6 +1,6 @@
-##AirSuck is an ADS-B/SSR and AIS processing, storage, and display application with Google Maps integration.
+## AirSuck is an ADS-B/SSR and AIS processing, storage, and display application with Google Maps integration.
 
-###Features:
+### Features:
  - GPLv3 license.
  - Uses dump1090 binary output to proces SSR frames.
  - Uses a generic AIS TCP port to get AIS data frames.
@@ -15,14 +15,14 @@
    - The libAirSuck package includes aisParse.py, ssrParse.py, airSuckUtil.py, cprMath.py, handler1090.py, and handlerAIS.py.
  - Metadata from the FAA aircraft registration database can be imported and passed along.
 
-Support for ACARS data is planned in future releases. 
+Support for ACARS data is planned in future releases.
 
 
-###File list:
+### File list:
 
 "Daemons":
   - airSuckClient.py - A client script that submits information to airSuckServer.py. Currently this script pulls data from dump1090 only. AIS support is planned.
-  - airSuckServer.py - A server script that recieves data from airSuckClient.py. 
+  - airSuckServer.py - A server script that recieves data from airSuckClient.py.
   - aisConnector.py - Handles connections to one or more AIS NMEA TCP source to recieve AIS data.
   - dump1090ConnClt.py - Handles connections to one or more dump1090 instances to recieve ADS-B Modes A, C, and S frames as hex strings with support for MLAT data. All data is passed through the ADS-B decoder and placed on a reliable queue to store raw frames and a pub/sub queue for further processing by the SSR state engine.
   - mongoDump.py - Stores incoming raw data from sources in a database for storage and reprocessing if necessary.
@@ -71,13 +71,13 @@ Support config files:
 AirSuck Geospatial viewer web page:
   - node/index.html - Main page served when you're connected to the stateNode service with a browser. This page displays data about vehicles being received by airSuck on Google Maps.
   - node/jquery-2.1.4.min.js - jQuery javascript library served locally. (See https://jquery.com)
-  
+
 Documentation:
   - SETUP.md - Markdown formatted doc describing how to set airSuck up.
   - docs/airSuck data dictionary.ods - Data dictionary for JSON data passed between components of airSuck.
   - docs/README.md - Description of airSuck's operation and configuration.
 
-##Acknowledgements:
+## Acknowledgements:
   - This project uses code from [Bistromath's gr-modes](https://github.com/bistromath/gr-air-modes) project, and from [MalcomRobb's dump1090](https://github.com/MalcolmRobb/dump1090).
   - The AIS regex in handlerAIS.py is from [vlfig's ais-decoder](https://github.com/vlfig/ais-decoder/blob/master/src/main/java/org/freeais/ais/AISParser.java).
   - Matthew Lambert for a lot of work on the Google Maps integration.

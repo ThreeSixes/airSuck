@@ -214,7 +214,7 @@ Once supervisor restarts you can point your browser to http://127.0.0.1:8090 to 
 If the browser isn't showing data you can check the status of the software using:
 
 ```shell
-sudo supervisorctl
+sudo supervisorctl status
 ```
 You'll see a list of airSuck processes. If any of them are listed in a state other than RUNNING it means something went wrong. Check the log files under /var/log/supervisor/ for more details about the error message.
 

@@ -1,12 +1,12 @@
-#Single-system Ubuntu install and configuration for ADS-B
+# Single-system Ubuntu install and configuration for ADS-B
 This installation is for a single system only. You can easily configure AirSuck to connect to multiple dump1090 instances using the dump1090 connector and multiple AIS targets using the AIS connector. If the airSuckClient is installed and configured on many machines one airSuck server can recieve traffic from them.
 
-##If you want to use airSuck to pick up ADS-B from aircraft, etc. run first few steps here.
-####Note: If you want AIS support you'll need to know the IP address and TCP port of one or more AIS sources.
+## If you want to use airSuck to pick up ADS-B from aircraft, etc. run first few steps here.
+#### Note: If you want AIS support you'll need to know the IP address and TCP port of one or more AIS sources.
 
-####First, you'll need an [RTL-SDR compatible with dump1090](http://amzn.com/B00P2UOU72).
+#### First, you'll need an [RTL-SDR compatible with dump1090](http://amzn.com/B00P2UOU72).
 
-###Install MalcolmRobb's dump1090 fork. You'll also need to install a couple dependencies first.
+### Install MalcolmRobb's dump1090 fork. You'll also need to install a couple dependencies first.
 ```shell
 sudo apt-get install librtlsdr-dev librtlsdr0 libusb-dev libusb-1.0-0-dev
 git clone https://github.com/MalcolmRobb/dump1090.git
@@ -15,11 +15,11 @@ make
 cd ..
 sudo mv dump1090 /opt
 ```
-###Now install airSuck and its dependencies.
+### Now install airSuck and its dependencies.
 
 Next install the necessary base dependencies for airSuck.
 ```shell
-sudo apt-get install python supervisor monogodb-server redis-server nodejs npm python-redis
+sudo apt-get install python supervisor mongodb-server redis-server nodejs npm python-redis
 ```
 
 Then install the necessary nodeJS packages for stateNode.js
@@ -43,7 +43,7 @@ sudo cp config/config.py .
 sudo cp config/nodeConfig.js node/
 ```
 
-###Copy supvervisor config files into place. These files keep various components of airSuck running.
+### Copy supvervisor config files into place. These files keep various components of airSuck running.
 ```shell
 cd /opt/airSuck
 sudo cp supvervisor/airSuck-airSuckServer.py /etc/supervisor/conf.d/
@@ -55,7 +55,7 @@ sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
 sudo cp supvervisor/airSuck-stateNode.py /etc/supervisor/conf.d/
 ```
 
-###OPTIONAL: Setting up the FAA database ingestion engine. This will add metadata about aircraft to the webpage.
+### OPTIONAL: Setting up the FAA database ingestion engine. This will add metadata about aircraft to the webpage.
 To add FAA aircraft registration data to the database run the download script to prime the system:
 
 ```shell
@@ -68,9 +68,11 @@ crontab -e
 ```
 
 Add the following line to your crontab. This has it execute at 5 AM every day.
+```
 0 5 * * * /opt/airSuck/faaIngest.py
+```
 
-###Editing config.py - since this a single-host installation minimal configuration will be required.
+### Editing config.py - since this a single-host installation minimal configuration will be required.
 **WARNING:** This configuration file is actually Python code which depends on the arrangment of the whitespace at the beginning of each line. Don't remove spaces or tabs before configuration variables.
 
 ```shell
@@ -108,7 +110,7 @@ ssrRegMongo = {
     'enabled': True, # Do we want to use this?
 ```
 
-###Optionally you can activate manual position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
+### Optionally you can activate manual position reporting. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
 If you choose to enable it follow these steps:
 
 Change reportPos to True:
@@ -121,7 +123,7 @@ My example yields a latitude and longitude of 45.520851 and -122.625855 respecti
 ```python
 'myPos': [45.520851, -122.625855, "manual"],
 ```
-###You can also optionally enable GPS support for MLAT or a moving sensor. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
+### You can also optionally enable GPS support for MLAT or a moving sensor. This will help airSuck plot your location in Google Maps, and will also enable local CPR decoding for aircraft, etc.
 If you choose to enable GPS support follow these steps:
 
 Install gpsd and gpsd-clients and make sure they start by default.
@@ -173,8 +175,7 @@ Add the --mlat switch to 'dump1090Args' under the airSuckClient section of confi
 'dump1090Args': "--aggressive --gain 40 --raw --mlat",
 ```
 
-###We can now edit node/nodeConfig.js. Only one variable needs to be modified:
-####
+### We can now edit node/nodeConfig.js. Only one variable needs to be modified:
 ```shell
 sudo nano /opt/airSuck/config.py
 ```
@@ -184,18 +185,18 @@ Change redisHost to 127.0.0.1.
 redisHost: "127.0.0.1",
 ```
 
-###Set file permissions.
-####Since all the supervisor files run these python scripts as the nobody user we need to make sure all the scripts, libraries, and folders have read access for that user. The quickest way is using these two commands.
+### Set file permissions.
+#### Since all the supervisor files run these python scripts as the nobody user we need to make sure all the scripts, libraries, and folders have read access for that user. The quickest way is using these two commands.
 ```shell
 find /opt/airSuck/ -type f | xargs sudo setfacl -m u:nobody:r
 find /opt/airSuck/ -type d | xargs sudo setfacl -m u:nobody:rx
 ```
-#####There may be three errors with files that include spaces in their names. You can safely ignore them.
+##### There may be three errors with files that include spaces in their names. You can safely ignore them.
 
-###Connect the RTL-SDR.
+### Connect the RTL-SDR.
 Plug in your RTL-SDR and antenna to the machine running airSuck.
 
-###Start airSuck.
+### Start airSuck.
 Assuming all went well previously we can start supervisor and make sure it starts on boot.
 ```shell
 sudo /etc/init.d/supervisor start
@@ -207,7 +208,7 @@ If that fails try this:
 ```
 Once supervisor restarts you can point your browser to http://127.0.0.1:8090 to see a map and list of ADS-B targets.
 
-##Troubleshooting:
+## Troubleshooting:
 
 1) Check supevisor to make sure everything is running.
 If the browser isn't showing data you can check the status of the software using:

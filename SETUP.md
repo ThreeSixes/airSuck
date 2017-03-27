@@ -43,16 +43,16 @@ sudo cp config/config.py .
 sudo cp config/nodeConfig.js node/
 ```
 
-### Copy supvervisor config files into place. These files keep various components of airSuck running.
+### Copy supervisor config files into place. These files keep various components of airSuck running.
 ```shell
 cd /opt/airSuck
-sudo cp supvervisor/airSuck-airSuckServer.py /etc/supervisor/conf.d/
-sudo cp supvervisor/airSuck-airSuckClient.py /etc/supervisor/conf.d/
-sudo cp supvervisor/airSuck-ssrStateEngine.py /etc/supervisor/conf.d/
-sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
-sudo cp supvervisor/airSuck-stateMongoDump.py /etc/supervisor/conf.d/
-sudo cp supvervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
-sudo cp supvervisor/airSuck-stateNode.py /etc/supervisor/conf.d/
+sudo cp supervisor/airSuck-airSuckServer.py /etc/supervisor/conf.d/
+sudo cp supervisor/airSuck-airSuckClient.py /etc/supervisor/conf.d/
+sudo cp supervisor/airSuck-ssrStateEngine.py /etc/supervisor/conf.d/
+sudo cp supervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
+sudo cp supervisor/airSuck-stateMongoDump.py /etc/supervisor/conf.d/
+sudo cp supervisor/airSuck-mongoDump.py /etc/supervisor/conf.d/
+sudo cp supervisor/airSuck-stateNode.py /etc/supervisor/conf.d/
 ```
 
 ### OPTIONAL: Setting up the FAA database ingestion engine. This will add metadata about aircraft to the webpage.

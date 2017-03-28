@@ -1,4 +1,4 @@
-###AirSuck block diagram describing communication between various components.
+### AirSuck block diagram describing communication between various components.
 ```
      +---------------------+
      | Dump1090 managed    |
@@ -37,7 +37,7 @@
  +------------------+         |stateNode.js|    HTTP     +-----------+    |collection|
                               +------------+                              +----------+
 ```
-###Component roundup:
+### Component roundup:
 
 1. The airSuckClient.py and airSuckServer.py. These two scripts are designed to run as a client/server pair with remote connections in mind. The server can accept many client connections, and the client manages the dump1090 thread which also includes a watchdog that will restart the dump1090 client in the event of a failure. The client and server components also send each other keepalives and have watchdogs that re-estabish the connections in the event they are disrupted.
  * One instance of airSuckServer.py can accept many client connections. The clients connect to the server on TCP 8091 by default.
@@ -71,7 +71,7 @@
 12. And end-user can view and search the information from the state queue which is overlayed on Google Maps.
  * Various configuration options can be found under vehicles.js and many settings from vehicles.js are overriden by airAIS.js and airSSR.js to be speicific to the type of incoming data.
 
-####Notes:
+#### Notes:
  * There are many independent scripts that make up the airSuck project. The reason for this is to support running various compnonents on many servers in a distributed fashion, or to be run on one host.
  * config.py contains many variables staring with "gen" and these options can be overriden in any section of config.py. They're provided by default in order to speed up simple installations of airSuck.
  * If airSuck is being run in a distributed fashion across many hosts it's important to make sure the sections of the configuration that deal with redis queues and dedpe tables are consistent across the multiple hosts. Misconfiguration can result in data not being processed between the connector, state engine, and client layers as well as failure to deduplicate input data from multiple dump1090 or AIS sources.

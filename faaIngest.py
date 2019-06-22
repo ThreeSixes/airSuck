@@ -10,7 +10,6 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 import csv
 from datetime import datetime
 import os
-from pprint import pprint
 import shutil
 import traceback
 from urllib import request
@@ -69,7 +68,8 @@ class ImportFaaDb:
             {'fieldName': 'cruiseSpd', 'index': 10, 'convert': self.__faa_to_int}
         ]
         # Aircraft Engine fields
-        self.__aircraft_engine_fields = [ {'fieldName': 'mfgName', 'index': 1, 'convert': self.__faa_to_str},
+        self.__aircraft_engine_fields = [
+            {'fieldName': 'mfgName', 'index': 1, 'convert': self.__faa_to_str},
             {'fieldName': 'modelName', 'index': 2, 'convert': self.__faa_to_str},
             {'fieldName': 'engType', 'index': 3, 'convert': self.__faa_to_int},
             {'fieldName': 'engHP', 'index': 4, 'convert': self.__faa_to_int},
@@ -181,16 +181,23 @@ class ImportFaaDb:
         file_target = "%s%s" %(config.ssrRegMongo['tempPath'],
                                config.ssrRegMongo['tempZip'])
         try:
-            # Try to create our directory
-            os.makedirs(config.ssrRegMongo['tempPath'])
-        # TODO: Eliminate this and see if the file exists instead.
-        except OSError:
-            # Already exists. We DGAF.
-            None
+            self.__make_temp_dir()
+        except PermissionError:
+            self.__logger.log("Permission error creating %s..." %config.ssrRegMongo['tempPath'])
         # Open the file and download the FAA DB into it.
         self.__logger.log("Downloading FAA database to %s..." %file_target)
         request.urlretrieve(config.ssrRegMongo['faaDataURL'], file_target)
-        self.__logger.log("Unzipping relevatnt files from %s..." %file_target)
+        self.__logger.log("Unzipping relevant files from %s..." %file_target)
+
+
+    def __make_temp_dir(self):
+        """
+        Make the temporary directory for handling downloaded FAA data.
+        """
+        if not os.path.exists(config.ssrRegMongo['tempPath']):
+            if not os.path.isdir(config.ssrRegMongo['tempPath']):
+                # Try to create our directory
+                os.makedirs(config.ssrRegMongo['tempPath'])
 
 
     def __decompress_faa_data(self):
@@ -202,13 +209,9 @@ class ImportFaaDb:
         file_target = "%s%s" %(config.ssrRegMongo['tempPath'],
                                config.ssrRegMongo['tempZip'])
         try:
-            # Try to create our directory
-            os.makedirs(config.ssrRegMongo['tempPath'])
-        # TODO: Eliminate this and see if the file exists instead.
-        except OSError:
-            # Already exists. We DGAF.
-            None
-        self.__logger.log("Unzipping relevatnt database files from %s..." %file_target)
+            self.__make_temp_dir()
+        except PermissionError:
+            self.__logger.log("Permission error creating %s..." %config.ssrRegMongo['tempPath'])
         try:
             # Open our zip file
             zip_f = zipfile.ZipFile(file_target, 'r')
@@ -402,9 +405,8 @@ class ImportFaaDb:
             # How long did we run?
             runtime = run_end_dts - run_start_dts
             self.__logger.log("Runtime was %s sec." %runtime.seconds)
-
-        except:
-            self.__logger.log("Unhandled exception:\n%s" %traceback.format_exc())
+        except (SystemExit, KeyboardInterrupt):
+            raise
         #finally:
             #try:
             #    # Drop the temporary collection.
@@ -420,5 +422,9 @@ class ImportFaaDb:
             #    # We DGAF it this doesn't work.
             #    self.__logger.log("Failed to nuke the FAA data.")
 
-IFDB = ImportFaaDb()
-IFDB.run()
+try:
+    IFDB = ImportFaaDb()
+    IFDB.run()
+except (SystemExit, KeyboardInterrupt):
+    print("Exit.")
+    quit(9)

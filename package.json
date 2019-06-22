@@ -1,0 +1,28 @@
+{
+  "name": "airsuck",
+  "version": "1.0.0",
+  "description": "Aircraft and ship telemetry decoder.",
+  "main": "node/stateNode.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThreeSixes/airSuck.git"
+  },
+  "keywords": [
+    "SSR",
+    "ADSB",
+    "AIS"
+  ],
+  "author": "ThreeSixes",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ThreeSixes/airSuck/issues"
+  },
+  "homepage": "https://github.com/ThreeSixes/airSuck#readme"
+}

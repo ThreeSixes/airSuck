@@ -166,8 +166,7 @@ class ImportFaaDb:
         ret_val = None
         try:
             ret_val = datetime.strptime(entry.strip(), '%Y%m%d')
-        # TODO: Fix this bare exception check.
-        except:
+        except ValueError:
             ret_val = default
         return ret_val
 
@@ -184,6 +183,7 @@ class ImportFaaDb:
             self.__make_temp_dir()
         except PermissionError:
             self.__logger.log("Permission error creating %s..." %config.ssrRegMongo['tempPath'])
+            raise SystemExit
         # Open the file and download the FAA DB into it.
         self.__logger.log("Downloading FAA database to %s..." %file_target)
         request.urlretrieve(config.ssrRegMongo['faaDataURL'], file_target)
@@ -224,10 +224,14 @@ class ImportFaaDb:
             # Extract engine file.
             zip_f.extract(config.ssrRegMongo['engFile'],
                           config.ssrRegMongo['tempPath'])
-        except:
-            self.__logger.log("Failed to extract files from zip file:\n%s" %traceback.format_exc())
+        except zipfile.BadZipfile:
+            self.__logger.log("Bad FAA database zip file.")
+        except PermissionError:
+            self.__logger.log("Permissions error extract files from FAA database zip file.")
+            raise SystemExit
         finally:
-            zip_f.close()
+            if 'zip_f' in locals():
+                zip_f.close()
 
 
     def __nuke_faa_data(self):
@@ -236,11 +240,8 @@ class ImportFaaDb:
         """
 
         self.__logger.log("Deleting %s..." %config.ssrRegMongo['tempPath'])
-        try:
-            # Nuke the temporary directory and all files under it.
-            shutil.rmtree(config.ssrRegMongo['tempPath'])
-        except:
-            raise
+        # Nuke the temporary directory and all files under it.
+        shutil.rmtree(config.ssrRegMongo['tempPath'])
 
     def __load_acft_ref(self):
         """
@@ -373,11 +374,8 @@ class ImportFaaDb:
         """
 
         self.__logger.log("Migrate new processed aircraft data to live data...")
-        try:
-            # Try to overwrite the main collection.
-            self.__m_db_coll.renameCollection(config.ssrRegMongo['coll'], True)
-        except:
-            raise
+        # Try to overwrite the main collection.
+        #self.__m_db_coll.renameCollection(config.ssrRegMongo['coll'], True)
 
     def run(self):
         """
@@ -406,7 +404,7 @@ class ImportFaaDb:
             runtime = run_end_dts - run_start_dts
             self.__logger.log("Runtime was %s sec." %runtime.seconds)
         except (SystemExit, KeyboardInterrupt):
-            raise
+            self.__logger.log("Exit.")
         #finally:
             #try:
             #    # Drop the temporary collection.
@@ -422,9 +420,5 @@ class ImportFaaDb:
             #    # We DGAF it this doesn't work.
             #    self.__logger.log("Failed to nuke the FAA data.")
 
-try:
-    IFDB = ImportFaaDb()
-    IFDB.run()
-except (SystemExit, KeyboardInterrupt):
-    print("Exit.")
-    quit(9)
+IFDB = ImportFaaDb()
+IFDB.run()

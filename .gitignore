@@ -1,4 +1,4 @@
-
 node/nodeConfig.js
-
 node/node_modules/*
+**/__pycache__/**
+**/*.pyc

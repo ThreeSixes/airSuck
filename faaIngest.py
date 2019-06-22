@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 faaIngest by ThreeSixes (https://github.com/ThreeSixes)
@@ -7,508 +7,418 @@ This project is licensed under GPLv3. See COPYING for dtails.
 
 This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
 """
-import config as config
 import csv
-import traceback
-import datetime
-import pymongo
-import zipfile
+from datetime import datetime
 import os
-import shutil
-import pycurl
-from libAirSuck import asLog
 from pprint import pprint
+import shutil
+import traceback
+from urllib import request
+import zipfile
+import pymongo
+import config
+from libAirSuck import asLog
 
-class importFaaDb:
+
+class ImportFaaDb:
+    """
+    Import the FAA database from a zip file.
+    """
     def __init__(self):
         """
         Handle the FAA aircraft database files.
         """
-        
+
         # Build logger.
         self.__logger = asLog(config.ssrRegMongo['logMode'])
         self.__logger.log("AirSuck FAA database import starting...")
-        
         # Master list of aircraft properties.
-        self.__acList = {}
-        
+        self.__ac_list = {}
         # Master list of engine properties.
-        self.__engList = {}
-        
+        self.__eng_list = {}
+        #try:
+        #    #MongoDB config
+        #    faa_reg_mongo = pymongo.MongoClient(
+        #        config.ssrRegMongo['host'], config.ssrRegMongo['port'])
+        #    m_db = faa_reg_mongo[config.ssrRegMongo['dbName']]
+        #    temp_coll_name = "%s_tmp" %config.ssrRegMongo['coll']
+        #    # Set up the temporary colleciton.
+        #    self.__m_db_coll = m_db[temp_coll_name]
+        #    # Nuke it if it exists.
+        #    try:
+        #        self.__m_db_coll.drop()
+        #    except:
+        #        # Probably means it doesn't exist. We DGAF if it blows up.
+        #        None
+        #except:
+        #    self.__logger.log("Failed to connect to MongoDB:\n%s" %traceback.format_exc())
+        #    raise
+
+        # Aircraft reference fields
+        self.__aircraft_ref_fields = [
+            {'fieldName': 'mfgName', 'index': 1, 'convert': self.__faa_to_str},
+            {'fieldName': 'modelName', 'index': 2, 'convert': self.__faa_to_str},
+            {'fieldName': 'acType', 'index': 3, 'convert': self.__faa_to_int},
+            {'fieldName': 'engType', 'index': 4, 'convert': self.__faa_to_int},
+            {'fieldName': 'acCat', 'index': 5, 'convert': self.__faa_to_int},
+            {'fieldName': 'buldCert', 'index': 6, 'convert': self.__faa_to_int},
+            {'fieldName': 'engCt', 'index': 7, 'convert': self.__faa_to_int},
+            {'fieldName': 'seatCt', 'index': 8, 'convert': self.__faa_to_int},
+            {'fieldName': 'weight', 'index': 9, 'convert': self.__faa_to_int,
+             'erase_str': 'CLASS '},
+            {'fieldName': 'cruiseSpd', 'index': 10, 'convert': self.__faa_to_int}
+        ]
+        # Aircraft Engine fields
+        self.__aircraft_engine_fields = [ {'fieldName': 'mfgName', 'index': 1, 'convert': self.__faa_to_str},
+            {'fieldName': 'modelName', 'index': 2, 'convert': self.__faa_to_str},
+            {'fieldName': 'engType', 'index': 3, 'convert': self.__faa_to_int},
+            {'fieldName': 'engHP', 'index': 4, 'convert': self.__faa_to_int},
+            {'fieldName': 'thrust', 'index': 5, 'convert': self.__faa_to_int}
+        ]
+
+        # Aircraft master fields
+        self.__aircraft_master_fields = [
+            {'fieldName': 'nNumeer', 'index': 0, 'convert': self.__faa_to_str,
+             'prefix_str': 'N', 'to_upper': True},
+            {'fieldName': 'serial', 'index': 1, 'convert': self.__faa_to_str},
+            {'fieldName': 'acMfg', 'index': 2, 'convert': self.__faa_to_str},
+            {'fieldName': 'engMfg', 'index': 3, 'convert': self.__faa_to_str},
+            {'fieldName': 'yearMfg', 'index': 4, 'convert': self.__faa_to_int},
+            {'fieldName': 'regType', 'index': 5, 'convert': self.__faa_to_int},
+            {'fieldName': 'regName', 'index': 6, 'convert': self.__faa_to_str},
+            {'fieldName': 'street1', 'index': 7, 'convert': self.__faa_to_str},
+            {'fieldName': 'street2', 'index': 8, 'convert': self.__faa_to_str},
+            {'fieldName': 'city', 'index': 9, 'convert': self.__faa_to_str},
+            {'fieldName': 'state', 'index': 10, 'convert': self.__faa_to_str},
+            {'fieldName': 'zip', 'index': 11, 'convert': self.__faa_to_str},
+            {'fieldName': 'region', 'index': 12, 'convert': self.__faa_to_str},
+            {'fieldName': 'countyCode', 'index': 13, 'convert': self.__faa_to_str},
+            {'fieldName': 'countryCode', 'index': 14, 'convert': self.__faa_to_str},
+            {'fieldName': 'lastActDate', 'index': 15, 'convert': self.__faa_to_date},
+            {'fieldName': 'certIssDate', 'index': 16, 'convert': self.__faa_to_date},
+            {'fieldName': 'airWorthClass', 'index': 17, 'convert': self.__faa_to_str},
+            {'fieldName': 'acType', 'index': 18, 'convert': self.__faa_to_int},
+            {'fieldName': 'engType', 'index': 19, 'convert': self.__faa_to_int},
+            {'fieldName': 'statCode', 'index': 20, 'convert': self.__faa_to_str},
+            {'fieldName': 'modeSInt', 'index': 21, 'convert': self.__faa_to_int},
+            {'fieldName': 'fractOwner', 'index': 22, 'convert': self.__faa_to_str},
+            {'fieldName': 'airWorthyDate', 'index': 23, 'convert': self.__faa_to_date},
+            {'fieldName': 'otherName1', 'index': 24, 'convert': self.__faa_to_str},
+            {'fieldName': 'otherName2', 'index': 25, 'convert': self.__faa_to_str},
+            {'fieldName': 'otherName3', 'index': 26, 'convert': self.__faa_to_str},
+            {'fieldName': 'otherName4', 'index': 27, 'convert': self.__faa_to_str},
+            {'fieldName': 'otherName5', 'index': 28, 'convert': self.__faa_to_str},
+            {'fieldName': 'expireDate', 'index': 29, 'convert': self.__faa_to_date},
+            {'fieldName': 'uid', 'index': 30, 'convert': self.__faa_to_str},
+            {'fieldName': 'kitMfr', 'index': 31, 'convert': self.__faa_to_str},
+            {'fieldName': 'kitMdl', 'index': 32, 'convert': self.__faa_to_str},
+            {'fieldName': 'modeSHex', 'index': 33, 'convert': self.__faa_to_str,
+             'to_lower': True}
+        ]
+
+
+    def __faa_to_int(self, entry, erase_str=None, default=None):
+        """
+        Convert an FAA DB field to an integer.
+        """
+
+        ret_val = None
+        # Erase a string from this field before converting?
+        if erase_str is not None:
+            entry.replace(erase_str, "")
         try:
-            #MongoDB config
-            faaRegMongo = pymongo.MongoClient(config.ssrRegMongo['host'], config.ssrRegMongo['port'])
-            mDB = faaRegMongo[config.ssrRegMongo['dbName']]
-            tempCollName = "%s_tmp" %config.ssrRegMongo['coll']
-            
-            # Set up the temporary colleciton.
-            self.__mDBColl = mDB[tempCollName]
-            
-            # Nuke it if it exists.
-            try:
-                self.__mDBColl.drop()
-            except:
-                # Probably means it doesn't exist. We DGAF if it blows up.
-                None
-        
+            ret_val = int(entry.strip())
+        except ValueError:
+            ret_val = default
+        return ret_val
+
+
+    def __faa_to_str(self, entry, default=None, erase_str=None, prefix_str=None,
+                     to_lower=False, to_upper=False):
+        """
+        Convert an FAA DB field to an string.
+        """
+
+        ret_val = None
+        try:
+            ret_val = str(entry).strip()
+            # Erase a string from this field before converting?
+            if erase_str is not None:
+                entry.replace(erase_str, "")
+            # Tack on a prefix to the string?
+            if prefix_str is not None:
+                entry = "%s%s" %(prefix_str, entry)
+            # Make the string lower case?
+            if to_lower:
+                entry = entry.lower()
+            # Make the string upper case?
+            if to_upper:
+                entry = entry.upper()
+        except ValueError:
+            ret_val = default
+        return ret_val
+
+    def __faa_to_date(self, entry, default=None):
+        """
+        Convert an FAA DB date to a date.
+        """
+
+        ret_val = None
+        try:
+            ret_val = datetime.strptime(entry.strip(), '%Y%m%d')
+        # TODO: Fix this bare exception check.
         except:
-            tb = traceback.format_exc()
-            self.__logger.log("Failed to connect to MongoDB:\n%s" %tb)
-            
-            raise
-    
-    def __getFaaData(self):
+            ret_val = default
+        return ret_val
+
+
+    def __download_faa_data(self):
         """
-        Download and decompress FAA data.
+        Download FAA database.
         """
-        
+
         # Final location the zip file should end up.
-        fileTarget = "%s%s" %(config.ssrRegMongo['tempPath'], config.ssrRegMongo['tempZip'])
-        
-        self.__logger.log("Downloading FAA database to %s..." %fileTarget)
-        
+        file_target = "%s%s" %(config.ssrRegMongo['tempPath'],
+                               config.ssrRegMongo['tempZip'])
         try:
-            try:
-                # Try to create our directory
-                os.makedirs(config.ssrRegMongo['tempPath'])
-                
-            except OSError:
-                # Already exists. We DGAF.
-                None
-            
-            except:
-                raise
-            
-            # Open the file and download the FAA DB into it.
-            with open(fileTarget, 'wb') as outZip:
-                # Use cURL to snag our database.
-                crl = pycurl.Curl()
-                crl.setopt(crl.URL, config.ssrRegMongo['faaDataURL'])
-                crl.setopt(crl.WRITEDATA, outZip)
-                crl.perform()
-                crl.close()
-        
-        except:
-            raise
-        
-        self.__logger.log("Unzipping relevatnt files from %s..." %fileTarget)
-        
+            # Try to create our directory
+            os.makedirs(config.ssrRegMongo['tempPath'])
+        # TODO: Eliminate this and see if the file exists instead.
+        except OSError:
+            # Already exists. We DGAF.
+            None
+        # Open the file and download the FAA DB into it.
+        self.__logger.log("Downloading FAA database to %s..." %file_target)
+        request.urlretrieve(config.ssrRegMongo['faaDataURL'], file_target)
+        self.__logger.log("Unzipping relevatnt files from %s..." %file_target)
+
+
+    def __decompress_faa_data(self):
+        """
+        Decompress FAA data.
+        """
+
+        # Final location the zip file should end up.
+        file_target = "%s%s" %(config.ssrRegMongo['tempPath'],
+                               config.ssrRegMongo['tempZip'])
+        try:
+            # Try to create our directory
+            os.makedirs(config.ssrRegMongo['tempPath'])
+        # TODO: Eliminate this and see if the file exists instead.
+        except OSError:
+            # Already exists. We DGAF.
+            None
+        self.__logger.log("Unzipping relevatnt database files from %s..." %file_target)
         try:
             # Open our zip file
-            zipF = zipfile.ZipFile(fileTarget, 'r')
-            
+            zip_f = zipfile.ZipFile(file_target, 'r')
             # Extract master file
-            zipF.extract(config.ssrRegMongo['masterFile'], config.ssrRegMongo['tempPath'], config.ssrRegMongo['tempPath'])
-            
+            zip_f.extract(config.ssrRegMongo['masterFile'],
+                          config.ssrRegMongo['tempPath'])
             # Extract aircraft file.
-            zipF.extract(config.ssrRegMongo['acFile'], config.ssrRegMongo['tempPath'], config.ssrRegMongo['tempPath'])
-            
+            zip_f.extract(config.ssrRegMongo['acFile'],
+                          config.ssrRegMongo['tempPath'])
             # Extract engine file.
-            zipF.extract(config.ssrRegMongo['engFile'], config.ssrRegMongo['tempPath'], config.ssrRegMongo['tempPath'])
-        
+            zip_f.extract(config.ssrRegMongo['engFile'],
+                          config.ssrRegMongo['tempPath'])
         except:
-            raise
-        
+            self.__logger.log("Failed to extract files from zip file:\n%s" %traceback.format_exc())
         finally:
-            zipF.close()
-        
-        return
-    
-    def __nukeFaaData(self):
+            zip_f.close()
+
+
+    def __nuke_faa_data(self):
         """
         Delete FAA data files downloaded above.
         """
-        
-        self.__logger.log("Deleting %s..." %fileTarget)
-        
+
+        self.__logger.log("Deleting %s..." %config.ssrRegMongo['tempPath'])
         try:
             # Nuke the temporary directory and all files under it.
             shutil.rmtree(config.ssrRegMongo['tempPath'])
-        
         except:
             raise
-    
-    def __loadAcftRef(self):
+
+    def __load_acft_ref(self):
         """
         Load eircraft reference data from file.
         """
-        dataRow = False
-        
-        targetFile = "%s%s" %(config.ssrRegMongo['tempPath'], config.ssrRegMongo['acFile'])
-        
-        self.__logger.log("Processing aicraft reference data in %s..." %targetFile)
-        
-        with open(targetFile, 'rb') as csvFile:
-            for row in csv.reader(csvFile):
+
+        load_count = 0
+        data_row = False
+        target_file = "%s%s" %(config.ssrRegMongo['tempPath'],
+                               config.ssrRegMongo['acFile'])
+        self.__logger.log("Processing aicraft reference data in %s..." %target_file)
+        with open(target_file, 'r') as csv_file:
+            for row in csv.reader(csv_file):
                 # Blank the row, create template.
-                thisRow = {}
-                
-                if dataRow:
-                    
+                this_row = {}
+                if data_row:
+                    load_count += 1
                     # Type-correct our CSV data.
                     try:
-                        thisRow.update({'mfgName': row[1].strip()})
+                        for conversion in self.__aircraft_ref_fields:
+                            args = {'entry': row[conversion['index']]}
+                            if 'erase' in conversion:
+                                args.update({'erase_str': conversion['erase']})
+                            if 'default' in conversion:
+                                args.update({'default': conversion['erase']})
+                            converted_data = conversion['convert'](**args)
+                            if converted_data is not None:
+                                this_row.update({
+                                    conversion['fieldName']: conversion['convert'](**args)
+                                })
                     except:
-                        None
-                    
-                    try:
-                        thisRow.update({'modelName': row[2].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'acType': int(row[3].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'engType': int(row[4].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'acCat': int(row[5].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'buldCert': int(row[6].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'engCt': int(row[7].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'seatCt': int(row[8].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'weight': int(row[9].replace("CLASS ", "").strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'cruiseSpd': int(row[10].strip())})
-                    except:
-                        None
-                    
-                    self.__acList.update({row[0].strip(): thisRow})
-                    
+                        self.__logger.log("Failed to auto-correct Aircraft Ref:\n%s"
+                                          %traceback.format_exc())
+                    self.__ac_list.update({row[0].strip(): this_row})
                 else:
-                    dataRow = True
-        
-        return
-    
-    def __loadEngine(self):
+                    data_row = True
+        self.__logger.log("Processed %s aicraft reference entries." %load_count)
+
+    def __load_engine(self):
         """
         Load engine reference data from file.
         """
-        dataRow = False
-        
-        targetFile = "%s%s" %(config.ssrRegMongo['tempPath'], config.ssrRegMongo['engFile'])
-        
-        self.__logger.log("Processing engine reference data in %s..." %targetFile)
-        
-        with open(targetFile, 'rb') as csvFile:
-            for row in csv.reader(csvFile):
-                
+
+        load_count = 0
+        data_row = False
+        target_file = "%s%s" %(config.ssrRegMongo['tempPath'],
+                               config.ssrRegMongo['engFile'])
+        self.__logger.log("Processing engine reference data in %s..." %target_file)
+        with open(target_file, 'r') as csv_file:
+            for row in csv.reader(csv_file):
                 # Blank the row, create template.
-                thisRow = {}
-                
-                if dataRow:
+                this_row = {}
+                if data_row:
+                    load_count += 1
                     # Type-correct our CSV data.
                     try:
-                        thisRow.update({'mfgName': row[1].strip()})
+                        for conversion in self.__aircraft_engine_fields:
+                            args = {'entry': row[conversion['index']]}
+                            if 'default' in conversion:
+                                args.update({'default': conversion['erase']})
+                            converted_data = conversion['convert'](**args)
+                            if converted_data is not None:
+                                this_row.update({
+                                    conversion['fieldName']: conversion['convert'](**args)
+                                })
                     except:
-                        None
-                    
-                    try:
-                        thisRow.update({'modelName': row[2].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'engType': int(row[3].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'engHP': int(row[4].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'thrust': int(row[5].strip())})
-                    except:
-                        None
-                    
+                        self.__logger.log("Failed to auto-correct engine data:\n%s"
+                                          %traceback.format_exc())
                     # Tack our row on.
-                    self.__engList.update({row[0].strip(): thisRow})
-                    
+                    self.__eng_list.update({row[0].strip(): this_row})
                 else:
-                    dataRow = True
-        
-        return
-    
-    def __processMaster(self):
+                    data_row = True
+        self.__logger.log("Processed %s aircraft engine entries." %load_count)
+
+
+    def __process_master(self):
         """
-        Load master aircraft data from file. This should be called AFTER __loadAcftRef and __loadEngine.
+        Load master aircraft data from file.
+        This should be called AFTER __loadAcftRef and __loadEngine.
         """
-        dataRow = False
-        
-        targetFile = "%s%s" %(config.ssrRegMongo['tempPath'], config.ssrRegMongo['masterFile'])
-        
-        self.__logger.log("Processing master aicraft data in %s..." %targetFile)
-        
-        with open(targetFile, 'rb') as csvFile:
-            for row in csv.reader(csvFile):
-                
+
+        data_row = False
+        load_count = 0
+        target_file = "%s%s" %(config.ssrRegMongo['tempPath'],
+                               config.ssrRegMongo['masterFile'])
+        self.__logger.log("Processing master aicraft data in %s..." %target_file)
+        with open(target_file, 'r') as csv_file:
+            for row in csv.reader(csv_file):
                 # Blank the row, create template.
-                thisRow = {}
-                
-                if dataRow:
+                this_row = {}
+                if data_row:
+                    load_count += 1
                     # Type-correct our CSV data.
                     try:
-                        thisRow.update({'nNumber': "N%s" %row[0].strip()})
+                        for conversion in self.__aircraft_master_fields:
+                            args = {'entry': row[conversion['index']]}
+                            if 'default' in conversion:
+                                args.update({'default': conversion['default']})
+                            if 'erase_str' in conversion:
+                                args.update({'erase_str': conversion['erase_str']})
+                            if 'prefix_str' in conversion:
+                                args.update({'prefix_str': conversion['prefix_str']})
+                            if 'to_lower' in conversion:
+                                args.update({'to_lower': conversion['to_lower']})
+                            if 'to_upper' in conversion:
+                                args.update({'to_upper': conversion['to_upper']})
+                            converted_data = conversion['convert'](**args)
+                            if converted_data is not None:
+                                this_row.update({
+                                    conversion['fieldName']: conversion['convert'](**args)
+                                })
                     except:
-                        None
-                    
-                    try:
-                        thisRow.update({'serial': row[1].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'acMfg': self.__acList[row[2].strip()]})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'engMfg': self.__engList[row[3].strip()]})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'yearMfg': int(row[4].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'regType': int(row[5].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'regName': row[6].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'street1': row[7].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'street2': row[8].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'city': row[9].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'state': row[10].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'zip': row[11].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'region': row[12].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'countyCode': row[13].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'countryCode': row[14].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'lastActDate': datetime.datetime.strptime(row[15].strip(), '%Y%m%d')})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'certIssDate': datetime.datetime.strptime(row[16].strip(), '%Y%m%d')})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'airWorthClass': row[17].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'acType': int(row[18].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'engType': int(row[19].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'statCode': row[20].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'modeSInt': int(row[21].strip())})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'fractOwner': row[22].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'airWorthyDate': datetime.datetime.strptime(row[23].strip(), '%Y%m%d')})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'otherName1': row[24].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'otherName2': row[25].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'otherName3': row[26].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'otherName4': row[27].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'otherName5': row[28].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'expireDate': datetime.datetime.strptime(row[29].strip(), '%Y%m%d')})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'uid': row[30].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'kitMfr': row[31].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'kitMdl': row[32].strip()})
-                    except:
-                        None
-                    
-                    try:
-                        thisRow.update({'modeSHex': row[33].strip().lower()})
-                    except:
-                        None
-                    
-                    # Insert the row.
-                    try:
-                        self.__mDBColl.insert(thisRow)
-                    except:
-                        raise
-                    
+                        self.__logger.log("Failed to auto-correct Aircraft Ref:\n%s"
+                                          %traceback.format_exc())
+                    self.__ac_list.update({row[0].strip(): this_row})
                 else:
-                    dataRow = True
-        
-        return
-    
-    def migrateDb(self):
+                    data_row = True
+        self.__logger.log("Processed %s master aircraft entries." %load_count)
+
+        # Insert the row.
+        #try:
+        #    self.__m_db_coll.insert(this_row)
+        #except:
+        #    raise
+
+
+    def migrate_db(self):
         """
         Swap out the old database for the new.
         """
-        
+
         self.__logger.log("Migrate new processed aircraft data to live data...")
-        
         try:
             # Try to overwrite the main collection.
-            self.__mDBColl.renameCollection(config.ssrRegMongo['coll'], True)
+            self.__m_db_coll.renameCollection(config.ssrRegMongo['coll'], True)
         except:
             raise
-        
-        return
-    
+
     def run(self):
         """
         Do all the work in sequence.
         """
-        
+
         try:
-            # Grab and decompress file.
-            self.__getFaaData()
-            
+            # When did we start?
+            run_start_dts = datetime.utcnow()
+            # Grab FAA database file from their website.
+            self.__download_faa_data()
+            # Decompress FAA database.
+            self.__decompress_faa_data()
             # Pull aircraft reference data.
-            self.__loadAcftRef()
-            
+            self.__load_acft_ref()
             # Pull aircraft engine data.
-            self.__loadEngine()
-            
-            # Insert master aircraft records combined with record from the engine and aicraft records.
-            self.__processMaster()
-            
+            self.__load_engine()
+            # Insert master aircraft records combined with
+            # record from the engine and aicraft records.
+            self.__process_master()
             # Swap the database.
-            self.__migrateDb()
-        
+            #self.__migrate_db()
+            # When did we stop?
+            run_end_dts = datetime.utcnow()
+            # How long did we run?
+            runtime = run_end_dts - run_start_dts
+            self.__logger.log("Runtime was %s sec." %runtime.seconds)
+
         except:
-            tb = traceback.format_exc()
-            print("Unhandled exception:\n%s" %tb)
-        
-        finally:
-            try:
-                # Drop the temporary collection.
-                self.__mDBColl.drop()
-            except:
-                # We DGAF it this doesn't work.
-                None
-            
-            try:
-                # Drop the temporary collection.
-                self.__nukeFaaData()
-            except:
-                # We DGAF it this doesn't work.
-                None
+            self.__logger.log("Unhandled exception:\n%s" %traceback.format_exc())
+        #finally:
+            #try:
+            #    # Drop the temporary collection.
+            #    self.__m_db_coll.drop()
+            #except:
+            #    # We DGAF it this doesn't work.
+            #    self.__logger.log("Failed to drop data collection.")
+            # TODO: Reactivate this seciton.
+            #try:
+            #    # Drop the temporary collection.
+            #    self.__nuke_faa_data()
+            #except:
+            #    # We DGAF it this doesn't work.
+            #    self.__logger.log("Failed to nuke the FAA data.")
 
-
-ifdb = importFaaDb()
-ifdb.run()
-
+IFDB = ImportFaaDb()
+IFDB.run()

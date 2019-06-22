@@ -15,8 +15,6 @@ The AIS regex in this code is from ais-decoder by vlfig https://github.com/vlfig
 ###########
 
 import sys
-sys.path.append("..")
-
 try:
     import config
 except:
@@ -28,9 +26,9 @@ import redis
 import traceback
 import binascii
 import json
-import asLog
-import aisParse
 import re
+from libAirSuck import asLog
+from libAirSuck import aisParse
 
 
 ####################

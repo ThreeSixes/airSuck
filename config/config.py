@@ -48,14 +48,14 @@ airSuckClientSettings = {
     'reportPos': False, # Do we report the client position data specified below? If this and GPS are set to True the position in myPos will be sent when teh GPS does not have a fix.
     'myPos': [0.0, 0.0], # Position data of the client formatted as such: [lat, lon]. This is ignored if GPS is set to true and the GPS has a fix.
     'debug': False, # Debug?
-    
+
     # Dump1090 data source settings.
     'dump1090Enabled': True, # Enable if you want to submit dump1090 data.
     'dump1090Path': "/opt/dump1090/dump1090", # Path to the dump1090 executable.
     'dump1090Args': "--aggressive --gain 40 --raw", # Dump1090 arguments. See dump1090 --help for all possible options.
     'dump1090Timeout': 60.0, # How long should we wait in seconds before considering the dump1090 dead?
     'dump1090Delay': 5.0, # How long should we wait intially before restarting dump1090 after an error?
-    
+
     # AIS source(s)
     'aisEnabled': False, # Do we want to connect to the AIS servers in the list?
     'aisSrvList': { # Dictionary of host(s) to connect to when running the AIS connector.

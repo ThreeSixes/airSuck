@@ -13,8 +13,6 @@ This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck)
 ###########
 
 import sys
-sys.path.append("..")
-
 try:
 	import config
 except:
@@ -25,10 +23,10 @@ import datetime
 import redis
 import traceback
 import binascii
-import asLog
-import ssrParse
 import json
 import re
+from libAirSuck import asLog
+from libAirSuck import ssrParse
 
 
 #####################

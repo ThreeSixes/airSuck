@@ -420,5 +420,9 @@ class ImportFaaDb:
             #    # We DGAF it this doesn't work.
             #    self.__logger.log("Failed to nuke the FAA data.")
 
-IFDB = ImportFaaDb()
-IFDB.run()
+try:
+    IFDB = ImportFaaDb()
+    IFDB.run()
+except (SystemExit, KeyboardInterrupt):
+    print("Exit.")
+    quit(9)

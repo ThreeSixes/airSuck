@@ -8,6 +8,7 @@
     "test": "test"
   },
   "scripts": {
+    "start": "node node/stateNode.js",
     "test": "exit 0"
   },
   "repository": {

@@ -5,7 +5,7 @@
 //  This file is part of the airSuck project (https://github.com/ThreeSixes/airSUck).
 
 // Settings
-var cfg = require('./nodeConfig.js');
+var cfg = require('../config/nodeConfig.js');
 var config = cfg.getConfig();
 
 // Set up our needed libraries.

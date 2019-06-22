@@ -1,4 +1,6 @@
-node/nodeConfig.js
-node/node_modules/*
 **/__pycache__/**
 **/*.pyc
+config/config.py
+config/nodeConfig.js
+node/nodeConfig.js
+node/node_modules/*
